@@ -1,0 +1,2 @@
+def login():
+    raise NotImplementedError()
