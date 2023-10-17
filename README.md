@@ -20,10 +20,10 @@ Follow these [instructions](https://hatch.pypa.io/latest/install/) to install it
 
 ```
 # Run all tests
-hatch run tests
+hatch run test
 
 # Run a single test file
-hatch run tests tests/test_<SOME_FILE>.py
+hatch run test tests/test_<SOME_FILE>.py
 ```
 
 ### Lint / Format

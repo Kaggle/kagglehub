@@ -1,0 +1,39 @@
+steps:
+
+# Import builder if exists.
+# Note: the reason to use bash is to be able to return an exit code 0 even if
+# the docker image doesn't exist yet.
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    docker pull gcr.io/$PROJECT_ID/hatch || exit 0
+
+# Build a modified version of the python image that includes hatch.
+# Use the previous built image as cache.
+- name: 'gcr.io/cloud-builders/docker'
+  dir: 'tools/cicd'
+  args:
+  - build
+  - -f
+  - Dockerfile
+  - -t
+  - gcr.io/$PROJECT_ID/hatch
+  - --cache-from
+  - gcr.io/$PROJECT_ID/hatch
+  - .
+
+- name: gcr.io/$PROJECT_ID/hatch
+  id: tests
+  args:
+  - run
+  - test
+
+- name: gcr.io/$PROJECT_ID/hatch
+  id: lint
+  args:
+  - run
+  - lint:all
+
+images: ['gcr.io/$PROJECT_ID/hatch']
