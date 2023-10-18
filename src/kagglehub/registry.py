@@ -1,3 +1,6 @@
+from typing import Callable, List
+
+
 class MultiImplRegistry:
     """Utility class to inject multiple implementations of class.
 
@@ -8,9 +11,9 @@ class MultiImplRegistry:
 
     def __init__(self, name: str):
         self._name = name
-        self._impls = []
+        self._impls: List[Callable] = []
 
-    def add_implementation(self, impl):
+    def add_implementation(self, impl: Callable):
         self._impls += [impl]
 
     def __call__(self, *args, **kwargs):
