@@ -46,7 +46,7 @@ class TestCache(unittest.TestCase):
             cache_path = get_cached_path(TEST_MODEL_HANDLE, cache_dir=d)
 
             os.makedirs(cache_path)
-            Path.touch(os.path.join(cache_path, "foo.txt"))  # Create file
+            Path(os.path.join(cache_path, "foo.txt")).touch()  # Create file
 
             path = load_from_cache(TEST_MODEL_HANDLE, path="foo.txt", cache_dir=d)
 

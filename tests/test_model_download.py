@@ -39,7 +39,7 @@ class TestModelDownload(unittest.TestCase):
         with TemporaryDirectory() as d:
             cache_path = get_cached_path(parse_model_handle(VERSIONED_MODEL_HANDLE), cache_dir=d)
             os.makedirs(cache_path)
-            Path.touch(os.path.join(cache_path, "foo.txt"))  # Create file
+            Path(os.path.join(cache_path, "foo.txt")).touch()  # Create file
 
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path="foo.txt", cache_dir=d)
 
