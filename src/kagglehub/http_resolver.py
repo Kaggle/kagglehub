@@ -10,9 +10,9 @@ class HttpResolver(Resolver):
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 
-    def __call__(self, handle: str, path: Optional[str] = None, cache_dir: Optional[str] = None):
+    def __call__(self, handle: str, path: Optional[str] = None):
         model_handle = parse_model_handle(handle)
-        model_path = load_from_cache(model_handle, path, cache_dir)
+        model_path = load_from_cache(model_handle, path)
         if model_path:
             return model_path  # Already cached
 

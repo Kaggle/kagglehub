@@ -8,13 +8,12 @@ class Resolver:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __call__(self, handle: str, path: Optional[str] = None, cache_dir: Optional[str] = None) -> str:
+    def __call__(self, handle: str, path: Optional[str] = None) -> str:
         """Resolves a handle into a path with the requested model files.
 
         Args:
             handle: (string) the model handle to resolve.
             path: (string) Optional path to a file within the model bundle.
-            cache_dir: (string) Optional cache directory to use. Defaults to ~/.cache/kagglehub.
 
 
         Returns:
