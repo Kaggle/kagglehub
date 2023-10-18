@@ -1,6 +1,5 @@
 """Functions to parse resource handles."""
 from dataclasses import dataclass
-from typing import Optional
 
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
@@ -15,7 +14,7 @@ class ModelHandle:
     version: int
 
 
-def parse_model_handle(handle: str) -> Optional[ModelHandle]:
+def parse_model_handle(handle: str) -> ModelHandle:
     parts = handle.split("/")
 
     if len(parts) == NUM_VERSIONED_MODEL_PARTS:
