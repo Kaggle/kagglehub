@@ -1,7 +1,8 @@
 __version__ = "0.0.1a0"
 
+from kagglehub import http_resolver, registry
 from kagglehub.auth import login
-from kagglehub.config import _install_resolvers
 from kagglehub.models import model_download, model_upload
 
-_install_resolvers()
+registry.resolver.add_implementation(http_resolver.HttpResolver())
+# TODO(b/305947763): Implement Kaggle Cache resolver.
