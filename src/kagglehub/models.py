@@ -8,7 +8,7 @@ def model_download(handle: str, path: Optional[str] = None):
 
     Args:
         handle: (string) the model handle.
-        path: (string) Optional path to files within the model bundle.
+        path: (string) Optional path to a file within the model bundle.
 
     Returns:
         A string representing the path to the requested model files.

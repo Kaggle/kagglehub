@@ -13,6 +13,8 @@ class Resolver:
 
         Args:
             handle: (string) the model handle to resolve.
+            path: (string) Optional path to a file within the model bundle.
+
 
         Returns:
             A string representing the path
