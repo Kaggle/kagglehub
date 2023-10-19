@@ -44,6 +44,13 @@ Alternatively, you can set the `KAGGLE_CONFIG_DIR` environment variable to chang
 
 Note for Windows users: The default directory is `%HOMEPATH%/kaggle.json`.
 
+### Download Model
+
+```
+# TODO(b/305947384) Not yet implemented
+kagglehub.model_download(...)
+```
+
 ## Development
 
 ### Prequisites
