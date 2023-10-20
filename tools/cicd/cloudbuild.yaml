@@ -8,7 +8,7 @@ steps:
   args:
   - '-c'
   - |
-    docker pull gcr.io/$PROJECT_ID/hatch || exit 0
+    docker pull gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION} || exit 0
 
 # Build a modified version of the python image that includes hatch.
 # Use the previous built image as cache.
@@ -19,23 +19,26 @@ steps:
   - -f
   - Dockerfile
   - -t
-  - gcr.io/$PROJECT_ID/hatch
+  - gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   - --cache-from
-  - gcr.io/$PROJECT_ID/hatch
+  - gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   - --build-arg
-  - PYTHON_VERSION=3.9.18
+  - PYTHON_VERSION=${_PYTHON_VERSION}
   - .
 
-- name: gcr.io/$PROJECT_ID/hatch
+- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   id: tests
   args:
   - run
   - test
 
-- name: gcr.io/$PROJECT_ID/hatch
+- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   id: lint
   args:
   - run
   - lint:all
 
 images: ['gcr.io/$PROJECT_ID/hatch']
+
+substitutions:
+  _PYTHON_VERSION: 3.9.18
