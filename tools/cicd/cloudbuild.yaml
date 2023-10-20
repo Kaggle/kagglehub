@@ -22,6 +22,8 @@ steps:
   - gcr.io/$PROJECT_ID/hatch
   - --cache-from
   - gcr.io/$PROJECT_ID/hatch
+  - --build-arg
+  - PYTHON_VERSION=3.9.18
   - .
 
 - name: gcr.io/$PROJECT_ID/hatch
