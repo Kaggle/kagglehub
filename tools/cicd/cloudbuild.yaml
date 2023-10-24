@@ -41,4 +41,4 @@ steps:
 images: ['gcr.io/$PROJECT_ID/hatch']
 
 substitutions:
-  _PYTHON_VERSION: 3.9.18
+  _PYTHON_VERSION: 3.10.13
