@@ -3,15 +3,10 @@ import tarfile
 import tempfile
 from typing import Optional
 
-import requests
-from requests.auth import HTTPBasicAuth
-from tqdm import tqdm
-
 from kagglehub.cache import get_cached_path, load_from_cache
-from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
-from kagglehub.handle import ModelHandle, parse_model_handle
-from kagglehub.resolver import Resolver
 from kagglehub.clients import KaggleApiV1Client
+from kagglehub.handle import parse_model_handle
+from kagglehub.resolver import Resolver
 
 
 class HttpResolver(Resolver):
@@ -20,14 +15,14 @@ class HttpResolver(Resolver):
         return True
 
     def __call__(self, handle: str, path: Optional[str] = None):
-        model_handle = parse_model_handle(handle)
-        model_path = load_from_cache(model_handle, path)
+        h = parse_model_handle(handle)
+        model_path = load_from_cache(h, path)
         if model_path:
             return model_path  # Already cached
 
         api_client = KaggleApiV1Client()
-        url_path = f"models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/{model_handle.version}/download"
-        out_path = get_cached_path(model_handle, path)
+        url_path = f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
+        out_path = get_cached_path(h, path)
 
         # Create the intermediary directories
         if path:

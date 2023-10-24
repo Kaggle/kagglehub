@@ -1,9 +1,11 @@
 import requests
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
+
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 
 CHUNK_SIZE = 1048576
+
 
 # TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
 class KaggleApiV1Client:
@@ -12,7 +14,7 @@ class KaggleApiV1Client:
     def __init__(self):
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
-    
+
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)
         # TODO(b/307572374) Support resumable downloads.
@@ -30,7 +32,6 @@ class KaggleApiV1Client:
                         f.write(chunk)
                         size_read = min(size, size_read + CHUNK_SIZE)
                         progress_bar.update(len(chunk))
-
 
     def _get_http_basic_auth(self):
         if self.credentials:
