@@ -20,7 +20,10 @@ classifiers = [
 ]
 keywords = ["Kaggle", "API"]
 requires-python = ">=3.7"
-dependencies = []
+dependencies = [
+  "requests", 
+  "tqdm"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/Kaggle/kagglehub"

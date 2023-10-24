@@ -4,10 +4,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_CACHE_FOLDER = os.path.join(Path.home(), ".cache", "kagglehub")
+DEFAULT_KAGGLE_API_ENDPOINT="https://www.kaggle.com"
 DEFAULT_KAGGLE_CREDENTIALS_FOLDER = os.path.join(Path.home(), ".kaggle")
 CREDENTIALS_FILENAME = "kaggle.json"
 
 CACHE_FOLDER_ENV_VAR_NAME = "KAGGLEHUB_CACHE"
+KAGGLE_API_ENDPOINT_ENV_VAR_NAME = "KAGGLE_API_ENDPOINT"
 USERNAME_ENV_VAR_NAME = "KAGGLE_USERNAME"
 KEY_ENV_VAR_NAME = "KAGGLE_KEY"
 CREDENTIALS_FOLDER_ENV_VAR_NAME = "KAGGLE_CONFIG_DIR"
@@ -21,6 +23,10 @@ def get_cache_folder():
         return os.environ[CACHE_FOLDER_ENV_VAR_NAME]
     return DEFAULT_CACHE_FOLDER
 
+def get_kaggle_api_endpoint():
+    if KAGGLE_API_ENDPOINT_ENV_VAR_NAME in os.environ:
+        return os.environ[KAGGLE_API_ENDPOINT_ENV_VAR_NAME]
+    return DEFAULT_KAGGLE_API_ENDPOINT
 
 def get_kaggle_credentials():
     creds_filepath = _get_kaggle_credentials_file()
