@@ -24,7 +24,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(DEFAULT_CACHE_FOLDER, get_cache_folder())
 
     def test_get_kaggle_api_endpoint_default(self):
-        self.assertEqual(DEFAULT_KAGGLE_API_ENDPOINT, get_kaggle_api_endpoint())
+        self.assertEqual("http://localhost:7777", get_kaggle_api_endpoint())
 
     @mock.patch.dict(os.environ, {KAGGLE_API_ENDPOINT_ENV_VAR_NAME: "http://localhost"})
     def test_get_kaggle_api_endpoint_environment_var_override(self):

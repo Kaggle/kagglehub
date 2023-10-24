@@ -8,8 +8,9 @@ CHUNK_SIZE = 1048576
 # The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
 # The `read` timeout is the number of seconds that the client will wait BETWEEN bytes sent from the server.
 # See: https://requests.readthedocs.io/en/stable/user/advanced/#timeouts
-DEFAULT_CONNECT_TIMEOUT = 5 # seconds
-DEFAULT_READ_TIMEOUT = 15 # seconds
+DEFAULT_CONNECT_TIMEOUT = 5  # seconds
+DEFAULT_READ_TIMEOUT = 15  # seconds
+
 
 # TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
 class KaggleApiV1Client:
@@ -26,6 +27,7 @@ class KaggleApiV1Client:
             url,
             stream=True,
             auth=self._get_http_basic_auth(),
+            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             response.raise_for_status()
             size = int(response.headers["Content-Length"])
