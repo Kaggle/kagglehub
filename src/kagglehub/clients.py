@@ -5,7 +5,11 @@ from tqdm import tqdm
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 
 CHUNK_SIZE = 1048576
-
+# The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
+# The `read` timeout is the number of seconds that the client will wait BETWEEN bytes sent from the server.
+# See: https://requests.readthedocs.io/en/stable/user/advanced/#timeouts
+DEFAULT_CONNECT_TIMEOUT = 5 # seconds
+DEFAULT_READ_TIMEOUT = 15 # seconds
 
 # TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
 class KaggleApiV1Client:
