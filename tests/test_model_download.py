@@ -1,17 +1,17 @@
-import io
 import os
+import threading
 import unittest
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
-import threading
 
 import kagglehub
 from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_path
 from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KAGGLE_API_ENDPOINT_ENV_VAR_NAME
 from kagglehub.handle import parse_model_handle
+
 from .utils import get_test_file_path
 
 INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
@@ -20,13 +20,13 @@ UNVERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b"
 
 
 class FileHTTPHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):
+    def do_HEAD(self):  # noqa: N802
         self.send_response(200)
 
-    def do_GET(self):
+    def do_GET(self):  # noqa: N802
         if self.path.endswith(VERSIONED_MODEL_HANDLE + "/download/foo.txt"):
             test_file_path = get_test_file_path("foo.txt")
-            with open(test_file_path, 'rb') as f:
+            with open(test_file_path, "rb") as f:
                 # Serve a single file
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
@@ -35,7 +35,7 @@ class FileHTTPHandler(BaseHTTPRequestHandler):
                 self.wfile.write(f.read())
         elif self.path.endswith(VERSIONED_MODEL_HANDLE + "/download"):
             test_file_path = get_test_file_path("archive.tar.gz")
-            with open(test_file_path, 'rb') as f:
+            with open(test_file_path, "rb") as f:
                 # Serve archive file
                 self.send_response(200)
                 self.send_header("Content-type", "application/x-gzip")
@@ -43,16 +43,17 @@ class FileHTTPHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(f.read())
         elif self.path.endswith(INVALID_ARCHIVE_MODEL_HANDLE + "/download"):
-                # Serve a bad archive file
-                content = "bad archive".encode("utf-8")
-                self.send_response(200)
-                self.send_header("Content-type", "application/x-gzip")
-                self.send_header("Content-Length", len(content))
-                self.end_headers()
-                self.wfile.write(content) # bad archive
-        
+            # Serve a bad archive file
+            content = b"bad archive"
+            self.send_response(200)
+            self.send_header("Content-type", "application/x-gzip")
+            self.send_header("Content-Length", len(content))
+            self.end_headers()
+            self.wfile.write(content)  # bad archive
+
         # Unknown file path
         return self.send_response(404)
+
 
 class TestModelDownload(unittest.TestCase):
     def test_unversioned_model_download(self):
@@ -99,7 +100,9 @@ class TestModelDownload(unittest.TestCase):
                     try:
                         model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path="foo.txt")
                         self.assertEqual(
-                            os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3", "foo.txt"),
+                            os.path.join(
+                                d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3", "foo.txt"
+                            ),
                             model_path,
                         )
                         with open(model_path) as model_file:

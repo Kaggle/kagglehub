@@ -1,4 +1,41 @@
-# Do we want to check the API version to tell them to upgrade? https://github.com/Kaggle/kaggleazure/blob/5c1d746a8a4b8743f931075fe7e91783be7e2cdb/tools/ApiClients/template/kaggle/api/kaggle_api_extended.py#L3510
-# Probably no because this is not the same version than the one reported.
+import requests
+from requests.auth import HTTPBasicAuth
+from tqdm import tqdm
+from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 
-# TODO(b/305947763) Implement KaggleJwtClient
+CHUNK_SIZE = 1048576
+
+# TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
+class KaggleApiV1Client:
+    BASE_PATH = "/api/v1/"
+
+    def __init__(self):
+        self.credentials = get_kaggle_credentials()
+        self.endpoint = get_kaggle_api_endpoint()
+    
+    def download_file(self, path: str, out_file: str):
+        url = self._build_url(path)
+        # TODO(b/307572374) Support resumable downloads.
+        with requests.get(
+            url,
+            stream=True,
+            auth=self._get_http_basic_auth(),
+        ) as response:
+            response.raise_for_status()
+            size = int(response.headers["Content-Length"])
+            size_read = 0
+            with tqdm(total=size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
+                with open(out_file, "wb") as f:
+                    for chunk in response.iter_content(CHUNK_SIZE):
+                        f.write(chunk)
+                        size_read = min(size, size_read + CHUNK_SIZE)
+                        progress_bar.update(len(chunk))
+
+
+    def _get_http_basic_auth(self):
+        if self.credentials:
+            return HTTPBasicAuth(self.credentials.username, self.credentials.key)
+        return None
+
+    def _build_url(self, path):
+        return f"{self.endpoint}/{KaggleApiV1Client.BASE_PATH}/{path}"
