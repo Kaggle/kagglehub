@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 import requests
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
@@ -14,7 +16,7 @@ DEFAULT_READ_TIMEOUT = 15  # seconds
 
 # TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
 class KaggleApiV1Client:
-    BASE_PATH = "/api/v1/"
+    BASE_PATH = "api/v1"
 
     def __init__(self):
         self.credentials = get_kaggle_credentials()
@@ -45,4 +47,4 @@ class KaggleApiV1Client:
         return None
 
     def _build_url(self, path):
-        return f"{self.endpoint}/{KaggleApiV1Client.BASE_PATH}/{path}"
+        return urljoin(self.endpoint, f"{KaggleApiV1Client.BASE_PATH}/{path}")
