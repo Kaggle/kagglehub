@@ -3,7 +3,7 @@ import tarfile
 import tempfile
 from typing import Optional
 
-from kagglehub.cache import get_cached_path, load_from_cache
+from kagglehub.cache import get_cached_path, load_from_cache, mark_as_complete
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.handle import ModelHandle, parse_model_handle
 from kagglehub.resolver import Resolver
@@ -47,6 +47,7 @@ class HttpResolver(Resolver):
                     # Use 'data' filter to prevent dangerous security issues.
                     f.extractall(out_path, filter="data")
 
+        mark_as_complete(h, path)
         return out_path
 
 
