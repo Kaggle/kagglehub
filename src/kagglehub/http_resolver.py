@@ -1,5 +1,4 @@
 import os
-import sys
 import tarfile
 import tempfile
 from typing import Optional
@@ -45,7 +44,8 @@ class HttpResolver(Resolver):
 
                 # Extract all files to this directory.
                 with tarfile.open(archive_file.name) as f:
-                    _tar_extract_all(f, out_path)
+                    # Model archives are created by Kaggle via the Databundle Worker.
+                    f.extractall(out_path)
 
         mark_as_complete(h, path)
         return out_path
@@ -53,14 +53,3 @@ class HttpResolver(Resolver):
 
 def _build_download_url_path(h: ModelHandle):
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
-
-
-def _tar_extract_all(f: tarfile.TarFile, out_path: str):
-    if (sys.version_info.major, sys.version_info.minor) >= (3, 8, 17):
-        # Use 'data' filter to prevent dangerous security issues.
-        f.extractall(out_path, filter="data")
-    else:
-        # Older Python version do not support the `filter` parameter.
-        # Model archives are created by Kaggle via the Databundle Worker and don't
-        # include destination outside the output path.
-        f.extractall(out_path)
