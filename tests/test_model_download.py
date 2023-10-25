@@ -72,7 +72,7 @@ class TestModelDownload(unittest.TestCase):
                             os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
                             model_path,
                         )
-                        self.assertEqual(["config.json", "model.keras"], os.listdir(model_path))
+                        self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
                     finally:
                         httpd.shutdown()
 
@@ -93,7 +93,7 @@ class TestModelDownload(unittest.TestCase):
                             os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
                             model_path,
                         )
-                        self.assertEqual(["config.json", "model.keras"], os.listdir(model_path))
+                        self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
                     finally:
                         httpd.shutdown()
 
