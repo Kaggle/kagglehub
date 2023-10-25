@@ -5,7 +5,7 @@ from typing import Optional
 
 from kagglehub.cache import get_cached_path, load_from_cache
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.handle import parse_model_handle
+from kagglehub.handle import ModelHandle, parse_model_handle
 from kagglehub.resolver import Resolver
 
 
@@ -21,7 +21,7 @@ class HttpResolver(Resolver):
             return model_path  # Already cached
 
         api_client = KaggleApiV1Client()
-        url_path = f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
+        url_path = _build_download_url_path(h)
         out_path = get_cached_path(h, path)
 
         # Create the intermediary directories
@@ -48,3 +48,7 @@ class HttpResolver(Resolver):
                     f.extractall(out_path, filter="data")
 
         return out_path
+
+
+def _build_download_url_path(h: ModelHandle):
+    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
