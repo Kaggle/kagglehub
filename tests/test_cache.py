@@ -69,7 +69,7 @@ class TestCache(unittest.TestCase):
             with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
                 get_cached_path(TEST_MODEL_HANDLE)
 
-                # Should be a cache `miss` if completion marker file exist but not the file itself.
+                # Should be a cache `miss` if completion marker file exists but not the file itself.
                 mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
                 self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH))
