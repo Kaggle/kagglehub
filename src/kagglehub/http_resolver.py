@@ -8,6 +8,8 @@ from kagglehub.clients import KaggleApiV1Client
 from kagglehub.handle import ModelHandle, parse_model_handle
 from kagglehub.resolver import Resolver
 
+MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
+
 
 class HttpResolver(Resolver):
     def is_supported(self, *_):
@@ -16,11 +18,15 @@ class HttpResolver(Resolver):
 
     def __call__(self, handle: str, path: Optional[str] = None):
         h = parse_model_handle(handle)
+        api_client = KaggleApiV1Client()
+
+        if not h.is_versioned():
+            h.version = _get_current_version(api_client, h)
+
         model_path = load_from_cache(h, path)
         if model_path:
             return model_path  # Already cached
 
-        api_client = KaggleApiV1Client()
         url_path = _build_download_url_path(h)
         out_path = get_cached_path(h, path)
 
@@ -49,6 +55,19 @@ class HttpResolver(Resolver):
 
         mark_as_complete(h, path)
         return out_path
+
+
+def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle):
+    json_response = api_client.get(_build_get_instance_url_path(h))
+    if MODEL_INSTANCE_VERSION_FIELD not in json_response:
+        msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"
+        raise ValueError(msg)
+
+    return json_response[MODEL_INSTANCE_VERSION_FIELD]
+
+
+def _build_get_instance_url_path(h: ModelHandle):
+    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/get"
 
 
 def _build_download_url_path(h: ModelHandle):

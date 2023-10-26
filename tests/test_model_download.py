@@ -1,9 +1,11 @@
+import json
 import os
 import unittest
 from http.server import BaseHTTPRequestHandler
 
 import kagglehub
 from kagglehub.cache import MODELS_CACHE_SUBFOLDER
+from kagglehub.http_resolver import MODEL_INSTANCE_VERSION_FIELD
 
 from .utils import create_test_cache, create_test_http_server, get_test_file_path
 
@@ -13,7 +15,7 @@ UNVERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b"
 TEST_FILEPATH = "config.json"
 
 
-class FileHTTPHandler(BaseHTTPRequestHandler):
+class KaggleAPIHandler(BaseHTTPRequestHandler):
     def do_HEAD(self):  # noqa: N802
         self.send_response(200)
 
@@ -44,19 +46,30 @@ class FileHTTPHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", len(content))
             self.end_headers()
             self.wfile.write(content)  # bad archive
+        elif self.path.endswith(UNVERSIONED_MODEL_HANDLE + "/get"):
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(bytes(json.dumps({MODEL_INSTANCE_VERSION_FIELD: 3}), "utf-8"))
         else:
-            # Unknown file path
-            return self.send_response(404)
+            self.send_response(404)
+            self.wfile.write(bytes(f"Unhandled path: {self.path}", "utf-8"))
 
 
 class TestModelDownload(unittest.TestCase):
     def test_unversioned_model_download(self):
-        with self.assertRaises(NotImplementedError):
-            kagglehub.model_download(UNVERSIONED_MODEL_HANDLE)
+        with create_test_cache() as d:
+            with create_test_http_server(KaggleAPIHandler):
+                model_path = kagglehub.model_download(UNVERSIONED_MODEL_HANDLE)
+                self.assertEqual(
+                    os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
+                    model_path,
+                )
+                self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
 
     def test_versioned_model_download(self):
         with create_test_cache() as d:
-            with create_test_http_server(FileHTTPHandler):
+            with create_test_http_server(KaggleAPIHandler):
                 model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
                 self.assertEqual(
                     os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
@@ -66,7 +79,7 @@ class TestModelDownload(unittest.TestCase):
 
     def test_versioned_model_full_download_with_file_already_cached(self):
         with create_test_cache() as d:
-            with create_test_http_server(FileHTTPHandler):
+            with create_test_http_server(KaggleAPIHandler):
                 # Download a single file
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
                 # Then download the full model and ensure all files are there.
@@ -80,13 +93,13 @@ class TestModelDownload(unittest.TestCase):
 
     def test_versioned_model_download_bad_archive(self):
         with create_test_cache():
-            with create_test_http_server(FileHTTPHandler):
+            with create_test_http_server(KaggleAPIHandler):
                 with self.assertRaises(ValueError):
                     kagglehub.model_download(INVALID_ARCHIVE_MODEL_HANDLE)
 
     def test_versioned_model_download_with_path(self):
         with create_test_cache() as d:
-            with create_test_http_server(FileHTTPHandler):
+            with create_test_http_server(KaggleAPIHandler):
                 model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
                 self.assertEqual(
                     os.path.join(
@@ -107,7 +120,7 @@ class TestModelDownload(unittest.TestCase):
     def test_versioned_model_download_already_cached(self):
         with create_test_cache() as d:
             # Download from server.
-            with create_test_http_server(FileHTTPHandler):
+            with create_test_http_server(KaggleAPIHandler):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE)
 
             # No internet, cache hit.
@@ -120,7 +133,7 @@ class TestModelDownload(unittest.TestCase):
 
     def test_versioned_model_download_with_path_already_cached(self):
         with create_test_cache() as d:
-            with create_test_http_server(FileHTTPHandler):
+            with create_test_http_server(KaggleAPIHandler):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
 
             # No internet, cache hit.
