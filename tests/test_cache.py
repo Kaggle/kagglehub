@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 
-from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_path, load_from_cache
+from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_path, load_from_cache, mark_as_complete
 from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME
 from kagglehub.handle import ModelHandle
 
@@ -15,6 +15,8 @@ TEST_MODEL_HANDLE = ModelHandle(
     variation="answer-equivalence-bem",
     version=2,
 )
+
+TEST_FILEPATH = "foo.txt"
 
 
 class TestCache(unittest.TestCase):
@@ -29,13 +31,55 @@ class TestCache(unittest.TestCase):
         self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
     def test_load_from_cache_with_path_miss(self):
-        self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, "foo.txt"))
+        self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, TEST_FILEPATH))
+
+    def test_load_from_cache_not_complete_miss(self):
+        with TemporaryDirectory() as d:
+            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
+                cache_path = get_cached_path(TEST_MODEL_HANDLE)
+
+                # Should be a cache `miss` if the directory exists but not the marker file.
+                os.makedirs(cache_path)
+
+                self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
+
+    def test_load_from_cache_with_path_not_complete_miss(self):
+        with TemporaryDirectory() as d:
+            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
+                cache_path = get_cached_path(TEST_MODEL_HANDLE)
+
+                # Should be a cache `miss` if the directory exists but not the marker file.
+                os.makedirs(cache_path)
+                Path(os.path.join(cache_path, TEST_FILEPATH)).touch()  # Create file
+
+                self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH))
+
+    def test_load_from_cache_with_complete_marker_no_files_miss(self):
+        with TemporaryDirectory() as d:
+            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
+                get_cached_path(TEST_MODEL_HANDLE)
+
+                # Should be a cache `miss` if completion marker file exists but not the files themselves.
+                mark_as_complete(TEST_MODEL_HANDLE)
+
+                self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
+
+    def test_load_from_cache_with_path_complete_marker_no_files_miss(self):
+        with TemporaryDirectory() as d:
+            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
+                get_cached_path(TEST_MODEL_HANDLE)
+
+                # Should be a cache `miss` if completion marker file exists but not the file itself.
+                mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
+
+                self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH))
 
     def test_cache_hit(self):
         with TemporaryDirectory() as d:
             with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
                 cache_path = get_cached_path(TEST_MODEL_HANDLE)
                 os.makedirs(cache_path)
+                mark_as_complete(TEST_MODEL_HANDLE)
 
                 path = load_from_cache(TEST_MODEL_HANDLE)
 
@@ -52,9 +96,10 @@ class TestCache(unittest.TestCase):
                 cache_path = get_cached_path(TEST_MODEL_HANDLE)
 
                 os.makedirs(cache_path)
-                Path(os.path.join(cache_path, "foo.txt")).touch()  # Create file
+                Path(os.path.join(cache_path, TEST_FILEPATH)).touch()  # Create file
+                mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
-                path = load_from_cache(TEST_MODEL_HANDLE, path="foo.txt")
+                path = load_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
                 self.assertEqual(
                     os.path.join(
