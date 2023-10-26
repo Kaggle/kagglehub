@@ -1,4 +1,4 @@
-__version__ = "0.0.1a0"
+__version__ = "0.0.1a1"
 
 from kagglehub import http_resolver, registry
 from kagglehub.auth import login
