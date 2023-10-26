@@ -1,16 +1,11 @@
 import os
-import threading
 import unittest
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from tempfile import TemporaryDirectory
-from unittest import mock
-from urllib.parse import urlparse
+from http.server import BaseHTTPRequestHandler
 
 import kagglehub
 from kagglehub.cache import MODELS_CACHE_SUBFOLDER
-from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KAGGLE_API_ENDPOINT_ENV_VAR_NAME
 
-from .utils import get_test_file_path
+from .utils import create_test_cache, create_test_http_server, get_test_file_path
 
 INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
 VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/3"
@@ -60,123 +55,80 @@ class TestModelDownload(unittest.TestCase):
             kagglehub.model_download(UNVERSIONED_MODEL_HANDLE)
 
     def test_versioned_model_download(self):
-        with TemporaryDirectory() as d:
-            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
-                test_server_address = urlparse(os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME))
-                with HTTPServer((test_server_address.hostname, test_server_address.port), FileHTTPHandler) as httpd:
-                    threading.Thread(target=httpd.serve_forever).start()
-
-                    try:
-                        model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
-                        self.assertEqual(
-                            os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
-                            model_path,
-                        )
-                        self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
-                    finally:
-                        httpd.shutdown()
+        with create_test_cache() as d:
+            with create_test_http_server(FileHTTPHandler):
+                model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
+                self.assertEqual(
+                    os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
+                    model_path,
+                )
+                self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
 
     def test_versioned_model_full_download_with_file_already_cached(self):
-        with TemporaryDirectory() as d:
-            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
-                test_server_address = urlparse(os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME))
-                with HTTPServer((test_server_address.hostname, test_server_address.port), FileHTTPHandler) as httpd:
-                    threading.Thread(target=httpd.serve_forever).start()
-
-                    try:
-                        # Download a single file
-                        kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
-                        # Then download the full model and ensure all files are there.
-                        model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
-
-                        self.assertEqual(
-                            os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
-                            model_path,
-                        )
-                        self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
-                    finally:
-                        httpd.shutdown()
-
-    def test_versioned_model_download_bad_archive(self):
-        with TemporaryDirectory() as d:
-            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
-                test_server_address = urlparse(os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME))
-                with HTTPServer((test_server_address.hostname, test_server_address.port), FileHTTPHandler) as httpd:
-                    threading.Thread(target=httpd.serve_forever).start()
-
-                    try:
-                        with self.assertRaises(ValueError):
-                            kagglehub.model_download(INVALID_ARCHIVE_MODEL_HANDLE)
-                    finally:
-                        httpd.shutdown()
-
-    def test_versioned_model_download_with_path(self):
-        with TemporaryDirectory() as d:
-            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
-                test_server_address = urlparse(os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME))
-                with HTTPServer((test_server_address.hostname, test_server_address.port), FileHTTPHandler) as httpd:
-                    threading.Thread(target=httpd.serve_forever).start()
-
-                    try:
-                        model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
-                        self.assertEqual(
-                            os.path.join(
-                                d,
-                                MODELS_CACHE_SUBFOLDER,
-                                "metaresearch",
-                                "llama-2",
-                                "pyTorch",
-                                "13b",
-                                "3",
-                                TEST_FILEPATH,
-                            ),
-                            model_path,
-                        )
-                        with open(model_path) as model_file:
-                            self.assertEqual("{}", model_file.readline())
-                    finally:
-                        httpd.shutdown()
-
-    def test_versioned_model_download_already_cached(self):
-        with TemporaryDirectory() as d:
-            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
-                # Download from server.
-                test_server_address = urlparse(os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME))
-                with HTTPServer((test_server_address.hostname, test_server_address.port), FileHTTPHandler) as httpd:
-                    threading.Thread(target=httpd.serve_forever).start()
-
-                    try:
-                        kagglehub.model_download(VERSIONED_MODEL_HANDLE)
-                    finally:
-                        httpd.shutdown()
-
-                # No internet, cache hit.
+        with create_test_cache() as d:
+            with create_test_http_server(FileHTTPHandler):
+                # Download a single file
+                kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
+                # Then download the full model and ensure all files are there.
                 model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
 
                 self.assertEqual(
                     os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
                     model_path,
                 )
+                self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
 
-    def test_versioned_model_download_with_path_already_cached(self):
-        with TemporaryDirectory() as d:
-            with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
-                # Download from server.
-                test_server_address = urlparse(os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME))
-                with HTTPServer((test_server_address.hostname, test_server_address.port), FileHTTPHandler) as httpd:
-                    threading.Thread(target=httpd.serve_forever).start()
+    def test_versioned_model_download_bad_archive(self):
+        with create_test_cache():
+            with create_test_http_server(FileHTTPHandler):
+                with self.assertRaises(ValueError):
+                    kagglehub.model_download(INVALID_ARCHIVE_MODEL_HANDLE)
 
-                    try:
-                        kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
-                    finally:
-                        httpd.shutdown()
-
-                # No internet, cache hit.
+    def test_versioned_model_download_with_path(self):
+        with create_test_cache() as d:
+            with create_test_http_server(FileHTTPHandler):
                 model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
-
                 self.assertEqual(
                     os.path.join(
-                        d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3", TEST_FILEPATH
+                        d,
+                        MODELS_CACHE_SUBFOLDER,
+                        "metaresearch",
+                        "llama-2",
+                        "pyTorch",
+                        "13b",
+                        "3",
+                        TEST_FILEPATH,
                     ),
                     model_path,
                 )
+                with open(model_path) as model_file:
+                    self.assertEqual("{}", model_file.readline())
+
+    def test_versioned_model_download_already_cached(self):
+        with create_test_cache() as d:
+            # Download from server.
+            with create_test_http_server(FileHTTPHandler):
+                kagglehub.model_download(VERSIONED_MODEL_HANDLE)
+
+            # No internet, cache hit.
+            model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
+
+            self.assertEqual(
+                os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
+                model_path,
+            )
+
+    def test_versioned_model_download_with_path_already_cached(self):
+        with create_test_cache() as d:
+            with create_test_http_server(FileHTTPHandler):
+                kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
+
+            # No internet, cache hit.
+            model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
+
+            self.assertEqual(
+                os.path.join(
+                    d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3", TEST_FILEPATH
+                ),
+                model_path,
+            )
