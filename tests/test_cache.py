@@ -38,7 +38,7 @@ class TestCache(unittest.TestCase):
             with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
                 cache_path = get_cached_path(TEST_MODEL_HANDLE)
 
-                # Should be a cache `miss` if the directory exist but not the marker file.
+                # Should be a cache `miss` if the directory exists but not the marker file.
                 os.makedirs(cache_path)
 
                 self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
