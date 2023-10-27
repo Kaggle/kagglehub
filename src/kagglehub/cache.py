@@ -33,6 +33,14 @@ def get_cached_path(handle: Union[ModelHandle], path: Optional[str] = None) -> s
         raise ValueError(msg)
 
 
+def get_cached_archive_path(handle: Union[ModelHandle]) -> str:
+    if isinstance(handle, ModelHandle):
+        return _get_model_archive_path(handle)
+    else:
+        msg = "Invalid handle"
+        raise ValueError(msg)
+
+
 def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None):
     marker_path = _get_completion_marker_filepath(handle, path)
     os.makedirs(os.path.dirname(marker_path), exist_ok=True)
@@ -60,6 +68,18 @@ def _get_model_path(handle: ModelHandle, path: Optional[str] = None):
     )
 
     return os.path.join(base_path, path) if path else base_path
+
+
+def _get_model_archive_path(handle: ModelHandle):
+    return os.path.join(
+        get_cache_folder(),
+        MODELS_CACHE_SUBFOLDER,
+        handle.owner,
+        handle.model,
+        handle.framework,
+        handle.variation,
+        f"{handle.version!s}.archive",
+    )
 
 
 def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None):

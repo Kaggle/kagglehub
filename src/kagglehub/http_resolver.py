@@ -1,9 +1,8 @@
 import os
 import tarfile
-import tempfile
 from typing import Optional
 
-from kagglehub.cache import get_cached_path, load_from_cache, mark_as_complete
+from kagglehub.cache import get_cached_archive_path, get_cached_path, load_from_cache, mark_as_complete
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.handle import ModelHandle, parse_model_handle
 from kagglehub.resolver import Resolver
@@ -37,21 +36,26 @@ class HttpResolver(Resolver):
             api_client.download_file(url_path + "/" + path, out_path)
         else:
             # Downloading the full archived bundle.
-            with tempfile.NamedTemporaryFile() as archive_file:
-                # First, we download the archive to a temporary location.
-                api_client.download_file(url_path, archive_file.name)
+            archive_path = get_cached_archive_path(h)
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
-                if not tarfile.is_tarfile(archive_file.name):
-                    msg = "Unsupported archive type."
-                    raise ValueError(msg)
+            # First, we download the archive.
+            api_client.download_file(url_path, archive_path)
 
-                # Create the directory to extract the archive to.
-                os.makedirs(out_path, exist_ok=True)
+            # Create the directory to extract the archive to.
+            os.makedirs(out_path, exist_ok=True)
 
-                # Extract all files to this directory.
-                with tarfile.open(archive_file.name) as f:
-                    # Model archives are created by Kaggle via the Databundle Worker.
-                    f.extractall(out_path)
+            if not tarfile.is_tarfile(archive_path):
+                msg = "Unsupported archive type."
+                raise ValueError(msg)
+
+            # Extract all files to this directory.
+            with tarfile.open(archive_path) as f:
+                # Model archives are created by Kaggle via the Databundle Worker.
+                f.extractall(out_path)
+
+            # Delete the archive
+            os.remove(archive_path)
 
         mark_as_complete(h, path)
         return out_path

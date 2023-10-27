@@ -2,7 +2,13 @@ import os
 import unittest
 from pathlib import Path
 
-from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_path, load_from_cache, mark_as_complete
+from kagglehub.cache import (
+    MODELS_CACHE_SUBFOLDER,
+    get_cached_archive_path,
+    get_cached_path,
+    load_from_cache,
+    mark_as_complete,
+)
 from kagglehub.handle import ModelHandle
 
 from .utils import create_test_cache
@@ -109,3 +115,20 @@ class TestCache(unittest.TestCase):
     def test_load_from_cache_invalid_handle(self):
         with self.assertRaises(ValueError):
             load_from_cache("invalid_handle")
+
+    def test_model_archive_path(self):
+        with create_test_cache() as d:
+            archive_path = get_cached_archive_path(TEST_MODEL_HANDLE)
+
+            self.assertEqual(
+                os.path.join(
+                    d,
+                    MODELS_CACHE_SUBFOLDER,
+                    "google",
+                    "bert",
+                    "tensorFlow2",
+                    "answer-equivalence-bem",
+                    "2.archive",
+                ),
+                archive_path,
+            )

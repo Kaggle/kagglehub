@@ -4,7 +4,8 @@ import unittest
 from http.server import BaseHTTPRequestHandler
 
 import kagglehub
-from kagglehub.cache import MODELS_CACHE_SUBFOLDER
+from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_archive_path
+from kagglehub.handle import parse_model_handle
 from kagglehub.http_resolver import MODEL_INSTANCE_VERSION_FIELD
 
 from .utils import create_test_cache, create_test_http_server, get_test_file_path
@@ -76,6 +77,10 @@ class TestModelDownload(unittest.TestCase):
                     model_path,
                 )
                 self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
+
+                # Assert that the archive file has been deleted.
+                archive_path = get_cached_archive_path(parse_model_handle(VERSIONED_MODEL_HANDLE))
+                self.assertFalse(os.path.exists(archive_path))
 
     def test_versioned_model_full_download_with_file_already_cached(self):
         with create_test_cache() as d:
