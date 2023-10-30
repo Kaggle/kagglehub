@@ -24,6 +24,6 @@ class Resolver:
         pass
 
     @abc.abstractmethod
-    def is_supported(self, handle: str, path: Optional[str] = None):
+    def is_supported(self, handle: ModelHandle, path: Optional[str] = None):
         """Returns whether the current environment supports this handle/path."""
         pass
