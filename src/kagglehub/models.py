@@ -1,6 +1,7 @@
 from typing import Optional
 
 from kagglehub import registry
+from kagglehub.handle import parse_model_handle
 
 
 def model_download(handle: str, path: Optional[str] = None):
@@ -13,7 +14,8 @@ def model_download(handle: str, path: Optional[str] = None):
     Returns:
         A string representing the path to the requested model files.
     """
-    return registry.resolver(handle, path)
+    h = parse_model_handle(handle)
+    return registry.resolver(h, path)
 
 
 def model_upload():

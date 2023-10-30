@@ -47,7 +47,7 @@ def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None):
     Path(marker_path).touch()
 
 
-def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None):
+def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
     # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_models_completion_marker_filepath(handle, path)
@@ -56,7 +56,7 @@ def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[s
         raise ValueError(msg)
 
 
-def _get_model_path(handle: ModelHandle, path: Optional[str] = None):
+def _get_model_path(handle: ModelHandle, path: Optional[str] = None) -> str:
     base_path = os.path.join(
         get_cache_folder(),
         MODELS_CACHE_SUBFOLDER,
@@ -70,7 +70,7 @@ def _get_model_path(handle: ModelHandle, path: Optional[str] = None):
     return os.path.join(base_path, path) if path else base_path
 
 
-def _get_model_archive_path(handle: ModelHandle):
+def _get_model_archive_path(handle: ModelHandle) -> str:
     return os.path.join(
         get_cache_folder(),
         MODELS_CACHE_SUBFOLDER,
@@ -82,7 +82,7 @@ def _get_model_archive_path(handle: ModelHandle):
     )
 
 
-def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None):
+def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None) -> str:
     if path:
         return os.path.join(
             get_cache_folder(),

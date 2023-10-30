@@ -22,7 +22,9 @@ You have 3 different options to authenticate
 
 #### Option 1: Calling kagglehub.login()
 
-```
+```python
+import kagglehub
+
 # TODO(b/305808471): Not yet implemented.
 kagglehub.login()
 ```
@@ -31,7 +33,7 @@ kagglehub.login()
 
 You can also choose to export your Kaggle username and token to the environment:
 
-```
+```sh
 export KAGGLE_USERNAME=datadinosaur
 export KAGGLE_KEY=xxxxxxxxxxxxxx
 ```
@@ -46,9 +48,17 @@ Note for Windows users: The default directory is `%HOMEPATH%/kaggle.json`.
 
 ### Download Model
 
-```
-# TODO(b/305947384) Not yet implemented
-kagglehub.model_download(...)
+The following examples download the `answer-equivalence-bem` variation under for this Kaggle model: https://www.kaggle.com/models/google/bert
+
+
+```python
+import kagglehub
+
+# Download the latest version.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem')
+
+# Download a specific version.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem/1')
 ```
 
 ## Development
@@ -61,7 +71,7 @@ Follow these [instructions](https://hatch.pypa.io/latest/install/) to install it
 
 ### Tests
 
-```
+```sh
 # Run all tests
 hatch run test
 
@@ -71,7 +81,7 @@ hatch run test tests/test_<SOME_FILE>.py
 
 ### Lint / Format
 
-```
+```sh
 # Lint check
 hatch run lint:style
 hatch run lint:typing
@@ -83,12 +93,12 @@ hatch run lint:fmt
 
 ### Coverage report
 
-```
+```sh
 hatch cov
 ```
 
 ### Build
 
-```
+```sh
 hatch build
 ```
