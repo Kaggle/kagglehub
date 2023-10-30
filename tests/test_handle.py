@@ -12,10 +12,16 @@ class TestHandle(unittest.TestCase):
         self.assertEqual("tensorFlow2", h.framework)
         self.assertEqual("answer-equivalence-bem", h.variation)
         self.assertEqual(3, h.version)
+        self.assertTrue(h.is_versioned())
 
     def test_unversioned_model_handle(self):
-        with self.assertRaises(NotImplementedError):
-            parse_model_handle("google/bert/tensorFlow2/answer-equivalence-bem")
+        h = parse_model_handle("google/bert/tensorFlow2/answer-equivalence-bem")
+        self.assertEqual("google", h.owner)
+        self.assertEqual("bert", h.model)
+        self.assertEqual("tensorFlow2", h.framework)
+        self.assertEqual("answer-equivalence-bem", h.variation)
+        self.assertEqual(None, h.version)
+        self.assertFalse(h.is_versioned())
 
     def test_invalid_model_handle(self):
         with self.assertRaises(ValueError):

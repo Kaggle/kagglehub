@@ -1,3 +1,4 @@
+import json
 from urllib.parse import urljoin
 
 import requests
@@ -21,6 +22,16 @@ class KaggleApiV1Client:
     def __init__(self):
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
+
+    def get(self, path: str):
+        url = self._build_url(path)
+        with requests.get(
+            url,
+            auth=self._get_http_basic_auth(),
+            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+        ) as response:
+            response.raise_for_status()
+            return json.loads(response.content)
 
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)
