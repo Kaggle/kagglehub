@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import unittest
 from tempfile import TemporaryDirectory
@@ -11,10 +12,12 @@ from kagglehub.config import (
     DEFAULT_CACHE_FOLDER,
     KAGGLE_API_ENDPOINT_ENV_VAR_NAME,
     KEY_ENV_VAR_NAME,
+    LOG_VERBOSITY_ENV_VAR_NAME,
     USERNAME_ENV_VAR_NAME,
     get_cache_folder,
     get_kaggle_api_endpoint,
     get_kaggle_credentials,
+    get_log_verbosity,
 )
 
 
@@ -97,3 +100,14 @@ class TestConfig(unittest.TestCase):
                     )
 
                 self.assertRaises(ValueError, get_kaggle_credentials)
+
+    def test_get_log_verbosity_default(self):
+        self.assertEqual(logging.INFO, get_log_verbosity())
+
+    @mock.patch.dict(os.environ, {LOG_VERBOSITY_ENV_VAR_NAME: "error"})
+    def test_get_log_verbosity_environment_var_override(self):
+        self.assertEqual(logging.ERROR, get_log_verbosity())
+
+    @mock.patch.dict(os.environ, {LOG_VERBOSITY_ENV_VAR_NAME: "invalid"})
+    def test_get_log_verbosity_environment_var_override_invalid_value_use_default(self):
+        self.assertEqual(logging.INFO, get_log_verbosity())

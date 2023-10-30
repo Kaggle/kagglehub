@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -6,6 +7,7 @@ from pathlib import Path
 DEFAULT_CACHE_FOLDER = os.path.join(Path.home(), ".cache", "kagglehub")
 DEFAULT_KAGGLE_API_ENDPOINT = "https://www.kaggle.com"
 DEFAULT_KAGGLE_CREDENTIALS_FOLDER = os.path.join(Path.home(), ".kaggle")
+DEFAULT_LOG_LEVEL = logging.INFO
 CREDENTIALS_FILENAME = "kaggle.json"
 
 CACHE_FOLDER_ENV_VAR_NAME = "KAGGLEHUB_CACHE"
@@ -13,9 +15,20 @@ KAGGLE_API_ENDPOINT_ENV_VAR_NAME = "KAGGLE_API_ENDPOINT"
 USERNAME_ENV_VAR_NAME = "KAGGLE_USERNAME"
 KEY_ENV_VAR_NAME = "KAGGLE_KEY"
 CREDENTIALS_FOLDER_ENV_VAR_NAME = "KAGGLE_CONFIG_DIR"
+LOG_VERBOSITY_ENV_VAR_NAME = "KAGGLEHUB_VERBOSITY"
 
 CREDENTIALS_JSON_USERNAME = "username"
 CREDENTIALS_JSON_KEY = "key"
+
+LOG_LEVELS_MAP = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
+}
+
+logger = logging.getLogger(__name__)
 
 
 def get_cache_folder():
@@ -56,6 +69,19 @@ def get_kaggle_credentials():
             )
 
     return None
+
+
+def get_log_verbosity():
+    if LOG_VERBOSITY_ENV_VAR_NAME in os.environ:
+        log_level_str = os.environ[LOG_VERBOSITY_ENV_VAR_NAME]
+        if log_level_str in LOG_LEVELS_MAP:
+            return LOG_LEVELS_MAP[log_level_str]
+        else:
+            logger.warning(
+                f"Unknown verbosity level set with {LOG_VERBOSITY_ENV_VAR_NAME}={log_level_str}, "
+                f"Accepted values are: {', '.join(LOG_LEVELS_MAP.keys())}"
+            )
+    return DEFAULT_LOG_LEVEL
 
 
 def _get_kaggle_credentials_file():
