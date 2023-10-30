@@ -28,7 +28,7 @@ class KaggleApiV1Client:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
 
-    def get(self, path: str) -> dict[str, str]:
+    def get(self, path: str) -> dict:
         url = self._build_url(path)
         with requests.get(
             url,
