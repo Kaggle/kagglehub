@@ -68,6 +68,10 @@ class TestModelDownload(unittest.TestCase):
                 )
                 self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
 
+                # Assert that the archive file has been deleted.
+                archive_path = get_cached_archive_path(parse_model_handle(UNVERSIONED_MODEL_HANDLE))
+                self.assertFalse(os.path.exists(archive_path))
+
     def test_versioned_model_download(self):
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
@@ -96,6 +100,20 @@ class TestModelDownload(unittest.TestCase):
                 )
                 self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
 
+    def test_unversioned_model_full_download_with_file_already_cached(self):
+        with create_test_cache() as d:
+            with create_test_http_server(KaggleAPIHandler):
+                # Download a single file
+                kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
+                # Then download the full model and ensure all files are there.
+                model_path = kagglehub.model_download(UNVERSIONED_MODEL_HANDLE)
+
+                self.assertEqual(
+                    os.path.join(d, MODELS_CACHE_SUBFOLDER, "metaresearch", "llama-2", "pyTorch", "13b", "3"),
+                    model_path,
+                )
+                self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
+
     def test_versioned_model_download_bad_archive(self):
         with create_test_cache():
             with create_test_http_server(KaggleAPIHandler):
@@ -106,6 +124,26 @@ class TestModelDownload(unittest.TestCase):
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
+                self.assertEqual(
+                    os.path.join(
+                        d,
+                        MODELS_CACHE_SUBFOLDER,
+                        "metaresearch",
+                        "llama-2",
+                        "pyTorch",
+                        "13b",
+                        "3",
+                        TEST_FILEPATH,
+                    ),
+                    model_path,
+                )
+                with open(model_path) as model_file:
+                    self.assertEqual("{}", model_file.readline())
+
+    def test_unversioned_model_download_with_path(self):
+        with create_test_cache() as d:
+            with create_test_http_server(KaggleAPIHandler):
+                model_path = kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
                 self.assertEqual(
                     os.path.join(
                         d,
