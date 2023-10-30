@@ -48,7 +48,7 @@ Note for Windows users: The default directory is `%HOMEPATH%/kaggle.json`.
 
 ### Download Model
 
-The following examples download the `answer-equivalence-bem` variation under for this Kaggle model: https://www.kaggle.com/models/google/bert
+The following examples download the `answer-equivalence-bem` variation of this Kaggle model: https://www.kaggle.com/models/google/bert
 
 
 ```python
