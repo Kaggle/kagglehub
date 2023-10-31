@@ -1,3 +1,8 @@
+"""Retrieve config values that a user may set/override.
+
+For config values specific to a resolver's environment (a user is not expected to override),
+add it to the resolver's module.
+"""
 import json
 import logging
 import os
@@ -17,6 +22,7 @@ USERNAME_ENV_VAR_NAME = "KAGGLE_USERNAME"
 KEY_ENV_VAR_NAME = "KAGGLE_KEY"
 CREDENTIALS_FOLDER_ENV_VAR_NAME = "KAGGLE_CONFIG_DIR"
 LOG_VERBOSITY_ENV_VAR_NAME = "KAGGLEHUB_VERBOSITY"
+DISABLE_KAGGLE_CACHE_ENV_VAR_NAME = "DISABLE_KAGGLE_CACHE"
 
 CREDENTIALS_JSON_USERNAME = "username"
 CREDENTIALS_JSON_KEY = "key"
@@ -28,6 +34,7 @@ LOG_LEVELS_MAP = {
     "error": logging.ERROR,
     "critical": logging.CRITICAL,
 }
+TRUTHY_VALUES = ["true", "1", "t"]
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +98,10 @@ def get_log_verbosity() -> int:
     return DEFAULT_LOG_LEVEL
 
 
+def is_kaggle_cache_disabled() -> bool:
+    return _is_env_var_truthy(DISABLE_KAGGLE_CACHE_ENV_VAR_NAME)
+
+
 def _get_kaggle_credentials_file() -> str:
     return os.path.join(_get_kaggle_credentials_folder(), CREDENTIALS_FILENAME)
 
@@ -99,3 +110,7 @@ def _get_kaggle_credentials_folder() -> str:
     if CREDENTIALS_FOLDER_ENV_VAR_NAME in os.environ:
         return os.environ[CREDENTIALS_FOLDER_ENV_VAR_NAME]
     return DEFAULT_KAGGLE_CREDENTIALS_FOLDER
+
+
+def _is_env_var_truthy(env_var_name: str) -> bool:
+    return env_var_name in os.environ and os.environ[env_var_name].lower() in TRUTHY_VALUES

@@ -57,7 +57,8 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(f"Unhandled path: {self.path}", "utf-8"))
 
 
-class TestModelDownload(unittest.TestCase):
+# Test cases for the HttpResolver.
+class TestHttpModelDownload(unittest.TestCase):
     def test_unversioned_model_download(self):
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
