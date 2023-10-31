@@ -3,6 +3,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 DEFAULT_CACHE_FOLDER = os.path.join(Path.home(), ".cache", "kagglehub")
 DEFAULT_KAGGLE_API_ENDPOINT = "https://www.kaggle.com"
@@ -31,19 +32,25 @@ LOG_LEVELS_MAP = {
 logger = logging.getLogger(__name__)
 
 
-def get_cache_folder():
+@dataclass
+class KaggleApiCredentials:
+    username: str
+    key: str
+
+
+def get_cache_folder() -> str:
     if CACHE_FOLDER_ENV_VAR_NAME in os.environ:
         return os.environ[CACHE_FOLDER_ENV_VAR_NAME]
     return DEFAULT_CACHE_FOLDER
 
 
-def get_kaggle_api_endpoint():
+def get_kaggle_api_endpoint() -> str:
     if KAGGLE_API_ENDPOINT_ENV_VAR_NAME in os.environ:
         return os.environ[KAGGLE_API_ENDPOINT_ENV_VAR_NAME]
     return DEFAULT_KAGGLE_API_ENDPOINT
 
 
-def get_kaggle_credentials():
+def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
     creds_filepath = _get_kaggle_credentials_file()
 
     if USERNAME_ENV_VAR_NAME in os.environ and KEY_ENV_VAR_NAME in os.environ:
@@ -71,7 +78,7 @@ def get_kaggle_credentials():
     return None
 
 
-def get_log_verbosity():
+def get_log_verbosity() -> int:
     if LOG_VERBOSITY_ENV_VAR_NAME in os.environ:
         log_level_str = os.environ[LOG_VERBOSITY_ENV_VAR_NAME]
         if log_level_str in LOG_LEVELS_MAP:
@@ -84,17 +91,11 @@ def get_log_verbosity():
     return DEFAULT_LOG_LEVEL
 
 
-def _get_kaggle_credentials_file():
+def _get_kaggle_credentials_file() -> str:
     return os.path.join(_get_kaggle_credentials_folder(), CREDENTIALS_FILENAME)
 
 
-def _get_kaggle_credentials_folder():
+def _get_kaggle_credentials_folder() -> str:
     if CREDENTIALS_FOLDER_ENV_VAR_NAME in os.environ:
         return os.environ[CREDENTIALS_FOLDER_ENV_VAR_NAME]
     return DEFAULT_KAGGLE_CREDENTIALS_FOLDER
-
-
-@dataclass
-class KaggleApiCredentials:
-    username: str
-    key: str

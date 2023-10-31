@@ -14,8 +14,8 @@ class ModelHandle:
     variation: str
     version: Optional[int]
 
-    def is_versioned(self):
-        return self.version and self.version > 0
+    def is_versioned(self) -> bool:
+        return self.version is not None and self.version > 0
 
 
 def parse_model_handle(handle: str) -> ModelHandle:
