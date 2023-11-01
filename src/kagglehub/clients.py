@@ -40,6 +40,7 @@ class KaggleApiV1Client:
 
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)
+        logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
             stream=True,
