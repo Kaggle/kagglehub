@@ -3,8 +3,12 @@ import os
 import unittest
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
+from unittest import mock
+
+import requests
 
 import kagglehub
+from kagglehub.config import DISABLE_KAGGLE_CACHE_ENV_VAR_NAME
 from kagglehub.kaggle_cache_resolver import ATTACH_DATASOURCE_REQUEST_NAME, KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 
 from .utils import create_test_jwt_http_server
@@ -102,6 +106,13 @@ class TestKaggleCacheModelDownload(unittest.TestCase):
         with create_test_jwt_http_server(KaggleJwtHandler):
             with self.assertRaises(ValueError):
                 kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, "missing.txt")
+
+    def test_kaggle_resolver_skipped(self):
+        with mock.patch.dict(os.environ, {DISABLE_KAGGLE_CACHE_ENV_VAR_NAME: "true"}):
+            with create_test_jwt_http_server(KaggleJwtHandler):
+                # Assert that a ConnectionError is set (uses HTTP server which is not set)
+                with self.assertRaises(requests.exceptions.ConnectionError):
+                    kagglehub.model_download(VERSIONED_MODEL_HANDLE)
 
     def test_versioned_model_download_bad_handle_raises(self):
         with self.assertRaises(ValueError):
