@@ -17,7 +17,7 @@ class ModelHandle:
     def is_versioned(self) -> bool:
         return self.version is not None and self.version > 0
 
-    def __str__(self):
+    def __str__(self) -> str:
         handle_str = f"{self.owner}/{self.model}/{self.framework}/{self.variation}"
         if self.is_versioned():
             return f"{handle_str}/{self.version}"
