@@ -8,6 +8,7 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.exceptions import BackendError, CredentialError, KaggleEnvironmentError
 
 CHUNK_SIZE = 1048576
 # The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
@@ -36,7 +37,7 @@ class KaggleApiV1Client:
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             response.raise_for_status()
-            return json.loads(response.content)
+            return response.json()
 
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)
@@ -89,3 +90,51 @@ def _download_file(response: requests.Response, out_file: str, size_read: int, t
                 f.write(chunk)
                 size_read = min(total_size, size_read + CHUNK_SIZE)
                 progress_bar.update(len(chunk))
+
+
+# These environment variables are set by the Kaggle notebook environment.
+KAGGLE_URL_BASE_ENV_VAR_NAME = "KAGGLE_URL_BASE"
+KAGGLE_JWT_TOKEN_ENV_VAR_NAME = "KAGGLE_USER_SECRETS_TOKEN"
+KAGGLE_IAP_TOKEN_ENV_VAR_NAME = "KAGGLE_IAP_TOKEN"
+
+
+class KaggleJwtClient:
+    BASE_PATH = "/requests/"
+
+    def __init__(self):
+        self.endpoint = os.getenv(KAGGLE_URL_BASE_ENV_VAR_NAME)
+        if self.endpoint is None:
+            msg = f"The {KAGGLE_URL_BASE_ENV_VAR_NAME} should be set."
+            raise KaggleEnvironmentError(msg)
+        jwt_token = os.getenv(KAGGLE_JWT_TOKEN_ENV_VAR_NAME)
+        if jwt_token is None:
+            msg = (
+                "A JWT Token is required to call Kaggle, "
+                f"but none found in environment variable {KAGGLE_JWT_TOKEN_ENV_VAR_NAME}"
+            )
+            raise CredentialError(msg)
+        self.headers = {"Content-type": "application/json", "X-Kaggle-Authorization": f"Bearer {jwt_token}"}
+        iap_token = os.getenv(KAGGLE_IAP_TOKEN_ENV_VAR_NAME)
+        if iap_token:
+            self.headers["Authorization"] = f"Bearer {iap_token}"
+
+    def post(self, request_name: str, data: dict) -> dict:
+        url = f"{self.endpoint}{KaggleJwtClient.BASE_PATH}{request_name}"
+        with requests.post(
+            url,
+            headers=self.headers,
+            data=bytes(json.dumps(data), "utf-8"),
+            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+        ) as response:
+            response.raise_for_status()
+            json_response = response.json()
+            if "wasSuccessful" not in json_response:
+                msg = "'wasSuccessful' field missing from response"
+                raise BackendError(msg)
+            if not json_response["wasSuccessful"]:
+                msg = f"POST failed with: {response.text!s}"
+                raise BackendError(msg)
+            if "result" not in json_response:
+                msg = "'result' field missing from response"
+                raise BackendError(msg)
+            return json_response["result"]

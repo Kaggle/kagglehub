@@ -10,6 +10,7 @@ from kagglehub.config import (
     CREDENTIALS_FILENAME,
     CREDENTIALS_FOLDER_ENV_VAR_NAME,
     DEFAULT_CACHE_FOLDER,
+    DISABLE_KAGGLE_CACHE_ENV_VAR_NAME,
     KAGGLE_API_ENDPOINT_ENV_VAR_NAME,
     KEY_ENV_VAR_NAME,
     LOG_VERBOSITY_ENV_VAR_NAME,
@@ -18,6 +19,7 @@ from kagglehub.config import (
     get_kaggle_api_endpoint,
     get_kaggle_credentials,
     get_log_verbosity,
+    is_kaggle_cache_disabled,
 )
 
 
@@ -111,3 +113,23 @@ class TestConfig(unittest.TestCase):
     @mock.patch.dict(os.environ, {LOG_VERBOSITY_ENV_VAR_NAME: "invalid"})
     def test_get_log_verbosity_environment_var_override_invalid_value_use_default(self):
         self.assertEqual(logging.INFO, get_log_verbosity())
+
+    def test_is_kaggle_cache_disabled_default(self):
+        # By default, the Kaggle cache is not disabled.
+        self.assertFalse(is_kaggle_cache_disabled())
+
+    def test_is_kaggle_cache_disabled(self):
+        cases = [
+            ("t", True),
+            ("1", True),
+            ("True", True),
+            ("true", True),
+            ("", False),
+            ("0", False),
+            ("False", False),
+            ("false", False),
+        ]
+        for t in cases:
+            env_var_value, expected = t[0], t[1]
+            with mock.patch.dict(os.environ, {DISABLE_KAGGLE_CACHE_ENV_VAR_NAME: env_var_value}):
+                self.assertEqual(expected, is_kaggle_cache_disabled())
