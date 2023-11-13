@@ -127,3 +127,9 @@ def _is_env_var_truthy(env_var_name: str) -> bool:
 def set_kaggle_credentials(username: str, api_key: str):
     global _kaggle_credentials
     _kaggle_credentials = KaggleApiCredentials(username=username, key=api_key)
+
+
+def clear_kaggle_credentials():
+    """Clear the stored Kaggle credentials."""
+    global _kaggle_credentials
+    _kaggle_credentials = KaggleApiCredentials(username=None, key=None)

@@ -12,7 +12,7 @@ from kagglehub.config import DISABLE_KAGGLE_CACHE_ENV_VAR_NAME
 from kagglehub.kaggle_cache_resolver import ATTACH_DATASOURCE_REQUEST_NAME, KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 
 from .utils import create_test_jwt_http_server
-from tests.fixtures import BaseTest
+from tests.fixtures import BaseTestCase
 
 INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
 VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/1"
@@ -73,7 +73,7 @@ class KaggleJwtHandler(BaseHTTPRequestHandler):
 
 
 # Test cases for the KaggleCacheResolver.
-class TestKaggleCacheModelDownload(BaseTest):
+class TestKaggleCacheModelDownload(BaseTestCase):
     def test_unversioned_model_download(self):
         with create_test_jwt_http_server(KaggleJwtHandler):
             model_path = kagglehub.model_download(UNVERSIONED_MODEL_HANDLE)

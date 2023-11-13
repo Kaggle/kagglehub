@@ -12,7 +12,7 @@ from kagglehub.cache import (
 from kagglehub.handle import ModelHandle
 
 from .utils import create_test_cache
-from tests.fixtures import BaseTest
+from tests.fixtures import BaseTestCase
 
 TEST_MODEL_HANDLE = ModelHandle(
     owner="google",
@@ -25,7 +25,7 @@ TEST_MODEL_HANDLE = ModelHandle(
 TEST_FILEPATH = "foo.txt"
 
 
-class TestCache(BaseTest):
+class TestCache(BaseTestCase):
     def test_load_from_cache_miss(self):
         ModelHandle(
             owner="google",

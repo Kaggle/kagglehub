@@ -1,5 +1,8 @@
 import json
+import logging
 from kagglehub.config import set_kaggle_credentials
+
+logger = logging.getLogger(__name__)
 
 
 def login():
@@ -10,4 +13,4 @@ def login():
 
     set_kaggle_credentials(username=username, api_key=api_key)
 
-    print("You are now logged in to Kaggle Hub.")
+    logger.info("You are now logged in to Kaggle Hub.")

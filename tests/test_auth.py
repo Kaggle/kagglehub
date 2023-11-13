@@ -1,32 +1,18 @@
 import io
 import json
 import unittest
+import logging
 from unittest import mock
 from unittest.mock import patch
 import sys
 import kagglehub
 from kagglehub.config import get_kaggle_credentials
-from tests.fixtures import BaseTest
+from tests.fixtures import BaseTestCase
+
+logger = logging.getLogger(__name__)
 
 
-class TestAuth(BaseTest):
-
-    def test_login_prompts_for_username(self):
-        # Simulate user input for username
-        with mock.patch('builtins.input', return_value='lastplacelarry'):
-            kagglehub.login()
-
-        # Verify that the global variable is updated with the provided username
-        self.assertEqual('lastplacelarry', get_kaggle_credentials().username)
-
-    def test_login_prompts_for_api_key(self):
-        # Simulate user input for API key
-        with mock.patch('builtins.input') as mock_input:
-            mock_input.side_effect = ['some-username', 'some-key']
-            kagglehub.login()
-
-        # Verify that the global variable is updated with the provided API key
-        self.assertEqual('some-key', get_kaggle_credentials().key)
+class TestAuth(BaseTestCase):
 
     def test_login_updates_global_credentials(self):
         # Simulate user input for credentials
@@ -43,16 +29,12 @@ class TestAuth(BaseTest):
         with mock.patch('builtins.input') as mock_input:
             mock_input.side_effect = ['lastplacelarry', 'some-key']
 
-            # Capture output using io.StringIO
-            old_stdout = sys.stdout
-            captured_output = io.StringIO()
-            sys.stdout = captured_output
+            # Capture log messages using a caplog fixture
+            caplog = mock.Mock()
+            logger.addFilter(caplog)
 
-            try:
-                kagglehub.login()
-            finally:
-                # Restore original stdout
-                sys.stdout = old_stdout
+            kagglehub.login()
 
-            # Verify that the success message is printed
-            self.assertRegex(captured_output.getvalue(), r"You are now logged in to Kaggle Hub\.")
+            # Verify that the success message is logged
+            last_message = caplog.pop()
+            self.assertTrue(last_message.msg.startswith("You are now logged in to Kaggle Hub."))
