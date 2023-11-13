@@ -1,6 +1,7 @@
 import unittest
 
 from kagglehub import registry
+from tests.fixtures import BaseTest
 
 SOME_VALUE = 1
 
@@ -22,7 +23,7 @@ class FakeImpl:
         return self._call_fn(*args, **kwargs)
 
 
-class RegistryTest(unittest.TestCase):
+class RegistryTest(BaseTest):
     def test_calls_only_supported(self):
         r = registry.MultiImplRegistry("test")
         r.add_implementation(FakeImpl(lambda _: True, lambda _: SOME_VALUE))

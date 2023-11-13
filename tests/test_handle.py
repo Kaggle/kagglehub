@@ -1,9 +1,10 @@
 import unittest
 
 from kagglehub.handle import parse_model_handle
+from tests.fixtures import BaseTest
 
 
-class TestHandle(unittest.TestCase):
+class TestHandle(BaseTest):
     def test_versioned_model_handle(self):
         handle = "google/bert/tensorFlow2/answer-equivalence-bem/3"
         h = parse_model_handle(handle)

@@ -7,6 +7,7 @@ import kagglehub
 from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_archive_path
 from kagglehub.handle import parse_model_handle
 from kagglehub.http_resolver import MODEL_INSTANCE_VERSION_FIELD
+from tests.fixtures import BaseTest
 
 from .utils import create_test_cache, create_test_http_server, get_test_file_path
 
@@ -58,7 +59,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
 
 
 # Test cases for the HttpResolver.
-class TestHttpModelDownload(unittest.TestCase):
+class TestHttpModelDownload(BaseTest):
     def test_unversioned_model_download(self):
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
