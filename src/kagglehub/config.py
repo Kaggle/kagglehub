@@ -27,7 +27,6 @@ DISABLE_KAGGLE_CACHE_ENV_VAR_NAME = "DISABLE_KAGGLE_CACHE"
 CREDENTIALS_JSON_USERNAME = "username"
 CREDENTIALS_JSON_KEY = "key"
 
-global _kaggle_credentials
 _kaggle_credentials = None
 
 LOG_LEVELS_MAP = {
@@ -64,7 +63,9 @@ def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
     global _kaggle_credentials
 
     # Check for credentials in the global variable
-    if _kaggle_credentials:
+    print(_kaggle_credentials)
+    if _kaggle_credentials != None:
+        print(_kaggle_credentials)
         return _kaggle_credentials
 
     creds_filepath = _get_kaggle_credentials_file()

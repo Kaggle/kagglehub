@@ -4,6 +4,7 @@ import os
 import unittest
 from tempfile import TemporaryDirectory
 from unittest import mock
+from tests.fixtures import BaseTest
 
 from kagglehub.config import (
     CACHE_FOLDER_ENV_VAR_NAME,
@@ -23,7 +24,8 @@ from kagglehub.config import (
 )
 
 
-class TestConfig(unittest.TestCase):
+class TestConfig(BaseTest):
+
     def test_get_cache_folder_default(self):
         self.assertEqual(DEFAULT_CACHE_FOLDER, get_cache_folder())
 
@@ -57,6 +59,8 @@ class TestConfig(unittest.TestCase):
         self.assertEqual("some-key", creds.key)
 
     def test_get_kaggle_credentials_file_succeeds(self):
+        global _kaggle_credentials
+        _kaggle_credentials = None
         with TemporaryDirectory() as d:
             with mock.patch.dict(os.environ, {CREDENTIALS_FOLDER_ENV_VAR_NAME: d}):
                 with open(os.path.join(d, CREDENTIALS_FILENAME), "x") as creds_file:

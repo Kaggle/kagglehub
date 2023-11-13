@@ -4,20 +4,20 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 import sys
-
 import kagglehub
 from kagglehub.config import get_kaggle_credentials
+from tests.fixtures import BaseTest
 
 
-class TestAuth(unittest.TestCase):
+class TestAuth(BaseTest):
 
     def test_login_prompts_for_username(self):
         # Simulate user input for username
-        with mock.patch('builtins.input', return_value='ABC'):
+        with mock.patch('builtins.input', return_value='lastplacelarry'):
             kagglehub.login()
 
         # Verify that the global variable is updated with the provided username
-        self.assertEqual('ABC', get_kaggle_credentials().username)
+        self.assertEqual('lastplacelarry', get_kaggle_credentials().username)
 
     def test_login_prompts_for_api_key(self):
         # Simulate user input for API key
@@ -31,17 +31,17 @@ class TestAuth(unittest.TestCase):
     def test_login_updates_global_credentials(self):
         # Simulate user input for credentials
         with mock.patch('builtins.input') as mock_input:
-            mock_input.side_effect = ['ABC', 'some-key']
+            mock_input.side_effect = ['lastplacelarry', 'some-key']
             kagglehub.login()
 
         # Verify that the global variable contains the updated credentials
-        self.assertEqual('ABC', get_kaggle_credentials().username)
+        self.assertEqual('lastplacelarry', get_kaggle_credentials().username)
         self.assertEqual('some-key', get_kaggle_credentials().key)
 
     def test_login_prints_success_message(self):
         # Simulate user input for credentials
         with mock.patch('builtins.input') as mock_input:
-            mock_input.side_effect = ['ABC', 'some-key']
+            mock_input.side_effect = ['lastplacelarry', 'some-key']
 
             # Capture output using io.StringIO
             old_stdout = sys.stdout
