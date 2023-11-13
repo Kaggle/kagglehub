@@ -1,5 +1,5 @@
 import json
-from kagglehub.config import CREDENTIALS_JSON_KEY, CREDENTIALS_JSON_USERNAME, KaggleApiCredentials, _get_kaggle_credentials_file
+from kagglehub.config import set_kaggle_credentials
 
 
 def login():
