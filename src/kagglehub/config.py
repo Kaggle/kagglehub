@@ -60,8 +60,6 @@ def get_kaggle_api_endpoint() -> str:
 
 
 def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
-    global _kaggle_credentials
-
     # Check for credentials in the global variable
     if (
         _kaggle_credentials is not None
