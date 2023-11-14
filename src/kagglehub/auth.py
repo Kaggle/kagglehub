@@ -13,4 +13,4 @@ def login():
 
     set_kaggle_credentials(username=username, api_key=api_key)
 
-    logger.info("You are now logged in to Kaggle Hub.")
+    logger.info("Kaggle credentials set.")

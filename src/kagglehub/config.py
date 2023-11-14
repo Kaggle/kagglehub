@@ -61,11 +61,7 @@ def get_kaggle_api_endpoint() -> str:
 
 def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
     # Check for credentials in the global variable
-    if (
-        _kaggle_credentials is not None
-        and _kaggle_credentials.username is not None
-        and _kaggle_credentials.key is not None
-    ):
+    if _kaggle_credentials:
         return _kaggle_credentials
 
     creds_filepath = _get_kaggle_credentials_file()
@@ -127,10 +123,13 @@ def _is_env_var_truthy(env_var_name: str) -> bool:
 
 
 def set_kaggle_credentials(username: str, api_key: str):
+    if not username or not api_key:
+        raise ValueError("Both username and API key are required")
+
     global _kaggle_credentials  # noqa: PLW0603
     _kaggle_credentials = KaggleApiCredentials(username=username, key=api_key)
 
 
 def clear_kaggle_credentials():
     global _kaggle_credentials  # noqa: PLW0603
-    _kaggle_credentials = KaggleApiCredentials(username=None, key=None)
+    _kaggle_credentials = None
