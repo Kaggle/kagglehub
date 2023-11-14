@@ -1,5 +1,3 @@
-import unittest
-
 from kagglehub.handle import parse_model_handle
 from tests.fixtures import BaseTestCase
 

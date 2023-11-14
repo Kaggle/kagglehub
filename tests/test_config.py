@@ -1,10 +1,8 @@
 import json
 import logging
 import os
-import unittest
 from tempfile import TemporaryDirectory
 from unittest import mock
-from tests.fixtures import BaseTestCase
 
 from kagglehub.config import (
     CACHE_FOLDER_ENV_VAR_NAME,
@@ -22,10 +20,10 @@ from kagglehub.config import (
     get_log_verbosity,
     is_kaggle_cache_disabled,
 )
+from tests.fixtures import BaseTestCase
 
 
 class TestConfig(BaseTestCase):
-
     def test_get_cache_folder_default(self):
         self.assertEqual(DEFAULT_CACHE_FOLDER, get_cache_folder())
 

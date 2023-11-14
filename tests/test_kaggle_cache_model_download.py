@@ -1,6 +1,5 @@
 import json
 import os
-import unittest
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from unittest import mock
@@ -10,9 +9,9 @@ import requests
 import kagglehub
 from kagglehub.config import DISABLE_KAGGLE_CACHE_ENV_VAR_NAME
 from kagglehub.kaggle_cache_resolver import ATTACH_DATASOURCE_REQUEST_NAME, KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
+from tests.fixtures import BaseTestCase
 
 from .utils import create_test_jwt_http_server
-from tests.fixtures import BaseTestCase
 
 INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
 VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/1"

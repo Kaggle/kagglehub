@@ -1,5 +1,3 @@
-import unittest
-
 from kagglehub import registry
 from tests.fixtures import BaseTestCase
 

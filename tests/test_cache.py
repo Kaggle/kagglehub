@@ -10,9 +10,9 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.handle import ModelHandle
+from tests.fixtures import BaseTestCase
 
 from .utils import create_test_cache
-from tests.fixtures import BaseTestCase
 
 TEST_MODEL_HANDLE = ModelHandle(
     owner="google",

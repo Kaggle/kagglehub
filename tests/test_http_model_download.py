@@ -1,6 +1,5 @@
 import json
 import os
-import unittest
 from http.server import BaseHTTPRequestHandler
 
 import kagglehub
