@@ -14,11 +14,13 @@ from kagglehub.config import (
     KEY_ENV_VAR_NAME,
     LOG_VERBOSITY_ENV_VAR_NAME,
     USERNAME_ENV_VAR_NAME,
+    clear_kaggle_credentials,
     get_cache_folder,
     get_kaggle_api_endpoint,
     get_kaggle_credentials,
     get_log_verbosity,
     is_kaggle_cache_disabled,
+    set_kaggle_credentials,
 )
 from tests.fixtures import BaseTestCase
 
@@ -133,3 +135,25 @@ class TestConfig(BaseTestCase):
             env_var_value, expected = t[0], t[1]
             with mock.patch.dict(os.environ, {DISABLE_KAGGLE_CACHE_ENV_VAR_NAME: env_var_value}):
                 self.assertEqual(expected, is_kaggle_cache_disabled())
+
+    def test_set_kaggle_credentials_raises_error_with_whitespace(self):
+        with self.assertRaises(ValueError):
+            set_kaggle_credentials(username=" ", api_key="some-key")
+        with self.assertRaises(ValueError):
+            set_kaggle_credentials(username="lastplacelarry", api_key=" ")
+
+    def test_set_and_clear_kaggle_credentials(self):
+        # Set valid credentials
+        set_kaggle_credentials("lastplacelarry", "some-key")
+
+        # Get and assert credentials
+        credentials = get_kaggle_credentials()
+        self.assertEqual("lastplacelarry", credentials.username)
+        self.assertEqual("some-key", credentials.key)
+
+        # Clear credentials
+        clear_kaggle_credentials()
+
+        # Get and assert credentials are cleared
+        credentials = get_kaggle_credentials()
+        self.assertIsNone(credentials)
