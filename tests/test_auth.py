@@ -2,7 +2,7 @@ import logging
 from unittest import mock
 
 import kagglehub
-from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials
+from kagglehub.config import get_kaggle_credentials
 from tests.fixtures import BaseTestCase
 
 logger = logging.getLogger(__name__)
@@ -27,4 +27,12 @@ class TestAuth(BaseTestCase):
 
     def test_set_kaggle_credentials_raises_error_with_empty_api_key(self):
         with self.assertRaises(ValueError):
-            set_kaggle_credentials(username="lastplacelarry", api_key="")
+            with mock.patch("builtins.input") as mock_input:
+                mock_input.side_effect = ["lastplacelarry", ""]
+                kagglehub.login()
+
+    def test_set_kaggle_credentials_raises_error_with_empty_username_api_key(self):
+        with self.assertRaises(ValueError):
+            with mock.patch("builtins.input") as mock_input:
+                mock_input.side_effect = ["", ""]
+                kagglehub.login()
