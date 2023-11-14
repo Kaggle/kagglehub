@@ -63,7 +63,7 @@ def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
     global _kaggle_credentials
 
     # Check for credentials in the global variable
-    if _kaggle_credentials.username != None and _kaggle_credentials.key != None:
+    if _kaggle_credentials != None and _kaggle_credentials.username != None and _kaggle_credentials.key != None:
         return _kaggle_credentials
 
     creds_filepath = _get_kaggle_credentials_file()
