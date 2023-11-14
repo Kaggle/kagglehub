@@ -123,8 +123,9 @@ def _is_env_var_truthy(env_var_name: str) -> bool:
 
 
 def set_kaggle_credentials(username: str, api_key: str):
+    error_message = "Both username and API key are required"
     if not username or not api_key:
-        raise ValueError("Both username and API key are required")
+        raise ValueError(error_message)
 
     global _kaggle_credentials  # noqa: PLW0603
     _kaggle_credentials = KaggleApiCredentials(username=username, key=api_key)
