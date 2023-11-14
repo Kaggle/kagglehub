@@ -21,7 +21,9 @@ class TestAuth(BaseTestCase):
 
     def test_set_kaggle_credentials_raises_error_with_empty_username(self):
         with self.assertRaises(ValueError):
-            set_kaggle_credentials(username="", api_key="some-key")
+            with mock.patch("builtins.input") as mock_input:
+                mock_input.side_effect = ["", "some-key"]
+                kagglehub.login()
 
     def test_set_kaggle_credentials_raises_error_with_empty_api_key(self):
         with self.assertRaises(ValueError):
