@@ -1,5 +1,4 @@
 import os
-import unittest
 from pathlib import Path
 
 from kagglehub.cache import (
@@ -10,6 +9,7 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.handle import ModelHandle
+from tests.fixtures import BaseTestCase
 
 from .utils import create_test_cache
 
@@ -24,7 +24,7 @@ TEST_MODEL_HANDLE = ModelHandle(
 TEST_FILEPATH = "foo.txt"
 
 
-class TestCache(unittest.TestCase):
+class TestCache(BaseTestCase):
     def test_load_from_cache_miss(self):
         ModelHandle(
             owner="google",

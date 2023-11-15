@@ -27,6 +27,8 @@ DISABLE_KAGGLE_CACHE_ENV_VAR_NAME = "DISABLE_KAGGLE_CACHE"
 CREDENTIALS_JSON_USERNAME = "username"
 CREDENTIALS_JSON_KEY = "key"
 
+_kaggle_credentials = None
+
 LOG_LEVELS_MAP = {
     "debug": logging.DEBUG,
     "info": logging.INFO,
@@ -58,6 +60,10 @@ def get_kaggle_api_endpoint() -> str:
 
 
 def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
+    # Check for credentials in the global variable
+    if _kaggle_credentials:
+        return _kaggle_credentials
+
     creds_filepath = _get_kaggle_credentials_file()
 
     if USERNAME_ENV_VAR_NAME in os.environ and KEY_ENV_VAR_NAME in os.environ:
@@ -114,3 +120,19 @@ def _get_kaggle_credentials_folder() -> str:
 
 def _is_env_var_truthy(env_var_name: str) -> bool:
     return env_var_name in os.environ and os.environ[env_var_name].lower() in TRUTHY_VALUES
+
+
+def set_kaggle_credentials(username: str, api_key: str):
+    stripped_username = username.strip()
+    stripped_api_key = api_key.strip()
+    if not stripped_username or not stripped_api_key:
+        error_message = "Both username and API key cannot be empty or whitespace"
+        raise ValueError(error_message)
+
+    global _kaggle_credentials  # noqa: PLW0603
+    _kaggle_credentials = KaggleApiCredentials(username=username, key=api_key)
+
+
+def clear_kaggle_credentials():
+    global _kaggle_credentials  # noqa: PLW0603
+    _kaggle_credentials = None
