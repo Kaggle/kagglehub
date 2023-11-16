@@ -3,8 +3,6 @@ import json
 import logging
 from unittest import mock
 
-import requests
-
 import kagglehub
 from kagglehub.config import get_kaggle_credentials
 from tests.fixtures import BaseTestCase
