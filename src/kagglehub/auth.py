@@ -7,6 +7,8 @@ from kagglehub.config import set_kaggle_credentials
 
 logger = logging.getLogger(__name__)
 
+INVALID_CREDENTIALS_ERROR = 403
+
 
 def login(validate_credentials=True):  # noqa: FBT002
     """Prompt the user for their Kaggle username and API key and save them globally."""
@@ -18,7 +20,7 @@ def login(validate_credentials=True):  # noqa: FBT002
 
     logger.info("Kaggle credentials set.")
 
-    if validate_credentials is False:
+    if not validate_credentials:
         return
 
     try:
@@ -26,8 +28,7 @@ def login(validate_credentials=True):  # noqa: FBT002
         api_client.get("/hello")
         logger.info("Kaggle credentials successfully validated.")
     except requests.exceptions.HTTPError as e:
-        invalid_credentials_error = 403
-        if e.response.status_code == invalid_credentials_error:
+        if e.response.status_code == INVALID_CREDENTIALS_ERROR:
             logger.error(
                 "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
             )
