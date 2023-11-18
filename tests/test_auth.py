@@ -1,17 +1,16 @@
 import base64
 import http.server
+import io
 import json
 import logging
 from unittest import mock
 
 import kagglehub
+from kagglehub.auth import logger
 from kagglehub.config import get_kaggle_credentials
 from tests.fixtures import BaseTestCase
 
 from .utils import create_test_http_server
-
-logger = logging.getLogger(__name__)
-
 
 GOOD_CREDENTIALS_USERNAME = "lastplacelarry"
 GOOD_CREDENTIALS_API_KEY = "some-key"
@@ -89,4 +88,16 @@ class TestAuth(BaseTestCase):
                 kagglehub.login()
 
     def test_login_returns_403_for_bad_credentials(self):
-        pass
+        output_stream = io.StringIO()
+        handler = logging.StreamHandler(output_stream)
+        logger.addHandler(handler)
+        with create_test_http_server(KaggleAPIHandler):
+            with mock.patch("builtins.input") as mock_input:
+                mock_input.side_effect = ["invalid", "invalid"]
+                kagglehub.login()
+
+            captured_output = output_stream.getvalue()
+            self.assertEqual(
+                captured_output,
+                "Kaggle credentials set.\nInvalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account).\n",  # noqa: E501
+            )
