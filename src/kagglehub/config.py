@@ -131,6 +131,7 @@ def set_kaggle_credentials(username: str, api_key: str):
 
     global _kaggle_credentials  # noqa: PLW0603
     _kaggle_credentials = KaggleApiCredentials(username=username, key=api_key)
+    logger.info("Kaggle credentials set.")
 
 
 def clear_kaggle_credentials():
