@@ -86,7 +86,7 @@ def notebook_login(validate_credentials) -> None:
 
         # Print result (success message or error)
         login_token_widget.children = [widgets.Label(line) for line in message.split("\n") if line.strip()]
-        login_button.on_click(login_token_event)
+    login_button.on_click(login_token_event)
     
 def validate_credentials_helper():
     try:
