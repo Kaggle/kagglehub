@@ -1,6 +1,7 @@
 import logging
 import sys
 import sys
+import io
 
 import requests
 
@@ -62,20 +63,29 @@ def notebook_login(validate_credentials) -> None:
 
         # Hide inputs
         login_token_widget.children = [widgets.Label("Connecting...")]
-        set_kaggle_credentials(username=username, api_key=token)
-        if validate_credentials is True:
-            validate_credentials_helper()
-        # try:
-        #     with capture_output() as captured:
-        #         set_kaggle_credentials(username=username, api_key=token)
-        #         if validate_credentials is True:
-        #             validate_credentials_helper()
-        #         message = captured.getvalue()
-        # except Exception as error:
-        #     message = str(error)
+        try:
+            # Redirect stdout to an in-memory StringIO object
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
 
-        # # Print result (success message or error)
-        # login_token_widget.children = [widgets.Label(line) for line in message.split("\n") if line.strip()]
+            # Set Kaggle credentials
+            set_kaggle_credentials(username=username, api_key=token)
+
+            # Validate credentials if necessary
+            if validate_credentials is True:
+                validate_credentials_helper()
+
+            # Capture the output from stdout and assign it to message
+            captured_output = output_buffer.getvalue()
+            message = captured_output
+
+            # Reset stdout back to the original console
+            sys.stdout = sys.__stdout__
+        except Exception as error:
+            message = str(error)
+
+        # Print result (success message or error)
+        login_token_widget.children = [widgets.Label(line) for line in message.split("\n") if line.strip()]
         login_button.on_click(login_token_event)
     
 def validate_credentials_helper():
