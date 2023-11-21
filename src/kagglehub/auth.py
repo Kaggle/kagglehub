@@ -1,5 +1,6 @@
 import logging
 import sys
+import sys
 
 import requests
 
@@ -10,6 +11,74 @@ logger = logging.getLogger(__name__)
 
 INVALID_CREDENTIALS_ERROR = 403
 
+NOTEBOOK_LOGIN_TOKEN_HTML_START = """<center> <img
+src=https://www.kaggle.com/static/images/site-logo.png
+alt='Kaggle'> <br> Copy a token from <a
+href="https://www.kaggle.com/settings/account" target="_blank">your Kaggle
+settings page</a> and paste it below. <br> </center>"""
+
+NOTEBOOK_LOGIN_TOKEN_HTML_END = """
+<b>Thank You</b></center>"""
+
+def is_in_notebook():
+    return "IPython" in sys.modules
+
+def notebook_login(validate_credentials) -> None:
+    """Prompt the user for their Kaggle token and save it in a widget (Jupyter or Colab)."""
+    try:
+        import ipywidgets.widgets as widgets  # type: ignore
+        from IPython.display import display  # type: ignore
+    except ImportError:
+        raise ImportError(
+            "You need the `ipywidgets` module: `pip install ipywidgets`."
+        )
+
+    box_layout = widgets.Layout(
+        display="flex", flex_flow="column", align_items="center", width="50%"
+    )
+
+    username_widget = widgets.Text(description="Username:")
+    token_widget = widgets.Password(description="Token:")
+    login_button = widgets.Button(description="Login")
+
+    login_token_widget = widgets.VBox(
+        [
+            widgets.HTML(NOTEBOOK_LOGIN_TOKEN_HTML_START),
+            username_widget,
+            token_widget,
+            login_button,
+            widgets.HTML(NOTEBOOK_LOGIN_TOKEN_HTML_END),
+        ],
+        layout=box_layout,
+    )
+    display(login_token_widget)
+
+    # On click events
+    def login_token_event():
+        username = username_widget.value
+        token = token_widget.value
+        # Erase token and clear value to make sure it's not saved in the notebook.
+        token_widget.value = ""
+
+        # Hide inputs
+        login_token_widget.children = [widgets.Label("Connecting...")]
+        set_kaggle_credentials(username=username, api_key=token)
+        if validate_credentials is True:
+            validate_credentials_helper()
+        # try:
+        #     with capture_output() as captured:
+        #         set_kaggle_credentials(username=username, api_key=token)
+        #         if validate_credentials is True:
+        #             validate_credentials_helper()
+        #         message = captured.getvalue()
+        # except Exception as error:
+        #     message = str(error)
+
+        # # Print result (success message or error)
+        # login_token_widget.children = [widgets.Label(line) for line in message.split("\n") if line.strip()]
+        login_button.on_click(login_token_event)
+
+def validate_credentials_helper():
 NOTEBOOK_LOGIN_TOKEN_HTML_START = """<center> <img
 src=https://www.kaggle.com/static/images/site-logo.png
 alt='Kaggle'> <br> Copy a token from <a
