@@ -83,7 +83,7 @@ def notebook_login(validate_credentials) -> None:
             sys.stdout = sys.__stdout__
         except Exception as error:
             message = str(error)
-
+        message = "test"
         # Print result (success message or error)
         login_token_widget.children = [widgets.Label(line) for line in message.split("\n") if line.strip()]
     login_button.on_click(login_token_event)
