@@ -48,14 +48,14 @@ def notebook_login(validate_credentials) -> None:
             username_widget,
             token_widget,
             login_button,
-            #widgets.HTML(NOTEBOOK_LOGIN_TOKEN_HTML_END),
+            widgets.HTML(NOTEBOOK_LOGIN_TOKEN_HTML_END),
         ],
         layout=box_layout,
     )
     display(login_token_widget)
 
     # On click events
-    def login_token_event():
+    def login_token_event(t):
         username = username_widget.value
         token = token_widget.value
         # Erase token and clear value to make sure it's not saved in the notebook.
@@ -113,8 +113,6 @@ def login(validate_credentials=True):  # noqa: FBT002
         api_key = input("Enter your Kaggle API key: ")
 
     set_kaggle_credentials(username=username, api_key=api_key)
-
-    logger.info("Kaggle credentials set.")
 
     if not validate_credentials:
         return
