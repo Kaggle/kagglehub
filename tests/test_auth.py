@@ -6,7 +6,7 @@ import logging
 from unittest import mock
 
 import kagglehub
-from kagglehub.auth import logger
+from kagglehub.auth import _capture_logger_output, logger
 from kagglehub.config import get_kaggle_credentials
 from tests.fixtures import BaseTestCase
 
@@ -99,5 +99,12 @@ class TestAuth(BaseTestCase):
             captured_output = output_stream.getvalue()
             self.assertEqual(
                 captured_output,
-                "Kaggle credentials set.\nInvalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account).\n",  # noqa: E501
+                "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account).\n",
             )
+
+    def test_capture_logger_output(self):
+        with _capture_logger_output() as output:
+            logger.info("This is an info message")
+            logger.error("This is an error message")
+
+        self.assertEqual(output.getvalue(), "This is an info message\nThis is an error message\n")
