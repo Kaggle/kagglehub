@@ -6,7 +6,7 @@ import logging
 from unittest import mock
 
 import kagglehub
-from kagglehub.auth import capture_logger_output, logger
+from kagglehub.auth import _capture_logger_output, logger
 from kagglehub.config import get_kaggle_credentials
 from tests.fixtures import BaseTestCase
 
@@ -103,7 +103,7 @@ class TestAuth(BaseTestCase):
             )
 
     def test_capture_logger_output(self):
-        with capture_logger_output() as output:
+        with _capture_logger_output() as output:
             logger.info("This is an info message")
             logger.error("This is an error message")
 
