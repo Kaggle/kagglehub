@@ -67,7 +67,7 @@ def notebook_login(validate_credentials) -> None:
         try:
             # Redirect stdout to an in-memory StringIO object
             output_buffer = io.StringIO()
-            sys.stdout = output_buffer
+            sys.stderr = output_buffer
 
             # Set Kaggle credentials
             set_kaggle_credentials(username=username, api_key=token)
@@ -81,7 +81,8 @@ def notebook_login(validate_credentials) -> None:
             message = captured_output
 
             # Reset stdout back to the original console
-            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            message = "tt"
         except Exception as error:
             message = str(error)
         # Print result (success message or error)
