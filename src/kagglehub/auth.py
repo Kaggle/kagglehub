@@ -20,6 +20,25 @@ settings page</a> and paste it below. <br> </center>"""
 
 NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 <b>Thank You</b></center>"""
+from contextlib import contextmanager
+@contextmanager
+def capture_output():
+    """Capture output that is printed to terminal.
+
+    Taken from https://stackoverflow.com/a/34738440
+
+    Example:
+    ```py
+    >>> with capture_output() as output:
+    ...     print("hello world")
+    >>> assert output.getvalue() == "hello world\n"
+    ```
+    """
+    output = io.StringIO()
+    previous_output = sys.stdout
+    sys.stdout = output
+    yield output
+    sys.stdout = previous_output
 
 def is_in_notebook():
     return "IPython" in sys.modules
@@ -63,26 +82,16 @@ def notebook_login(validate_credentials) -> None:
 
         # Hide inputs
         login_token_widget.children = [widgets.Label("Connecting...")]
-        message = "hey"
         try:
-            # Redirect stdout to an in-memory StringIO object
-            output_buffer = io.StringIO()
-            sys.stderr = output_buffer
+            with capture_output() as captured:
 
-            # Set Kaggle credentials
-            set_kaggle_credentials(username=username, api_key=token)
+                # Set Kaggle credentials
+                set_kaggle_credentials(username=username, api_key=token)
 
-            # Validate credentials if necessary
-            if validate_credentials is True:
-                validate_credentials_helper()
-
-            # Capture the output from stdout and assign it to message
-            captured_output = output_buffer.getvalue()
-            message = captured_output
-
-            # Reset stdout back to the original console
-            sys.stderr = sys.__stderr__
-            message = "tt"
+                # Validate credentials if necessary
+                if validate_credentials is True:
+                    validate_credentials_helper()
+            message = captured.getvalue()
         except Exception as error:
             message = str(error)
         # Print result (success message or error)
