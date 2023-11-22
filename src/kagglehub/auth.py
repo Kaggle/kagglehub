@@ -20,25 +20,27 @@ settings page</a> and paste it below. <br> </center>"""
 
 NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 <b>Thank You</b></center>"""
-from contextlib import contextmanager
-@contextmanager
-def capture_output():
-    """Capture output that is printed to terminal.
+import logging
 
-    Taken from https://stackoverflow.com/a/34738440
+def capture_logger_output():
+    """Capture output that is logged using the logger.
 
     Example:
     ```py
-    >>> with capture_output() as output:
-    ...     print("hello world")
-    >>> assert output.getvalue() == "hello world\n"
+    >>> output = capture_logger_output()
+    >>> logger.info("This is an info message")
+    >>> logger.error("This is an error message")
+    >>> print(output)
     ```
     """
-    output = io.StringIO()
-    previous_output = sys.stdout
-    sys.stdout = output
-    yield output
-    sys.stdout = previous_output
+    buffer = io.StringIO()
+    handler = logging.StreamHandler(buffer)
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    try:
+        yield buffer
+    finally:
+        logger.removeHandler(handler)
 
 def is_in_notebook():
     return "IPython" in sys.modules
@@ -83,7 +85,7 @@ def notebook_login(validate_credentials) -> None:
         # Hide inputs
         login_token_widget.children = [widgets.Label("Connecting...")]
         try:
-            with capture_output() as captured:
+            with capture_logger_output() as captured:
 
                 # Set Kaggle credentials
                 set_kaggle_credentials(username=username, api_key=token)
