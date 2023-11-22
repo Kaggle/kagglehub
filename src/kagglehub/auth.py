@@ -1,7 +1,7 @@
+import io
 import logging
 import sys
-import sys
-import io
+from contextlib import contextmanager
 
 import requests
 
@@ -20,8 +20,8 @@ settings page</a> and paste it below. <br> </center>"""
 
 NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 <b>Thank You</b></center>"""
-import logging
-from contextlib import contextmanager
+
+
 @contextmanager
 def capture_logger_output():
     """Capture output that is logged using the logger.
@@ -43,22 +43,21 @@ def capture_logger_output():
     finally:
         logger.removeHandler(handler)
 
+
 def is_in_notebook():
     return "IPython" in sys.modules
 
+
 def notebook_login(validate_credentials) -> None:
     """Prompt the user for their Kaggle token and save it in a widget (Jupyter or Colab)."""
+    library_error = "You need the `ipywidgets` module: `pip install ipywidgets`."
     try:
-        import ipywidgets.widgets as widgets  # type: ignore
         from IPython.display import display  # type: ignore
+        from ipywidgets import widgets  # type: ignore
     except ImportError:
-        raise ImportError(
-            "You need the `ipywidgets` module: `pip install ipywidgets`."
-        )
+        raise ImportError(library_error)  # noqa: B904
 
-    box_layout = widgets.Layout(
-        display="flex", flex_flow="column", align_items="center", width="50%"
-    )
+    box_layout = widgets.Layout(display="flex", flex_flow="column", align_items="center", width="50%")
 
     username_widget = widgets.Text(description="Username:")
     token_widget = widgets.Password(description="Token:")
@@ -77,7 +76,7 @@ def notebook_login(validate_credentials) -> None:
     display(login_token_widget)
 
     # On click events
-    def login_token_event(t):
+    def login_token_event(t):  # noqa: ARG001
         username = username_widget.value
         token = token_widget.value
         # Erase token and clear value to make sure it's not saved in the notebook.
@@ -87,7 +86,6 @@ def notebook_login(validate_credentials) -> None:
         login_token_widget.children = [widgets.Label("Connecting...")]
         try:
             with capture_logger_output() as captured:
-
                 # Set Kaggle credentials
                 set_kaggle_credentials(username=username, api_key=token)
 
@@ -99,8 +97,10 @@ def notebook_login(validate_credentials) -> None:
             message = str(error)
         # Print result (success message or error)
         login_token_widget.children = [widgets.Label(line) for line in message.split("\n") if line.strip()]
+
     login_button.on_click(login_token_event)
-    
+
+
 def validate_credentials_helper():
     try:
         api_client = KaggleApiV1Client()
