@@ -21,7 +21,8 @@ settings page</a> and paste it below. <br> </center>"""
 NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 <b>Thank You</b></center>"""
 import logging
-
+from contextlib import contextmanager
+@contextmanager
 def capture_logger_output():
     """Capture output that is logged using the logger.
 
