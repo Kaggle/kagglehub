@@ -63,6 +63,7 @@ def notebook_login(validate_credentials) -> None:
 
         # Hide inputs
         login_token_widget.children = [widgets.Label("Connecting...")]
+        message = "hey"
         try:
             # Redirect stdout to an in-memory StringIO object
             output_buffer = io.StringIO()
