@@ -93,18 +93,18 @@ def _download_file(response: requests.Response, out_file: str, size_read: int, t
 
 
 # These environment variables are set by the Kaggle notebook environment.
-KAGGLE_URL_BASE_ENV_VAR_NAME = "KAGGLE_URL_BASE"
+KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_URL"
 KAGGLE_JWT_TOKEN_ENV_VAR_NAME = "KAGGLE_USER_SECRETS_TOKEN"
-KAGGLE_IAP_TOKEN_ENV_VAR_NAME = "KAGGLE_IAP_TOKEN"
+KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_TOKEN"
 
 
 class KaggleJwtClient:
-    BASE_PATH = "/requests/"
+    BASE_PATH = "/kaggle-jwt-handler/"
 
     def __init__(self):
-        self.endpoint = os.getenv(KAGGLE_URL_BASE_ENV_VAR_NAME)
+        self.endpoint = os.getenv(KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME)
         if self.endpoint is None:
-            msg = f"The {KAGGLE_URL_BASE_ENV_VAR_NAME} should be set."
+            msg = f"The {KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME} should be set."
             raise KaggleEnvironmentError(msg)
         jwt_token = os.getenv(KAGGLE_JWT_TOKEN_ENV_VAR_NAME)
         if jwt_token is None:
@@ -113,10 +113,20 @@ class KaggleJwtClient:
                 f"but none found in environment variable {KAGGLE_JWT_TOKEN_ENV_VAR_NAME}"
             )
             raise CredentialError(msg)
-        self.headers = {"Content-type": "application/json", "X-Kaggle-Authorization": f"Bearer {jwt_token}"}
-        iap_token = os.getenv(KAGGLE_IAP_TOKEN_ENV_VAR_NAME)
-        if iap_token:
-            self.headers["Authorization"] = f"Bearer {iap_token}"
+
+        data_proxy_token = os.getenv(KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME)
+        if data_proxy_token is None:
+            msg = (
+                "A Data Proxy Token is required to call Kaggle, "
+                f"but none found in environment variable {KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME}"
+            )
+            raise CredentialError(msg)
+
+        self.headers = {
+            "Content-type": "application/json",
+            "X-Kaggle-Authorization": f"Bearer {jwt_token}",
+            "X-KAGGLE-PROXY-DATA": data_proxy_token,
+        }
 
     def post(self, request_name: str, data: dict) -> dict:
         url = f"{self.endpoint}{KaggleJwtClient.BASE_PATH}{request_name}"

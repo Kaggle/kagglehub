@@ -3,7 +3,7 @@ import os
 import time
 from typing import Optional
 
-from kagglehub.clients import KAGGLE_URL_BASE_ENV_VAR_NAME, KaggleJwtClient
+from kagglehub.clients import KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME, KaggleJwtClient
 from kagglehub.config import is_kaggle_cache_disabled
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import ModelHandle
@@ -26,10 +26,11 @@ class KaggleCacheResolver(Resolver):
 
         if KAGGLE_NOTEBOOK_ENV_VAR_NAME in os.environ:
             # Inside a Kaggle notebook.
-            if KAGGLE_URL_BASE_ENV_VAR_NAME not in os.environ:
+            if KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME not in os.environ:
                 # Missing endpoint for the Jwt client.
                 logger.warning(
-                    f"Can't use the Kaggle Cache. The '{KAGGLE_URL_BASE_ENV_VAR_NAME}' environment variable is not set."
+                    "Can't use the Kaggle Cache. "
+                    f"The '{KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME}' environment variable is not set."
                 )
                 return False
             return True
