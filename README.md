@@ -18,14 +18,15 @@ First, you will need a Kaggle account. You can sign up [here](https://www.kaggle
 
 After login in, you can download your Kaggle API credentials at https://www.kaggle.com/settings by clicking on the "Create New Token" button under the "API" section.
 
-You have 3 different options to authenticate
+You have 3 different options to authenticate.
 
 #### Option 1: Calling kagglehub.login()
+
+This will prompt you to enter your username and token:
 
 ```python
 import kagglehub
 
-# TODO(b/305808471): Not yet implemented.
 kagglehub.login()
 ```
 
