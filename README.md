@@ -25,7 +25,6 @@ You have 3 different options to authenticate
 ```python
 import kagglehub
 
-# TODO(b/305808471): Not yet implemented.
 kagglehub.login()
 ```
 
