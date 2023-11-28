@@ -3,7 +3,7 @@ import os
 import time
 from typing import Optional
 
-from kagglehub.clients import KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME, KaggleJwtClient
+from kagglehub.clients import DEFAULT_CONNECT_TIMEOUT, KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME, KaggleJwtClient
 from kagglehub.config import is_kaggle_cache_disabled
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import ModelHandle
@@ -12,6 +12,8 @@ from kagglehub.resolver import Resolver
 KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
 ATTACH_DATASOURCE_REQUEST_NAME = "AttachDatasourceUsingJwtRequest"
+# b/312965617: Using a longer timeout for this RPC.
+ATTACH_DATASOURCE_READ_TIMEOUT = 30  # seconds
 
 DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER = "/kaggle/input"
 
@@ -54,6 +56,7 @@ class KaggleCacheResolver(Resolver):
             {
                 "modelRef": model_ref,
             },
+            timeout=(DEFAULT_CONNECT_TIMEOUT, ATTACH_DATASOURCE_READ_TIMEOUT),
         )
         if "mountSlug" not in result:
             msg = "'result.mountSlug' field missing from response"
