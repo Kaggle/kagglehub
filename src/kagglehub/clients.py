@@ -129,7 +129,7 @@ class KaggleJwtClient:
         }
 
     def post(
-        self, request_name: str, data: dict, timeout: tuple[int, int] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT)
+        self, request_name: str, data: dict, timeout: tuple = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT)
     ) -> dict:
         url = f"{self.endpoint}{KaggleJwtClient.BASE_PATH}{request_name}"
         with requests.post(
