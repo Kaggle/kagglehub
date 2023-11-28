@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Tuple
 from urllib.parse import urljoin
 
 import requests
@@ -128,13 +129,18 @@ class KaggleJwtClient:
             "X-KAGGLE-PROXY-DATA": data_proxy_token,
         }
 
-    def post(self, request_name: str, data: dict) -> dict:
+    def post(
+        self,
+        request_name: str,
+        data: dict,
+        timeout: Tuple[float, float] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+    ) -> dict:
         url = f"{self.endpoint}{KaggleJwtClient.BASE_PATH}{request_name}"
         with requests.post(
             url,
             headers=self.headers,
             data=bytes(json.dumps(data), "utf-8"),
-            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+            timeout=timeout,
         ) as response:
             response.raise_for_status()
             json_response = response.json()
