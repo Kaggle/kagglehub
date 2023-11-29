@@ -38,6 +38,18 @@ class KaggleApiV1Client:
         ) as response:
             response.raise_for_status()
             return response.json()
+    
+    def post(self, path: str, data: dict):
+        url = self._build_url(path)
+        print(url)
+        with requests.post(
+            url,
+            json=data,
+            auth=self._get_http_basic_auth(),
+            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+        ) as response:
+            response.raise_for_status()
+            return response.json()
 
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)
