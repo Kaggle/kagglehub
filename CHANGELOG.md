@@ -4,6 +4,10 @@
 
 *
 
+## v0.1.1 (Nov 30th, 2023)
+
+* Fixed login credential validation ([#33](https://github.com/Kaggle/kagglehub/pull/33), [#34](https://github.com/Kaggle/kagglehub/pull/34))
+
 ## v0.1.0 (Nov 29th, 2023)
 
 * Attach model in Kaggle notebook environment with internet disabled ([#27](https://github.com/Kaggle/kagglehub/pull/27))
