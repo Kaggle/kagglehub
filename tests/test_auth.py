@@ -33,17 +33,15 @@ class KaggleAPIHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(bytes(json.dumps({"message": "Hello from test server!"}), "utf-8"))
             else:
-                self.send_response(403)
-                self.send_header("Content-type", "application/text")
-                self.send_header("Content-Length", 0)
+                self.send_response(200)
+                self.send_header("Content-type", "application/json")
                 self.end_headers()
-                self.wfile.write(bytes("", "utf-8"))
+                self.wfile.write(bytes(json.dumps({"code": "401"}), "utf-8"))
         else:
-            self.send_response(404)
-            self.send_header("Content-type", "application/text")
-            self.send_header("Content-Length", 0)
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write(bytes("", "utf-8"))
+            self.wfile.write(bytes(json.dumps({"code": "404"}), "utf-8"))
 
 
 class TestAuth(BaseTestCase):

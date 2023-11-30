@@ -3,14 +3,12 @@ import logging
 import sys
 from contextlib import contextmanager
 
-import requests
-
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
 
 logger = logging.getLogger(__name__)
 
-INVALID_CREDENTIALS_ERROR = 403
+INVALID_CREDENTIALS_ERROR = "401"
 
 NOTEBOOK_LOGIN_TOKEN_HTML_START = """<center> <img
 src=https://www.kaggle.com/static/images/site-logo.png
@@ -101,17 +99,16 @@ def _notebook_login(validate_credentials) -> None:
 
 
 def _validate_credentials_helper():
-    try:
-        api_client = KaggleApiV1Client()
-        api_client.get("/hello")
+    api_client = KaggleApiV1Client()
+    response = api_client.get("/hello")
+    if "code" not in response:
         logger.info("Kaggle credentials successfully validated.")
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == INVALID_CREDENTIALS_ERROR:
-            logger.error(
-                "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
-            )
-        else:
-            logger.warning("Unable to validate Kaggle credentials at this time.")
+    elif response["code"] == INVALID_CREDENTIALS_ERROR:
+        logger.error(
+            "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
+        )
+    else:
+        logger.warning("Unable to validate Kaggle credentials at this time.")
 
 
 def login(validate_credentials=True):  # noqa: FBT002
