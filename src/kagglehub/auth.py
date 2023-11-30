@@ -1,6 +1,5 @@
 import io
 import logging
-import sys
 from contextlib import contextmanager
 
 from kagglehub.clients import KaggleApiV1Client
@@ -49,12 +48,14 @@ def _is_in_notebook() -> bool:
     Adapted to make it work with Google colab as well.
     """
     try:
-        shell_class = get_ipython().__class__  # type: ignore # noqa: F821
+        from IPython import get_ipython  # type: ignore
+
+        shell_class = get_ipython().__class__
         for parent_class in shell_class.__mro__:  # e.g. "is subclass of"
             if parent_class.__name__ == "ZMQInteractiveShell":
                 return True  # Jupyter notebook, Kaggle Noteboo, Google colab or qtconsole
         return False
-    except NameError:
+    except (NameError, ModuleNotFoundError):
         return False  # Probably standard Python interpreter
 
 
