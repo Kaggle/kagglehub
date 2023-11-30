@@ -4,6 +4,10 @@
 
 *
 
+## v0.1.2 (Nov 30th, 2023)
+
+* Fixed notebook environment detection logic ([#36](https://github.com/Kaggle/kagglehub/pull/36))
+
 ## v0.1.1 (Nov 30th, 2023)
 
 * Fixed login credential validation ([#33](https://github.com/Kaggle/kagglehub/pull/33), [#34](https://github.com/Kaggle/kagglehub/pull/34))

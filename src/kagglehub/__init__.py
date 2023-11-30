@@ -1,4 +1,4 @@
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 import kagglehub.logging
 from kagglehub import http_resolver, kaggle_cache_resolver, registry
