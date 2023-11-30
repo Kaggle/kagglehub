@@ -8,7 +8,7 @@ from kagglehub.config import set_kaggle_credentials
 
 logger = logging.getLogger(__name__)
 
-INVALID_CREDENTIALS_ERROR = "401"
+INVALID_CREDENTIALS_ERROR = 401
 
 NOTEBOOK_LOGIN_TOKEN_HTML_START = """<center> <img
 src=https://www.kaggle.com/static/images/site-logo.png
