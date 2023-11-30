@@ -36,7 +36,7 @@ class KaggleAPIHandler(http.server.BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
-                self.wfile.write(bytes(json.dumps({"code": "401"}), "utf-8"))
+                self.wfile.write(bytes(json.dumps({"code": 401}), "utf-8"))
         else:
             self.send_response(200)
             self.send_header("Content-type", "application/json")
