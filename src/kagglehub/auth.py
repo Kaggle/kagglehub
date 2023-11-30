@@ -42,8 +42,20 @@ def _capture_logger_output():
         logger.removeHandler(handler)
 
 
-def _is_in_notebook():
-    return "IPython" in sys.modules
+def _is_in_notebook() -> bool:
+    """Return `True` if code is executed in a notebook (Jupyter, Kaggle Notebook, Colab, QTconsole).
+
+    Taken from https://stackoverflow.com/a/39662359.
+    Adapted to make it work with Google colab as well.
+    """
+    try:
+        shell_class = get_ipython().__class__  # type: ignore # noqa: F821
+        for parent_class in shell_class.__mro__:  # e.g. "is subclass of"
+            if parent_class.__name__ == "ZMQInteractiveShell":
+                return True  # Jupyter notebook, Kaggle Noteboo, Google colab or qtconsole
+        return False
+    except NameError:
+        return False  # Probably standard Python interpreter
 
 
 def _notebook_login(validate_credentials) -> None:
