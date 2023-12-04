@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 DOES_NOT_EXIST_ERROR = 401
 
+
 DATASET_METADATA_FILE = 'dataset-metadata.json'
 OLD_DATASET_METADATA_FILE = 'datapackage.json'
 KERNEL_METADATA_FILE = 'kernel-metadata.json'
@@ -208,16 +209,15 @@ def _upload_file(self, file_name, full_path, blob_type, upload_context,
 
 def create_model(data=None):
     try:
-        data = {
-        "framework": "tensorflow",
-        "version": "1.0",
-        "description": "A pre-trained model for image classification",
-        "tags": ["image-classification", "pretrained"]
-        }
+        data = {"ownerSlug": "aminmohamedmohami",
+                "slug": "test",
+                "title": "test_implentation",
+                "isPrivate": True}
         api_client = KaggleApiV1Client()
-        api_client.post("/models/create/new", data)
+        response = api_client.post("/models/create/new", data)
         logger.info("Model Created.")
     except requests.exceptions.HTTPError as e:
+        print(e)
         logger.error(
                 "Unable to create model at this time."
             )
@@ -231,7 +231,6 @@ def create_model_instance(owner_slug, model_slug, data=None):
         logger.error(
                 "Unable to create model instance at this time."
             )
-
 
 def create_model_instance_or_version(owner_slug, model_slug, framework, instance_slug, data=None):
     instance_exists = True
