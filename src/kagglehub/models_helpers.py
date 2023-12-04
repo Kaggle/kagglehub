@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 DOES_NOT_EXIST_ERROR = 401
 
 
+
 DATASET_METADATA_FILE = 'dataset-metadata.json'
 OLD_DATASET_METADATA_FILE = 'datapackage.json'
 KERNEL_METADATA_FILE = 'kernel-metadata.json'
