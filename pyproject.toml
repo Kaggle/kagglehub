@@ -118,6 +118,8 @@ ignore = [
   "FBT003",
   # Ignore checks for possible passwords
   "S105", "S106", "S107",
+  # Ignore md5
+  "S324",
   # Ignore complexity
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
 ]
