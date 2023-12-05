@@ -14,7 +14,7 @@ from kagglehub.clients import KaggleApiV1Client
 
 logger = logging.getLogger(__name__)
 
-DOES_NOT_EXIST_ERROR = 401
+DOES_NOT_EXIST_ERROR = 404
 
 
 
@@ -208,14 +208,14 @@ def _upload_file(self, file_name, full_path, blob_type, upload_context,
                 File.get_size(content_length) + ')')
     return
 
-def create_model(data=None):
+def create_model(owner_slug, model_slug, title):
     try:
-        data = {"ownerSlug": "aminmohamedmohami",
-                "slug": "test",
-                "title": "test_implentation",
+        data = {"ownerSlug": owner_slug,
+                "slug": model_slug,
+                "title": title,
                 "isPrivate": True}
         api_client = KaggleApiV1Client()
-        response = api_client.post("/models/create/new", data)
+        api_client.post("/models/create/new", data)
         logger.info("Model Created.")
     except requests.exceptions.HTTPError as e:
         print(e)
@@ -223,17 +223,28 @@ def create_model(data=None):
                 "Unable to create model at this time."
             )
 
-def create_model_instance(owner_slug, model_slug, data=None):
+def create_model_instance(owner_slug, model_slug, framework, instance_slug, license_name, files=None):
+    data = {
+        "owner_slug": owner_slug,
+        "model_slug":  model_slug,
+        "body":  {
+            "instance_slug": instance_slug,
+            "framework": framework,
+            "license_name": license_name,
+            "files": files
+            }
+        }
     try:
         api_client = KaggleApiV1Client()
         api_client.post(f"/models/{owner_slug}/{model_slug}/create/instance", data)
         logger.info("Model Instance Created.")
     except requests.exceptions.HTTPError as e:
+        print(e)
         logger.error(
                 "Unable to create model instance at this time."
             )
 
-def create_model_instance_or_version(owner_slug, model_slug, framework, instance_slug, data=None):
+def create_model_instance_or_version(owner_slug, model_slug, framework, instance_slug, license_name, files=None):
     instance_exists = True
     try:
         api_client = KaggleApiV1Client()
@@ -244,12 +255,21 @@ def create_model_instance_or_version(owner_slug, model_slug, framework, instance
             logger.error(
                 f"Model instance for framework '{framework}' does not exist for model '{model_slug}'. Creating..."
             )
-            create_model_instance(owner_slug, model_slug)
+            create_model_instance(owner_slug, model_slug, framework, instance_slug)
         else:
             logger.warning("Unable to validate model instance exists at this time.")
             return
 
     if instance_exists == True:
+        data = {
+        "owner_slug": owner_slug,
+        "model_slug":  model_slug,
+        "instance_slug": instance_slug,
+        "framework": framework,
+        "body":  {
+            "version_notes": "hey"
+            }
+        }
         try:
             api_client = KaggleApiV1Client()
             api_client.post(f"/models/{owner_slug}/{model_slug}/{framework}/{instance_slug}/create/version", data)
@@ -267,6 +287,7 @@ def get_or_create_model(owner_slug, model_slug):
             logger.error(
                 f"Model '{model_slug}' does not exist for user '{owner_slug}'. Creating Model..."
             )
-            create_model()
+            create_model(owner_slug, model_slug)
         else:
             logger.warning("Unable to validate model exists at this time.")
+#import kagglehub; from kagglehub.models_helpers import create_model_instance, create_model_instance_or_version; from kagglehub.auth import login; kagglehub.login()

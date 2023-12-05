@@ -8,10 +8,7 @@ from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_archive_path
 from kagglehub.handle import parse_model_handle
 from kagglehub.http_resolver import MODEL_INSTANCE_VERSION_FIELD
 from tests.fixtures import BaseTestCase
-<<<<<<< HEAD
 from unittest import mock
-=======
->>>>>>> c5db66768bb899cf80a6c1499530ba07373c174a
 
 from .utils import create_test_cache, create_test_http_server, get_test_file_path
 
@@ -19,41 +16,26 @@ GET_MODEL = "/models/metaresearch/llama-2/pyTorch/13b/get"
 GET_INSTANCE = "/models/metaresearch/llama-2/create/instance"
 CREATE_MODEL = "/models/create/new"
 CREATE_INSTANCE = "/models/metaresearch/llama-2/create/instance"
-<<<<<<< HEAD
 CREATE_VERSION = "/models/metaresearch/llama-2/pyTorch/13b/create/version"
 
 class KaggleAPIHandler(BaseHTTPRequestHandler):
     model_created = False
     instance_created = False
     version_created = False
-=======
-
-class KaggleAPIHandler(BaseHTTPRequestHandler):
-    model_created = False
->>>>>>> c5db66768bb899cf80a6c1499530ba07373c174a
     def do_HEAD(self):  # noqa: N802
         self.send_response(200)
 
     def do_GET(self):  # noqa: N802
-<<<<<<< HEAD
         if self.path == f"/api/v1{GET_MODEL}" and self.model_created is True:
-=======
-        if self.path == f"/api/v1{GET_MODEL}" and model_created is True:
->>>>>>> c5db66768bb899cf80a6c1499530ba07373c174a
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(bytes(json.dumps({"message": "Model Created!"}), "utf-8"))
-<<<<<<< HEAD
         elif self.path == f"/api/v1{GET_INSTANCE}" and self.instance_created is True:
-=======
-        elif self.path == f"/api/v1{GET_INSTANCE}":
->>>>>>> c5db66768bb899cf80a6c1499530ba07373c174a
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(bytes(json.dumps({"message": "Instance Created!"}), "utf-8"))
-<<<<<<< HEAD
         elif self.path == f"/api/v1{CREATE_VERSION}" and self.version_created is True:
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -96,19 +78,6 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
         self.model_created = False
         self.instance_created = False
         self.version_created = False
-
-=======
-        else:
-            self.send_response(403)
-            self.send_header("Content-type", "application/text")
-            self.send_header("Content-Length", 0)
-            self.end_headers()
-            self.wfile.write(bytes("", "utf-8"))
-
-    def do_POST(self):
-        if self.path == CREATE_MODEL:
-            model_created = True
->>>>>>> c5db66768bb899cf80a6c1499530ba07373c174a
 
 
 

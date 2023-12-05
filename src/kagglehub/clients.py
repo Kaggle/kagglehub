@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 # TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
+# handle 400 (Bad Request / Invalid Argument) here to show a nicer error message to the user
 class KaggleApiV1Client:
     BASE_PATH = "api/v1"
 

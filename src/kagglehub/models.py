@@ -30,10 +30,7 @@ def model_download(handle: str, path: Optional[str] = None):
     return registry.resolver(h, path)
 
 
-
-
-
-def model_upload(handle: str, local_model_dir):
+def model_upload(handle: str, local_model_dir, license, version_notes: Optional[str] = None):
     # parse slug
     h = parse_model_handle(handle)
 
@@ -45,6 +42,6 @@ def model_upload(handle: str, local_model_dir):
     # upload_model_files(local_model_dir, gcs_model_dir)
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
-    create_model_instance_or_version(h.owner, h.model, h.framework, h.version)
+    create_model_instance_or_version(h.owner, h.model, h.framework, h.version, license, files)
 
 
