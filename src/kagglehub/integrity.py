@@ -1,4 +1,5 @@
 import base64
+import logging
 from typing import Optional
 
 import requests
@@ -7,6 +8,8 @@ import requests
 GCS_HASH_HEADER = "x-goog-hash"
 COMPUTE_HASH_CHUNK_SIZE = 8192
 
+logger = logging.getLogger(__name__)
+
 
 def get_md5_checksum_from_response(response: requests.Response) -> Optional[str]:
     # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
@@ -14,10 +17,13 @@ def get_md5_checksum_from_response(response: requests.Response) -> Optional[str]
     if GCS_HASH_HEADER in response.headers:
         header_value = response.headers[GCS_HASH_HEADER]
         for checksum in header_value.split(","):
-            name, value = checksum.strip().split("=", 1)
-            if name == "md5":
-                return value
-
+            try:
+                name, value = checksum.strip().split("=", 1)
+                if name == "md5":
+                    return value
+            except ValueError:
+                logger.warning(f"Invalid {GCS_HASH_HEADER} header: {header_value}")
+                return None
     return None
 
 
