@@ -72,6 +72,10 @@ class KaggleApiV1Client:
                 size_read = os.path.getsize(out_file)
                 update_hash_from_file(hash_object, out_file)
 
+                if size_read == total_size:
+                    logger.info(f"Download already complete ({size_read} bytes).")
+                    return
+
                 logger.info(f"Resuming download from {size_read} bytes ({total_size - size_read} bytes left)...")
 
                 # Send the request again with the 'Range' header.
