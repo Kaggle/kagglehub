@@ -35,7 +35,7 @@ def kaggle_api_raise_for_status(response: requests.Response):
     except requests.HTTPError as e:
         message = str(e)
 
-        if response.status_code in { HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN }:
+        if response.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
             message = (
                 f"{response.status_code} Client Error."
                 "\n\n"
