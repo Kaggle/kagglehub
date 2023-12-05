@@ -8,3 +8,7 @@ class KaggleEnvironmentError(Exception):
 
 class BackendError(Exception):
     pass
+
+
+class DataCorruptionError(Exception):
+    pass

@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import os
@@ -9,7 +10,8 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
-from kagglehub.exceptions import BackendError, CredentialError, KaggleEnvironmentError
+from kagglehub.exceptions import BackendError, CredentialError, DataCorruptionError, KaggleEnvironmentError
+from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
 
 CHUNK_SIZE = 1048576
 # The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
@@ -18,6 +20,16 @@ CHUNK_SIZE = 1048576
 DEFAULT_CONNECT_TIMEOUT = 5  # seconds
 DEFAULT_READ_TIMEOUT = 15  # seconds
 ACCEPT_RANGE_HTTP_HEADER = "Accept-Ranges"
+
+_CHECKSUM_MISMATCH_MSG_TEMPLATE = """\
+The X-Goog-Hash header indicated a MD5 checksum of:
+
+  {}
+
+but the actual MD5 checksum of the downloaded contents was:
+
+  {}
+"""
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +65,16 @@ class KaggleApiV1Client:
             total_size = int(response.headers["Content-Length"])
             size_read = 0
 
+            expected_md5_hash = get_md5_checksum_from_response(response)
+            hash_object = hashlib.md5() if expected_md5_hash else None
+
             if _is_resumable(response) and os.path.isfile(out_file):
                 size_read = os.path.getsize(out_file)
+                update_hash_from_file(hash_object, out_file)
+
+                if size_read == total_size:
+                    logger.info(f"Download already complete ({size_read} bytes).")
+                    return
 
                 logger.info(f"Resuming download from {size_read} bytes ({total_size - size_read} bytes left)...")
 
@@ -66,9 +86,17 @@ class KaggleApiV1Client:
                     timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
                     headers={"Range": f"bytes={size_read}-"},
                 ) as resumed_response:
-                    _download_file(resumed_response, out_file, size_read, total_size)
+                    _download_file(resumed_response, out_file, size_read, total_size, hash_object)
             else:
-                _download_file(response, out_file, size_read, total_size)
+                _download_file(response, out_file, size_read, total_size, hash_object)
+
+            if hash_object:
+                actual_md5_hash = to_b64_digest(hash_object)
+                if actual_md5_hash != expected_md5_hash:
+                    os.remove(out_file)  # Delete the corrupted file.
+                    raise DataCorruptionError(
+                        _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(expected_md5_hash, actual_md5_hash)
+                    )
 
     def _get_http_basic_auth(self):
         if self.credentials:
@@ -83,12 +111,14 @@ def _is_resumable(response: requests.Response):
     return ACCEPT_RANGE_HTTP_HEADER in response.headers and response.headers[ACCEPT_RANGE_HTTP_HEADER] == "bytes"
 
 
-def _download_file(response: requests.Response, out_file: str, size_read: int, total_size: int):
+def _download_file(response: requests.Response, out_file: str, size_read: int, total_size: int, hash_object):
     open_mode = "ab" if size_read > 0 else "wb"
     with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
         with open(out_file, open_mode) as f:
             for chunk in response.iter_content(CHUNK_SIZE):
                 f.write(chunk)
+                if hash_object:
+                    hash_object.update(chunk)
                 size_read = min(total_size, size_read + CHUNK_SIZE)
                 progress_bar.update(len(chunk))
 
