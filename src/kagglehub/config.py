@@ -55,7 +55,7 @@ def get_cache_folder() -> str:
 
 def get_kaggle_api_endpoint() -> str:
     if KAGGLE_API_ENDPOINT_ENV_VAR_NAME in os.environ:
-        return os.environ[KAGGLE_API_ENDPOINT_ENV_VAR_NAME]
+        return "localhost"#os.environ[KAGGLE_API_ENDPOINT_ENV_VAR_NAME]
     return DEFAULT_KAGGLE_API_ENDPOINT
 
 
