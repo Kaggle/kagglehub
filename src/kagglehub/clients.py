@@ -42,7 +42,6 @@ class KaggleApiV1Client:
     
     def post(self, path: str, data: dict):
         url = self._build_url(path)
-        print(url)
         with requests.post(
             url,
             json=data,
