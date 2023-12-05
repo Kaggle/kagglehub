@@ -4,6 +4,11 @@
 
 *
 
+## v0.1.3 (Dec 5th, 2023)
+
+* Improve error messages for Kaggle API calls ([#38](https://github.com/Kaggle/kagglehub/pull/38))
+* Perform integrity check after file download ([#37](https://github.com/Kaggle/kagglehub/pull/37))
+
 ## v0.1.2 (Nov 30th, 2023)
 
 * Fixed notebook environment detection logic ([#36](https://github.com/Kaggle/kagglehub/pull/36))
