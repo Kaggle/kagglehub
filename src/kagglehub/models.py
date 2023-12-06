@@ -37,11 +37,14 @@ def model_upload(handle: str, local_model_dir, license, version_notes: Optional[
     # Create the model if it doesn't already exist
     get_or_create_model(h.owner, h.model)
     
-    # Upload the model files to GCS
-    # gcs_model_dir = os.path.join("gs://kaggle-models", h.owner, h.model)
-    # upload_model_files(local_model_dir, gcs_model_dir)
+    # TODO(aminmohamed): Upload the model files to GCS
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
-    create_model_instance_or_version(h.owner, h.model, h.framework, h.version, license, files)
+    file_paths = []
+    for root, directories, files in os.walk(local_model_dir):
+        for file in files:
+            full_path = os.path.join(root, file)
+            file_paths.append(full_path)
+    create_model_instance_or_version(h.owner, h.model, h.framework, h.version, license, file_paths, version_notes)
 
 
