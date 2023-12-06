@@ -30,9 +30,12 @@ def model_download(handle: str, path: Optional[str] = None):
     return registry.resolver(h, path)
 
 
-def model_upload(handle: str, local_model_dir, license, version_notes: Optional[str] = None):
+def model_upload(handle: str, local_model_dir: str, license: str, version_notes: Optional[str] = None):
     # parse slug
     h = parse_model_handle(handle)
+
+    if h.is_versioned():
+        raise ValueError("The model handle should not include the version")
 
     # Create the model if it doesn't already exist
     get_or_create_model(h.owner, h.model)
@@ -45,6 +48,6 @@ def model_upload(handle: str, local_model_dir, license, version_notes: Optional[
         for file in files:
             full_path = os.path.join(root, file)
             file_paths.append(full_path)
-    create_model_instance_or_version(h.owner, h.model, h.framework, h.version, license, file_paths, version_notes)
+    create_model_instance_or_version(h, license, local_model_dir, version_notes)
 
 
