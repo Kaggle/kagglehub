@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 from http.server import BaseHTTPRequestHandler
@@ -6,6 +7,7 @@ import kagglehub
 from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_archive_path
 from kagglehub.handle import parse_model_handle
 from kagglehub.http_resolver import MODEL_INSTANCE_VERSION_FIELD
+from kagglehub.integrity import GCS_HASH_HEADER, to_b64_digest
 from tests.fixtures import BaseTestCase
 
 from .utils import create_test_cache, create_test_http_server, get_test_file_path
@@ -28,8 +30,13 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
                 self.send_header("Content-Length", os.path.getsize(test_file_path))
+
+                content = f.read()
+                file_hash = hashlib.md5()
+                file_hash.update(content)
+                self.send_header(GCS_HASH_HEADER, f"md5={to_b64_digest(file_hash)}")
                 self.end_headers()
-                self.wfile.write(f.read())
+                self.wfile.write(content)
         elif self.path.endswith(VERSIONED_MODEL_HANDLE + "/download"):
             test_file_path = get_test_file_path("archive.tar.gz")
             with open(test_file_path, "rb") as f:
@@ -37,8 +44,12 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-type", "application/x-gzip")
                 self.send_header("Content-Length", os.path.getsize(test_file_path))
+                content = f.read()
+                file_hash = hashlib.md5()
+                file_hash.update(content)
+                self.send_header(GCS_HASH_HEADER, f"md5={to_b64_digest(file_hash)}")
                 self.end_headers()
-                self.wfile.write(f.read())
+                self.wfile.write(content)
         elif self.path.endswith(INVALID_ARCHIVE_MODEL_HANDLE + "/download"):
             # Serve a bad archive file
             content = b"bad archive"
