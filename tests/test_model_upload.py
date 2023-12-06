@@ -80,7 +80,6 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
         self.version_created = False
 
 
-
 class TestModelUpload(BaseTestCase):
     def test_model_upload_with_invalid_handle(self):
         with create_test_http_server(KaggleAPIHandler):

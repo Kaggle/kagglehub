@@ -25,15 +25,12 @@ def create_model(owner_slug, model_slug, title):
 
 def create_model_instance(owner_slug, model_slug, framework, instance_slug, license_name, files=None):
     data = {
-        "owner_slug": owner_slug,
-        "model_slug":  model_slug,
-        "body":  {
-            "instance_slug": instance_slug,
-            "framework": framework,
-            "license_name": license_name,
-            "files": files
-            }
-        }
+        "instanceSlug": instance_slug,
+        "framework": framework,
+        "licenseName": license_name,
+        "files": files
+    }
+    print("hey")
     try:
         api_client = KaggleApiV1Client()
         response = api_client.post(f"/models/{owner_slug}/{model_slug}/create/instance", data)
@@ -63,13 +60,7 @@ def create_model_instance_or_version(owner_slug, model_slug, framework, instance
 
     if instance_exists == True:
         data = {
-        "owner_slug": owner_slug,
-        "model_slug":  model_slug,
-        "instance_slug": instance_slug,
-        "framework": framework,
-        "body":  {
-            "version_notes": "hey"
-            }
+            "versionNotes": "hey"
         }
         try:
             api_client = KaggleApiV1Client()
@@ -92,4 +83,6 @@ def get_or_create_model(owner_slug, model_slug):
         else:
             logger.warning("Unable to validate model exists at this time.")
 #import kagglehub; from kagglehub.models_helpers import create_model_instance, create_model_instance_or_version; from kagglehub.auth import login; kagglehub.login()
+#from kagglehub.models_helpers import create_model_instance_or_version
+#create_model_instance_or_version('aminmohamedmohami', 'test', 'PyTorch', '13j', "Apache 2.0", ["/usr/local/google/home/aminmohamed/labeled_test_impression.csv"])
 #create_model_instance("/usr/local/google/home/aminmohamed/labeled_test_impression.csv"])
