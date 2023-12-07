@@ -7,6 +7,8 @@ import logging
 import requests
 from http import HTTPStatus
 
+import urllib
+
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError, KaggleApiHTTPError
@@ -19,8 +21,6 @@ OLD_DATASET_METADATA_FILE = 'datapackage.json'
 KERNEL_METADATA_FILE = 'kernel-metadata.json'
 MODEL_METADATA_FILE = 'model-metadata.json'
 MODEL_INSTANCE_METADATA_FILE = 'model-instance-metadata.json'
-
-# API_URL = "https://api.example.com/v1/blobs/upload"
 
 
 def parse(string):
@@ -74,17 +74,28 @@ class File(object):
         return '%.*f%s' % (precision, size, suffixes[suffix_index])
 
 def _upload_blob(file_path):
-    print(file_path)
     data = {
-        "fileName": os.path.basename(file_path)
+        "type": "model",
+        "name": os.path.basename(file_path),
+        "contentLength": os.path.getsize(file_path),
+        "lastModifiedEpochSeconds": int(os.path.getmtime(file_path))
     }
-    content_length = os.path.getsize(file_path)
-    last_modified_epoch_seconds = int(os.path.getmtime(file_path))
     api_client = KaggleApiV1Client()
-    response = api_client.post(f"/models/upload/file/{content_length}/{last_modified_epoch_seconds}", data)
+    response = api_client.post("/blobs/upload", data=data)
     print(response)
     if 'error' in response and response['error'] != "":
         raise BackendError(response['error'])
+
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+
+    headers = {"Content-Type": "application/octet-stream"}
+    signed_response = requests.put(response['createUrl'], data=file_data, headers=headers)
+
+    if 'error' in signed_response and signed_response['error'] != "":
+        raise BackendError(signed_response['error'])
+
+    return response['token']
 
 def upload_files(folder, quiet=False, dir_mode='skip'):
     """ upload files in a folder
@@ -94,6 +105,7 @@ def upload_files(folder, quiet=False, dir_mode='skip'):
         folder: the folder to upload from
         quiet: suppress verbose output (default is False)
     """
+    tokens = []
     for file_name in os.listdir(folder):
         if (file_name in [
                 DATASET_METADATA_FILE, OLD_DATASET_METADATA_FILE,
@@ -101,8 +113,9 @@ def upload_files(folder, quiet=False, dir_mode='skip'):
                 MODEL_INSTANCE_METADATA_FILE
         ]):
             continue
-        upload_file = _upload_file_or_folder(
-            folder, file_name, dir_mode, quiet)
+        tokens.append(_upload_file_or_folder(
+            folder, file_name, dir_mode, quiet))
+    return tokens
 
 def _upload_file_or_folder(parent_path,
                             file_or_folder_name,
@@ -147,7 +160,7 @@ def _upload_file(file_name, full_path, quiet):
     if not quiet:
         print('Upload successful: ' + file_name + ' (' +
                 File.get_size(content_length) + ')')
-    return
+    return token
 
 def create_model(owner_slug, model_slug):
     data = {"ownerSlug": owner_slug,
@@ -161,46 +174,34 @@ def create_model(owner_slug, model_slug):
         raise BackendError(response['error'])
     logger.info("Model Created.")
 
-def create_model_instance(model_handle: ModelHandle, license_name: str, files=None):
+def create_model_instance(model_handle: ModelHandle, license_name: str, files: list[str]):
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
         "licenseName": license_name,
-        # TODO(mohamed): You need to upload the file to GCS first.
-        # And then create the files in the proper format.
-        # See: https://github.com/Kaggle/kaggleazure/blob/ecd6e72f278c8aed2b5dc76cb458eaea08283360/Kaggle.Sdk/models/model_api_service.proto#L154
-        # And: https://github.com/Kaggle/kaggleazure/blob/ecd6e72f278c8aed2b5dc76cb458eaea08283360/Kaggle.Sdk/datasets/dataset_api_service.proto#L297-L301
-        # "files": files
+        "overview": "test",
+        "usage": "test",
+        "trainingData": ["test"],
+        "files": [{"token": files[0]}]
     }
-    try:
-        api_client = KaggleApiV1Client()
-        response = api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
-        # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-        if 'error' in response and response['error'] != "":
-            raise BackendError(response['error'])
-        logger.info("Model Instance Created.")
-    except requests.exceptions.HTTPError as e:
-        print(e)
-        logger.error(
-            "Unable to create model instance at this time."
-        )
+    api_client = KaggleApiV1Client()
+    response = api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
+    # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
+    if 'error' in response and response['error'] != "":
+        raise BackendError(response['error'])
+    logger.info("Model Instance Created.")
 
-def create_model_instance_version(model_handle: ModelHandle, version_notes: Optional[str] = None):
+def create_model_instance_version(model_handle: ModelHandle, files: list[str], version_notes=""):
     data = {
-        "versionNotes": version_notes
+        "versionNotes": version_notes,
+        "files": [{"token": files[0]}]
     }
-    try:
-        api_client = KaggleApiV1Client()
-        response = api_client.post(f"/models/{model_handle}/create/version", data)
-        # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-        if 'error' in response and response['error'] != "":
-            raise BackendError(response['error'])
-        logger.info("Model Instance Version Created.")
-    except requests.exceptions.HTTPError as e:
-        print(e)
-        logger.error(
-                "Unable to create model instance version at this time."
-            )
+    api_client = KaggleApiV1Client()
+    response = api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/create/version", data)
+    # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
+    if 'error' in response and response['error'] != "":
+        raise BackendError(response['error'])
+    logger.info("Model Instance Version Created.")
 
 def create_model_instance_or_version(model_handle: ModelHandle, license_name: str, files=None, version_notes: Optional[str] = None):
     try:
@@ -226,6 +227,3 @@ def get_or_create_model(owner_slug, model_slug):
             create_model(owner_slug, model_slug)
             return
         raise(e)
-#import kagglehub; from kagglehub.handle import ModelHandle; from kagglehub.models_helpers import create_model_instance, upload_files, create_model_instance_version, create_model_instance_or_version, get_or_create_model; from kagglehub.auth import login; kagglehub.login()
-#create_model_instance_or_version('aminmohamedmohami', 'test', 'PyTorch', '13j', "Apache 2.0", ["/usr/local/google/home/aminmohamed/labeled_test_impression.csv"])
-#create_model_instance("/usr/local/google/home/aminmohamed/labeled_test_impression.csv"])

@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 from urllib.parse import urljoin
 
 import requests
@@ -59,13 +59,14 @@ class KaggleApiV1Client:
             kaggle_api_raise_for_status(response)
             return response.json()
     
-    def post(self, path: str, data: dict):
+    def post(self, path: str, data: dict, headers: Optional[Dict[str, str]] = None):
         url = self._build_url(path)
         with requests.post(
             url,
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+            headers=headers,
         ) as response:
             kaggle_api_raise_for_status(response)
             return response.json()
