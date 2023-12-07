@@ -67,12 +67,12 @@ class KaggleCacheResolver(Resolver):
 
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
-        
+
         if not os.path.exists(cached_path):
             # Only print this if the model is not already mounted.
             logger.info(f"Mounting files to {cached_path}...")
 
-        while not os.path.exists(cached_path):                
+        while not os.path.exists(cached_path):
             time.sleep(5)
 
         if path:
