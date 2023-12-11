@@ -4,6 +4,10 @@
 
 *
 
+## v0.1.4 (Dec 11th, 2023)
+
+* Improve error messages for `KaggleCacheResolver` ([#40](https://github.com/Kaggle/kagglehub/pull/40))
+
 ## v0.1.3 (Dec 5th, 2023)
 
 * Improve error messages for Kaggle API calls ([#38](https://github.com/Kaggle/kagglehub/pull/38))
