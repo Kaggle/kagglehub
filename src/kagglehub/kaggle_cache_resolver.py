@@ -40,7 +40,10 @@ class KaggleCacheResolver(Resolver):
         return False
 
     def __call__(self, h: ModelHandle, path: Optional[str] = None) -> str:
-        logger.info(f"Attaching model '{h}' to your Kaggle notebook...")
+        if path:
+            logger.info(f"Attaching '{path}' from model '{h}' to your Kaggle notebook...")
+        else:
+            logger.info(f"Attaching model '{h}' to your Kaggle notebook...")
         client = KaggleJwtClient()
         model_ref = {
             "OwnerSlug": h.owner,
@@ -65,11 +68,12 @@ class KaggleCacheResolver(Resolver):
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
 
-        logger.info(f"Mounting files to {cached_path}...")
+        if not os.path.exists(cached_path):
+            # Only print this if the model is not already mounted.
+            logger.info(f"Mounting files to {cached_path}...")
+
         while not os.path.exists(cached_path):
             time.sleep(5)
-
-        logger.info(f"Model '{h}' is attached.")
 
         if path:
             cached_filepath = f"{cached_path}/{path}"
