@@ -66,7 +66,6 @@ class KaggleApiV1Client:
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
-            headers=headers,
         ) as response:
             kaggle_api_raise_for_status(response)
             return response.json()

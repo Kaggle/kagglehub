@@ -38,16 +38,12 @@ def model_upload(handle: str, local_model_dir: str, license: str, version_notes:
 
     # Create the model if it doesn't already exist
     get_or_create_model(h.owner, h.model)
-    
-    # TODO(aminmohamed): Upload the model files to GCS
-    upload_files(local_model_dir)
+
+    # Upload the model files to GCS
+    # tokens = upload_files(local_model_dir)
+    tokens = ['dsssd']
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
-    file_paths = []
-    for root, directories, files in os.walk(local_model_dir):
-        for file in files:
-            full_path = os.path.join(root, file)
-            file_paths.append(full_path)
-    create_model_instance_or_version(h, license, local_model_dir, version_notes)
+    create_model_instance_or_version(h, license, tokens, version_notes)
 
 

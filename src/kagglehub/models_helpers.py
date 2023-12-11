@@ -203,17 +203,17 @@ def create_model_instance_version(model_handle: ModelHandle, files: list[str], v
         raise BackendError(response['error'])
     logger.info("Model Instance Version Created.")
 
-def create_model_instance_or_version(model_handle: ModelHandle, license_name: str, files=None, version_notes: Optional[str] = None):
+def create_model_instance_or_version(model_handle: ModelHandle, license_name: str, files: list[str], version_notes: Optional[str] = None):
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{model_handle}/get")
         # the instance exist, create a new version.
-        create_model_instance_version(model_handle, version_notes)
+        create_model_instance_version(model_handle, files, version_notes)
     except KaggleApiHTTPError as e:
         if e.response.status_code == HTTPStatus.NOT_FOUND:
             create_model_instance(model_handle, license_name, files)
-            return
-        raise(e)
+        else:
+            raise(e)
 
 def get_or_create_model(owner_slug, model_slug):
     try:
@@ -221,9 +221,9 @@ def get_or_create_model(owner_slug, model_slug):
         api_client.get(f"/models/{owner_slug}/{model_slug}/get")
     except KaggleApiHTTPError as e:
         if e.response.status_code == HTTPStatus.NOT_FOUND:
-            logger.error(
+            logger.info(
                 f"Model '{model_slug}' does not exist for user '{owner_slug}'. Creating Model..."
             )
             create_model(owner_slug, model_slug)
-            return
-        raise(e)
+        else:
+            raise(e)
