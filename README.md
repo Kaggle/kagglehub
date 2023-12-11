@@ -80,6 +80,13 @@ hatch run test
 hatch run test tests/test_<SOME_FILE>.py
 ```
 
+### Run `kagglehub` from source
+
+```sh
+# Download a model & print the path
+hatch run python -c "import kagglehub; print('path: ', kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem'))"
+```
+
 ### Lint / Format
 
 ```sh
