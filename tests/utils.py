@@ -31,7 +31,6 @@ def create_test_cache():
 @contextmanager
 def create_test_http_server(handler_class: Type[BaseHTTPRequestHandler], endpoint=os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME)):
     test_server_address = urlparse(endpoint)
-    print(endpoint)
     if not test_server_address.hostname or not test_server_address.port:
         msg = f"Invalid test server address: {endpoint}. You must specify a hostname & port"
         raise ValueError(msg)

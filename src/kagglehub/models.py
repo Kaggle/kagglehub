@@ -40,8 +40,7 @@ def model_upload(handle: str, local_model_dir: str, license: str, version_notes:
     get_or_create_model(h.owner, h.model)
 
     # Upload the model files to GCS
-    # tokens = upload_files(local_model_dir)
-    tokens = ['dsssd']
+    tokens = upload_files(local_model_dir)
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
     create_model_instance_or_version(h, license, tokens, version_notes)

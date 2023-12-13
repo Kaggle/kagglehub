@@ -76,7 +76,7 @@ class TestModelUpload(BaseTestCase):
                 model_upload("invalid/invalid/invalid", TEST_FILEPATH, "Apache 2.0")
 
     def test_model_upload_instance_with_valid_handle(self):
-        # exection path: get model -> create_model -> get_instance -> create version
+        # exection path: get_model -> create_model -> get_instance -> create_version
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, 'http://localhost:7778'):
                 try:
@@ -86,7 +86,7 @@ class TestModelUpload(BaseTestCase):
                     self.fail(f"Unexpected exception raised: {e}")
 
     def test_model_upload_version_with_valid_handle(self):
-        # exection path: get model -> get_instance -> create version
+        # exection path: get_model -> get_instance -> create_version
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, 'http://localhost:7778'):
                 try:
