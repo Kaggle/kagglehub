@@ -10,7 +10,9 @@ class Resolver:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __call__(self, handle: ModelHandle, path: Optional[str] = None, force_download: Optional[bool] = False) -> str:
+    def __call__(
+        self, handle: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> str:
         """Resolves a handle into a path with the requested model files.
 
         Args:

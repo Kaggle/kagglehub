@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 from typing import Optional, Union
 
 from kagglehub.config import get_cache_folder
@@ -57,7 +57,7 @@ def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
         os.removedirs(os.path.dirname(marker_path))
 
 
-def delete_from_cache(handle: Union[ModelHandle], path: str) -> Optional[str]:
+def delete_from_cache(handle: Union[ModelHandle], path: Optional[str]) -> Optional[str]:
     """Delete resource from the cache, even if incomplete.
 
     Args:

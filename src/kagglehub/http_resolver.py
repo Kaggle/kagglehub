@@ -2,7 +2,13 @@ import os
 import tarfile
 from typing import Optional
 
-from kagglehub.cache import delete_from_cache, get_cached_archive_path, get_cached_path, load_from_cache, mark_as_complete
+from kagglehub.cache import (
+    delete_from_cache,
+    get_cached_archive_path,
+    get_cached_path,
+    load_from_cache,
+    mark_as_complete,
+)
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.handle import ModelHandle
 from kagglehub.resolver import Resolver
@@ -15,7 +21,7 @@ class HttpResolver(Resolver):
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, force_download: Optional[bool] = False) -> str:
+    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -26,7 +32,6 @@ class HttpResolver(Resolver):
             return model_path  # Already cached
         elif model_path and force_download:
             delete_from_cache(h, path)
-            # Delete from cache
 
         url_path = _build_download_url_path(h)
         out_path = get_cached_path(h, path)

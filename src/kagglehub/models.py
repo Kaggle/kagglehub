@@ -4,7 +4,7 @@ from kagglehub import registry
 from kagglehub.handle import parse_model_handle
 
 
-def model_download(handle: str, path: Optional[str] = None, force_download: Optional[bool] = False):
+def model_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False):
     """Download model files.
 
     Args:

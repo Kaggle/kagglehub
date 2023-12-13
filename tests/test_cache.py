@@ -26,13 +26,13 @@ TEST_FILEPATH = "foo.txt"
 
 class TestCache(BaseTestCase):
     def test_load_from_cache_miss(self):
-#         ModelHandle(
-#             owner="google",
-#             model="bert",
-#             framework="tensorFlow2",
-#             variation="answer-equivalence-bem",
-#             version=2,
-#         )
+        #         ModelHandle(
+        #             owner="google",
+        #             model="bert",
+        #             framework="tensorFlow2",
+        #             variation="answer-equivalence-bem",
+        #             version=2,
+        #         )
         self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
     def test_load_from_cache_with_path_miss(self):
