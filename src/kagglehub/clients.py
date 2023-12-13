@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Dict, Optional, Tuple
+from typing import Tuple
 from urllib.parse import urljoin
 
 import requests
@@ -58,8 +58,8 @@ class KaggleApiV1Client:
         ) as response:
             kaggle_api_raise_for_status(response)
             return response.json()
-    
-    def post(self, path: str, data: dict, headers: Optional[Dict[str, str]] = None):
+
+    def post(self, path: str, data: dict):
         url = self._build_url(path)
         with requests.post(
             url,
