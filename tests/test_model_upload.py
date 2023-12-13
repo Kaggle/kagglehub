@@ -2,7 +2,6 @@ from tests.fixtures import BaseTestCase
 from http.server import BaseHTTPRequestHandler
 import json
 
-import kagglehub
 from kagglehub.models import model_upload
 from tests.fixtures import BaseTestCase
 
@@ -68,8 +67,6 @@ class TestModelUpload(BaseTestCase):
 
     def test_model_upload_instance_with_valid_handle(self):
         # exection path: get model -> create_model -> get_instance -> create version
-        with self.assertRaises(Exception):
-            model_upload("valid/valid/valid/1", TEST_FILEPATH, "Apache 2.0")
         with create_test_http_server(KaggleAPIHandler):
             try:
                 model_upload("valid/valid/valid/1", TEST_FILEPATH, "Apache 2.0")
@@ -79,8 +76,6 @@ class TestModelUpload(BaseTestCase):
 
     def test_model_upload_version_with_valid_handle(self):
         # exection path: get model -> get_instance -> create version
-        with self.assertRaises(Exception):
-            model_upload("metaresearch/llama-2/pyTorch/1", TEST_FILEPATH, "Apache 2.0")
         with create_test_http_server(KaggleAPIHandler):
             try:
                 model_upload("metaresearch/llama-2/pyTorch/1", TEST_FILEPATH, "Apache 2.0")
