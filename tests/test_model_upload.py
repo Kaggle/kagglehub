@@ -59,6 +59,16 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             error_message = json.dumps({"error": f"bad: {self.path}"})
             self.wfile.write(bytes(error_message, "utf-8"))
 
+class GcsAPIHandler(BaseHTTPRequestHandler):
+    def do_HEAD(self):  # noqa: N802
+        self.send_response(200)
+
+    def do_PUT(self):  # noqa: N802
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"status": "success", "message": "File uploaded"}).encode('utf-8'))
+        
 class TestModelUpload(BaseTestCase):
     def test_model_upload_with_invalid_handle(self):
         with create_test_http_server(KaggleAPIHandler):
@@ -68,17 +78,19 @@ class TestModelUpload(BaseTestCase):
     def test_model_upload_instance_with_valid_handle(self):
         # exection path: get model -> create_model -> get_instance -> create version
         with create_test_http_server(KaggleAPIHandler):
-            try:
-                model_upload("valid/valid/valid/1", TEST_FILEPATH, "Apache 2.0")
-            except Exception as e:
-                # If an exception is caught, the test fails
-                self.fail(f"Unexpected exception raised: {e}")
+            with create_test_http_server(GcsAPIHandler, 'http://localhost:7778'):
+                try:
+                    model_upload("valid/valid/valid/1", TEST_FILEPATH, "Apache 2.0")
+                except Exception as e:
+                    # If an exception is caught, the test fails
+                    self.fail(f"Unexpected exception raised: {e}")
 
     def test_model_upload_version_with_valid_handle(self):
         # exection path: get model -> get_instance -> create version
         with create_test_http_server(KaggleAPIHandler):
-            try:
-                model_upload("metaresearch/llama-2/pyTorch/1", TEST_FILEPATH, "Apache 2.0")
-            except Exception as e:
-                # If an exception is caught, the test fails
-                self.fail(f"Unexpected exception raised: {e}")
+            with create_test_http_server(GcsAPIHandler, 'http://localhost:7778'):
+                try:
+                    model_upload("metaresearch/llama-2/pyTorch/1", TEST_FILEPATH, "Apache 2.0")
+                except Exception as e:
+                    # If an exception is caught, the test fails
+                    self.fail(f"Unexpected exception raised: {e}")
