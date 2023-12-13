@@ -17,7 +17,7 @@ MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 
 
 class HttpResolver(Resolver):
-    def is_supported(self, *_) -> bool:
+    def is_supported(self, *_, **__) -> bool:
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class KaggleCacheResolver(Resolver):
-    def is_supported(self, *_) -> bool:
+    def is_supported(self, *_, **__) -> bool:
         if is_kaggle_cache_disabled():
             return False
 
