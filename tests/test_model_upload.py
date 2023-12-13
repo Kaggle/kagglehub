@@ -51,7 +51,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"token": "dummy", "createUrl": "https://dummy", "status": "success", "message": "Here is your token and Url"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"token": "dummy", "createUrl": "http://localhost:7778", "status": "success", "message": "Here is your token and Url"}).encode('utf-8'))
         else:
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -86,7 +86,7 @@ class TestModelUpload(BaseTestCase):
                     self.fail(f"Unexpected exception raised: {e}")
 
     def test_model_upload_version_with_valid_handle(self):
-        # exection path: get_model -> get_instance -> create_version
+        # exection path: get_model -> create_model -> get_instance -> create_instance
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, 'http://localhost:7778'):
                 try:
