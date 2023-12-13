@@ -15,16 +15,16 @@ class HttpResolver(Resolver):
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, force: Optional[bool] = False) -> str:
+    def __call__(self, h: ModelHandle, path: Optional[str] = None, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
             h.version = _get_current_version(api_client, h)
 
         model_path = load_from_cache(h, path)
-        if model_path and not force:
+        if model_path and not force_download:
             return model_path  # Already cached
-        elif model_path and force:
+        elif model_path and force_download:
             delete_from_cache(h, path)
             # Delete from cache
 

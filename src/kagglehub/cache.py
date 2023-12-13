@@ -57,14 +57,23 @@ def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
         os.removedirs(os.path.dirname(marker_path))
 
 
-def delete_from_cache(handle: Union[ModelHandle], path: str) -> bool:
+def delete_from_cache(handle: Union[ModelHandle], path: str) -> Optional[str]:
+    """Delete resource from the cache, even if incomplete.
+
+    Args:
+        handle: Resource handle
+        path: Optional path to a file within the bundle.
+
+    Returns:
+        A string representing the path of the deleted resource or None on cache miss.
+    """
     mark_as_incomplete(handle, path)
     model_full_path = get_cached_path(handle, path)
     if os.path.exists(model_full_path):
         shutil.rmtree(model_full_path)
         os.removedirs(os.path.dirname(model_full_path))
-        return True
-    return False
+        return model_full_path
+    return None
 
 
 def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:

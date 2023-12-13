@@ -39,8 +39,8 @@ class KaggleCacheResolver(Resolver):
 
         return False
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, force: Optional[bool] = False) -> str:
-        if force:
+    def __call__(self, h: ModelHandle, path: Optional[str] = None, force_download: Optional[bool] = False) -> str:
+        if force_download:
             msg = "Invalid input: Cannot force download in a Kaggle notebook"
             raise ValueError(msg) from err
         
