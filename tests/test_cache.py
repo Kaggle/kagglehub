@@ -26,13 +26,13 @@ TEST_FILEPATH = "foo.txt"
 
 class TestCache(BaseTestCase):
     def test_load_from_cache_miss(self):
-        ModelHandle(
-            owner="google",
-            model="bert",
-            framework="tensorFlow2",
-            variation="answer-equivalence-bem",
-            version=2,
-        )
+#         ModelHandle(
+#             owner="google",
+#             model="bert",
+#             framework="tensorFlow2",
+#             variation="answer-equivalence-bem",
+#             version=2,
+#         )
         self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
     def test_load_from_cache_with_path_miss(self):
@@ -51,7 +51,7 @@ class TestCache(BaseTestCase):
         with create_test_cache():
             cache_path = get_cached_path(TEST_MODEL_HANDLE)
 
-            # Should be a cache `miss` if the directory exists but not the marker file.
+            # Should be a cache `miss` if the directory and file exist but not the marker file.
             os.makedirs(cache_path)
             Path(os.path.join(cache_path, TEST_FILEPATH)).touch()  # Create file
 

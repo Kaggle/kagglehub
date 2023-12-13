@@ -48,20 +48,24 @@ def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None):
     Path(marker_path).touch()
 
 
-def delete_from_cache(handle: Union[ModelHandle], path: str) -> bool:
+def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
     marker_path = _get_completion_marker_filepath(handle, path)
-    marker_dir = marker_path.rsplit("/", 1)[0]
+    if os.path.exists(marker_path):
+        os.remove(marker_path)
+    # Delete the parent directory if it's now empty.
+    if len(os.listdir(os.path.dirname(marker_path))) == 0:
+        os.removedirs(os.path.dirname(marker_path))
+
+
+def delete_from_cache(handle: Union[ModelHandle], path: str) -> bool:
+    mark_as_incomplete(handle, path)
     model_full_path = get_cached_path(handle, path)
-    model_dir = model_full_path.rsplit("/", 1)[0]
-    
-    os.remove(marker_path)
-    try:
-        os.removedirs(marker_dir)
-    except OSError:
-        pass # Directory might not be empty
-    shutil.rmtree(model_full_path)
-    os.removedirs(model_dir)
-    
+    if os.path.exists(model_full_path):
+        shutil.rmtree(model_full_path)
+        os.removedirs(os.path.dirname(model_full_path))
+        return True
+    return False
+
 
 def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
     # Can extend to add support for other resources like DatasetHandle.
