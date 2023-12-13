@@ -53,3 +53,10 @@ def kaggle_api_raise_for_status(response: requests.Response):
 
         # Default handling
         raise KaggleApiHTTPError(message, response=response) from e
+
+def postprocess_response(response: dict) -> None:
+    """
+    Postprocesses the API response to check for errors.
+    """
+    if "error" in response and response["error"] != "":
+        raise BackendError(response["error"])

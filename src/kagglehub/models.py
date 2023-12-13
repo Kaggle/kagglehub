@@ -3,7 +3,8 @@ from typing import Optional
 
 from kagglehub import registry
 from kagglehub.handle import parse_model_handle
-from kagglehub.models_helpers import create_model_instance_or_version, get_or_create_model, upload_files
+from kagglehub.models_helpers import create_model_instance_or_version, get_or_create_model
+from kagglehub.gcs_upload import upload_files
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ def model_download(handle: str, path: Optional[str] = None):
     return registry.resolver(h, path)
 
 
-def model_upload(handle: str, local_model_dir: str, license_name: str, version_notes: Optional[str] = None):
+def model_upload(handle: str, local_model_dir: str, license_name: str, model_type: str, version_notes: Optional[str] = None):
     """Upload model files.
 
     Args:
@@ -44,7 +45,7 @@ def model_upload(handle: str, local_model_dir: str, license_name: str, version_n
     get_or_create_model(h.owner, h.model)
 
     # Upload the model files to GCS
-    tokens = upload_files(local_model_dir)
+    tokens = upload_files(local_model_dir, model_type)
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
     create_model_instance_or_version(h, license_name, tokens, version_notes)
