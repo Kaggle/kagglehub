@@ -52,12 +52,12 @@ def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
     marker_path = _get_completion_marker_filepath(handle, path)
     if os.path.exists(marker_path):
         os.remove(marker_path)
-    # Delete the parent directory if it's now empty.
-    if len(os.listdir(os.path.dirname(marker_path))) == 0:
-        os.removedirs(os.path.dirname(marker_path))
+        # Delete the parent directory if it's now empty.
+        if len(os.listdir(os.path.dirname(marker_path))) == 0:
+            os.removedirs(os.path.dirname(marker_path))
 
 
-def delete_from_cache(handle: Union[ModelHandle], path: Optional[str]) -> Optional[str]:
+def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> Optional[str]:
     """Delete resource from the cache, even if incomplete.
 
     Args:
@@ -70,8 +70,12 @@ def delete_from_cache(handle: Union[ModelHandle], path: Optional[str]) -> Option
     mark_as_incomplete(handle, path)
     model_full_path = get_cached_path(handle, path)
     if os.path.exists(model_full_path):
-        shutil.rmtree(model_full_path)
-        os.removedirs(os.path.dirname(model_full_path))
+        if path:
+            os.remove(model_full_path)
+        else:
+            shutil.rmtree(model_full_path)
+        if len(os.listdir(os.path.dirname(model_full_path))) == 0:
+            os.removedirs(os.path.dirname(model_full_path))
         return model_full_path
     return None
 
