@@ -15,12 +15,7 @@ from tests.fixtures import BaseTestCase
 from .utils import create_test_cache
 
 EXPECTED_MODEL_SUBDIR = os.path.join(
-    MODELS_CACHE_SUBFOLDER,
-    "google",
-    "bert",
-    "tensorFlow2",
-    "answer-equivalence-bem",
-    "2"
+    MODELS_CACHE_SUBFOLDER, "google", "bert", "tensorFlow2", "answer-equivalence-bem", "2"
 )
 
 EXPECTED_MODEL_SUBPATH = os.path.join(
