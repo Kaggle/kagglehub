@@ -1,12 +1,13 @@
 import logging
 from http import HTTPStatus
-from typing import Optional, Any
+from typing import Any, Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError, postprocess_response
 from kagglehub.handle import ModelHandle
 
 logger = logging.getLogger(__name__)
+
 
 def _create_model(owner_slug: str, model_slug: str) -> Any:
     data = {"ownerSlug": owner_slug, "slug": model_slug, "title": model_slug, "isPrivate": True}

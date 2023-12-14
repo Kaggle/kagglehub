@@ -1,5 +1,7 @@
 import json
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from kagglehub.models import logger, model_upload
 from tests.fixtures import BaseTestCase
@@ -10,7 +12,6 @@ GET_INSTANCE = "/models/metaresearch/llama-2/pyTorch/1/get"
 GET_MODEL = "/models/metaresearch/llama-2/get"
 CREATE_MODEL = "/models/create/new"
 MODEL_HANDLE = "metaresearch/llama-2/pyTorch/1"
-TEST_FILEPATH = "/usr/local/google/home/aminmohamed/NegBio/images/"
 
 
 class KaggleAPIHandler(BaseHTTPRequestHandler):
@@ -85,7 +86,10 @@ class TestModelUpload(BaseTestCase):
     def test_model_upload_with_invalid_handle(self):
         with create_test_http_server(KaggleAPIHandler):
             try:
-                model_upload("invalid/invalid/invalid", TEST_FILEPATH, "Apache 2.0", "model_type")
+                with TemporaryDirectory() as temp_dir:
+                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath.touch()  # Create a temporary file in the temporary directory
+                    model_upload("invalid/invalid/invalid", temp_dir, "Apache 2.0", "model_type")
                 self.fail("Expected an exception")
             except Exception as e:
                 logger.info(f"Caught an exception: {type(e).__name__}")
@@ -95,17 +99,24 @@ class TestModelUpload(BaseTestCase):
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 try:
-                    model_upload("valid/valid/valid/1", TEST_FILEPATH, "Apache 2.0", "model_type")
+                    with TemporaryDirectory() as temp_dir:
+                        test_filepath = Path(temp_dir) / "temp_test_file"
+                        test_filepath.touch()  # Create a temporary file in the temporary directory
+                        model_upload("valid/valid/valid/1", temp_dir, "Apache 2.0", "model_type")
                 except Exception as e:
                     # If an exception is caught, the test fails
                     self.fail(f"Unexpected exception raised: {e}")
 
     def test_model_upload_version_with_valid_handle(self):
         # execution path: get_model -> get_instance -> create_instance
+
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 try:
-                    model_upload("metaresearch/llama-2/pyTorch/1", TEST_FILEPATH, "Apache 2.0", "model_type")
+                    with TemporaryDirectory() as temp_dir:
+                        test_filepath = Path(temp_dir) / "temp_test_file"
+                        test_filepath.touch()  # Create a temporary file in the temporary directory
+                        model_upload("metaresearch/llama-2/pyTorch/1", temp_dir, "Apache 2.0", "model_type")
                 except Exception as e:
                     # If an exception is caught, the test fails
                     self.fail(f"Unexpected exception raised: {e}")

@@ -2,9 +2,9 @@ import logging
 from typing import Optional
 
 from kagglehub import registry
+from kagglehub.gcs_upload import upload_files
 from kagglehub.handle import parse_model_handle
 from kagglehub.models_helpers import create_model_instance_or_version, get_or_create_model
-from kagglehub.gcs_upload import upload_files
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,9 @@ def model_download(handle: str, path: Optional[str] = None):
     return registry.resolver(h, path)
 
 
-def model_upload(handle: str, local_model_dir: str, license_name: str, model_type: str, version_notes: Optional[str] = None):
+def model_upload(
+    handle: str, local_model_dir: str, license_name: str, model_type: str, version_notes: Optional[str] = None
+):
     """Upload model files.
 
     Args:

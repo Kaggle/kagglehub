@@ -1,15 +1,15 @@
 import datetime
 import logging
 import os
-import shutil
-import tempfile
 
 import requests
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import BackendError, postprocess_response
+from kagglehub.exceptions import postprocess_response
 
 logger = logging.getLogger(__name__)
+
+MAX_NUM_FILES = 50
 
 
 def parse(string: str):
@@ -72,9 +72,9 @@ def _upload_blob(file_path: str, model_type: str):
     return response["token"]
 
 
-def upload_files(folder: str, model_type: str, quiet: bool = False, dir_mode: str = "skip"):  # noqa: FBT002
+def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FBT002, FBT001
     """upload files in a folder. Throws an exception if more than 50 files are found.
-        Parameters
+    Parameters
     ==========
     folder: the folder to upload from
     quiet: suppress verbose output (default is False)
@@ -87,8 +87,9 @@ def upload_files(folder: str, model_type: str, quiet: bool = False, dir_mode: st
     for _, _, files in os.walk(folder):
         file_count += len(files)
 
-    if file_count > 50:
-        raise RuntimeError("Cannot upload more than 50 files. Consider zipping the files first.")
+    if file_count > MAX_NUM_FILES:
+        max_num_files_exception = "Cannot upload more than 50 files. Consider zipping the files first."
+        raise RuntimeError(max_num_files_exception)
 
     tokens = []
     for file_name in os.listdir(folder):
@@ -97,7 +98,9 @@ def upload_files(folder: str, model_type: str, quiet: bool = False, dir_mode: st
     return tokens
 
 
-def _upload_file_or_folder(parent_path: str, file_or_folder_name: str, dir_mode: str, model_type: str, quiet: bool = False):  # noqa: FBT002
+def _upload_file_or_folder(
+    parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
+):
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
 
@@ -119,15 +122,14 @@ def _upload_file_or_folder(parent_path: str, file_or_folder_name: str, dir_mode:
             file_path = os.path.join(full_path, filename)
             if os.path.isfile(file_path):
                 _upload_file(filename, file_path, quiet, model_type)
-            else:
-                if not quiet:
-                    logger.info(f"Skipping non-file item in directory: {filename}")
+            elif not quiet:
+                logger.info(f"Skipping non-file item in directory: {filename}")
     elif not quiet:
         logger.info("Skipping: " + file_or_folder_name)
     return None
 
 
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str):
+def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str):  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========
@@ -150,5 +152,3 @@ def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str):
     if not quiet:
         logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
     return token
-
-
