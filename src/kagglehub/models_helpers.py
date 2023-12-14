@@ -9,7 +9,7 @@ from kagglehub.handle import ModelHandle
 logger = logging.getLogger(__name__)
 
 
-def _create_model(owner_slug: str, model_slug: str) -> Any:
+def _create_model(owner_slug: str, model_slug: str):
     data = {"ownerSlug": owner_slug, "slug": model_slug, "title": model_slug, "isPrivate": True}
     api_client = KaggleApiV1Client()
     response = api_client.post("/models/create/new", data)
@@ -18,7 +18,7 @@ def _create_model(owner_slug: str, model_slug: str) -> Any:
     logger.info("Model Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, license_name: str, files: list[str]) -> Any:
+def _create_model_instance(model_handle: ModelHandle, license_name: str, files: list[str]):
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
@@ -35,7 +35,7 @@ def _create_model_instance(model_handle: ModelHandle, license_name: str, files: 
     logger.info("Model Instance Created.")
 
 
-def _create_model_instance_version(model_handle: ModelHandle, files: list[str], version_notes="") -> Any:
+def _create_model_instance_version(model_handle: ModelHandle, files: list[str], version_notes=""):
     data = {"versionNotes": version_notes, "files": [{"token": files[0]}]}
     api_client = KaggleApiV1Client()
     response = api_client.post(
@@ -49,7 +49,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: list[str], 
 
 def create_model_instance_or_version(
     model_handle: ModelHandle, license_name: str, files: list[str], version_notes: Optional[str] = None
-) -> None:
+):
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{model_handle}/get")
@@ -62,7 +62,7 @@ def create_model_instance_or_version(
             raise (e)
 
 
-def get_or_create_model(owner_slug: str, model_slug: str) -> None:
+def get_or_create_model(owner_slug: str, model_slug: str):
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{owner_slug}/{model_slug}/get")
