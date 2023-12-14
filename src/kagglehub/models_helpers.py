@@ -72,3 +72,4 @@ def get_or_create_model(owner_slug: str, model_slug: str):
             _create_model(owner_slug, model_slug)
         else:
             raise (e)
+
