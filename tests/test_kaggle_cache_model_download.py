@@ -121,4 +121,10 @@ class TestKaggleCacheModelDownload(BaseTestCase):
     def test_versioned_model_download_force_download_raises(self):
         with create_test_jwt_http_server(KaggleJwtHandler):
             with self.assertRaises(ValueError):
-                kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download="hiksjdhf")
+                kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=True)
+
+    def test_versioned_model_download_with_force_download_explicitly_false(self):
+        with create_test_jwt_http_server(KaggleJwtHandler):
+            model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=False)
+            self.assertTrue(model_path.endswith("/1"))
+            self.assertEqual(["config.json"], sorted(os.listdir(model_path)))

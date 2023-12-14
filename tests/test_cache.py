@@ -203,6 +203,7 @@ class TestCache(BaseTestCase):
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE)
 
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), deleted_path)
+            self.assertFalse(os.path.exists(get_cached_path(TEST_MODEL_HANDLE)))
 
     def test_delete_from_cache_with_files_without_complete_marker_with_path(self):
         with create_test_cache() as d:
@@ -212,3 +213,4 @@ class TestCache(BaseTestCase):
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), deleted_path)
+            self.assertFalse(os.path.exists(os.path.join(get_cached_path(TEST_MODEL_HANDLE), TEST_FILEPATH)))
