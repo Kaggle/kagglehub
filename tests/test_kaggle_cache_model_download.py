@@ -117,3 +117,8 @@ class TestKaggleCacheModelDownload(BaseTestCase):
     def test_versioned_model_download_bad_handle_raises(self):
         with self.assertRaises(ValueError):
             kagglehub.model_download("bad handle")
+
+    def test_versioned_model_download_force_download_raises(self):
+        with create_test_jwt_http_server(KaggleJwtHandler):
+            with self.assertRaises(ValueError):
+                kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download="hiksjdhf")

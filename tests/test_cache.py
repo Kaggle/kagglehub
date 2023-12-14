@@ -41,13 +41,14 @@ TEST_FILEPATH = "foo.txt"
 
 class TestCache(BaseTestCase):
     def test_load_from_cache_miss(self):
-        #         ModelHandle(
-        #             owner="google",
-        #             model="bert",
-        #             framework="tensorFlow2",
-        #             variation="answer-equivalence-bem",
-        #             version=2,
-        #         )
+        # Why is this ModelHandle needed?
+        ModelHandle(
+            owner="google",
+            model="bert",
+            framework="tensorFlow2",
+            variation="answer-equivalence-bem",
+            version=2,
+        )
         self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
     def test_load_from_cache_with_path_miss(self):
@@ -183,7 +184,7 @@ class TestCache(BaseTestCase):
 
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE)
 
-            # Should not have deleted anything if only the marker file existed.
+            # Should not delete anything if only the marker file existed.
             self.assertEqual(None, deleted_path)
 
     def test_delete_from_cache_without_files_with_complete_marker_with_path(self):
@@ -192,7 +193,7 @@ class TestCache(BaseTestCase):
 
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
-            # Should not have deleted anything if only the marker file existed.
+            # Should not delete anything if only the marker file existed.
             self.assertEqual(None, deleted_path)
 
     def test_delete_from_cache_with_files_without_complete_marker(self):
