@@ -121,7 +121,7 @@ class TestHttpModelDownload(BaseTestCase):
     def test_unversioned_model_full_download_with_file_already_cached(self):
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
-                # Download a single file
+                # Download a single file first
                 kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
                 self._download_model_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR)
 
@@ -151,7 +151,7 @@ class TestHttpModelDownload(BaseTestCase):
     def test_unversioned_model_full_download_with_file_already_cached_and_force_download(self):
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
-                # Download a single file
+                # Download a single file first
                 kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
                 self._download_model_and_assert_downloaded(
                     d, UNVERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR, force_download=True
