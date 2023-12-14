@@ -1,6 +1,6 @@
-import datetime
 import logging
 import os
+from datetime import datetime
 
 import requests
 
@@ -16,7 +16,7 @@ def parse(string: str):
     time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
         try:
-            result = datetime.strptime(string[:26], t).replace(microsecond=0)
+            result = datetime.strptime(string[:26], t).replace(microsecond=0)  # noqa: DTZ007
             return result
         except:  # noqa: E722, S110
             pass
