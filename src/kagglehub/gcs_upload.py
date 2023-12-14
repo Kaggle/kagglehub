@@ -71,9 +71,12 @@ def _upload_blob(file_path: str, model_type: str):
     with open(file_path, "rb") as f:
         headers = {"Content-Type": "application/octet-stream"}
         # TODO(b/312511716): add resumable upload
-        requests.put(response["createUrl"], data=f, headers=headers, timeout=600, stream=True)
-
-    postprocess_response(response)
+        gcs_response = requests.put(response["createUrl"], data=f, headers=headers, timeout=600, stream=True)
+        if gcs_response.status_code != 200:  # noqa: PLR2004
+            gcs_exception = (
+                f"Failed to upload to GCS. Status: {gcs_response.status_code}, Response: {gcs_response.text}"
+            )
+            raise Exception(gcs_exception)
 
     return response["token"]
 
