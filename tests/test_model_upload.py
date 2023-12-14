@@ -3,7 +3,7 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from kagglehub.models import logger, model_upload
+from kagglehub.models import model_upload
 from tests.fixtures import BaseTestCase
 
 from .utils import create_test_http_server
@@ -85,38 +85,38 @@ class GcsAPIHandler(BaseHTTPRequestHandler):
 class TestModelUpload(BaseTestCase):
     def test_model_upload_with_invalid_handle(self):
         with create_test_http_server(KaggleAPIHandler):
-            try:
+            with self.assertRaises(ValueError):
                 with TemporaryDirectory() as temp_dir:
                     test_filepath = Path(temp_dir) / "temp_test_file"
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("invalid/invalid/invalid", temp_dir, "Apache 2.0", "model_type")
-                self.fail("Expected an exception")
-            except Exception as e:
-                logger.info(f"Caught an exception: {type(e).__name__}")
 
     def test_model_upload_instance_with_valid_handle(self):
         # execution path: get_model -> create_model -> get_instance -> create_version
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
-                try:
-                    with TemporaryDirectory() as temp_dir:
-                        test_filepath = Path(temp_dir) / "temp_test_file"
-                        test_filepath.touch()  # Create a temporary file in the temporary directory
-                        model_upload("valid/valid/valid/1", temp_dir, "Apache 2.0", "model_type")
-                except Exception as e:
-                    # If an exception is caught, the test fails
-                    self.fail(f"Unexpected exception raised: {e}")
+                with TemporaryDirectory() as temp_dir:
+                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath.touch()  # Create a temporary file in the temporary directory
+                    model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Apache 2.0", "model_type")
 
     def test_model_upload_version_with_valid_handle(self):
         # execution path: get_model -> get_instance -> create_instance
 
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
-                try:
-                    with TemporaryDirectory() as temp_dir:
-                        test_filepath = Path(temp_dir) / "temp_test_file"
-                        test_filepath.touch()  # Create a temporary file in the temporary directory
-                        model_upload("metaresearch/llama-2/pyTorch/1", temp_dir, "Apache 2.0", "model_type")
-                except Exception as e:
-                    # If an exception is caught, the test fails
-                    self.fail(f"Unexpected exception raised: {e}")
+                with TemporaryDirectory() as temp_dir:
+                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath.touch()  # Create a temporary file in the temporary directory
+                    model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, "Apache 2.0", "model_type")
+
+    def test_model_upload_with_too_many_files(self):
+        with create_test_http_server(KaggleAPIHandler):
+            with self.assertRaises(ValueError):
+                with TemporaryDirectory() as temp_dir:
+                    # Create more than 50 temporary files in the directory
+                    for i in range(51):
+                        test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
+                        test_filepath.touch()
+
+                    model_upload("valid/owner/slug", temp_dir, "Apache 2.0", "model_type")

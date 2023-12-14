@@ -16,6 +16,7 @@ from kagglehub.exceptions import (
     DataCorruptionError,
     KaggleEnvironmentError,
     kaggle_api_raise_for_status,
+    postprocess_response,
 )
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
 
@@ -41,7 +42,6 @@ logger = logging.getLogger(__name__)
 
 
 # TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
-# handle 400 (Bad Request / Invalid Argument) here to show a nicer error message to the user
 class KaggleApiV1Client:
     BASE_PATH = "api/v1"
 
@@ -67,7 +67,7 @@ class KaggleApiV1Client:
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
-            kaggle_api_raise_for_status(response)
+            postprocess_response(response)
             return response.json()
 
     def download_file(self, path: str, out_file: str):

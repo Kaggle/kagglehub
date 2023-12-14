@@ -5,14 +5,14 @@ from datetime import datetime
 import requests
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import postprocess_response
+from kagglehub.exceptions import BackendError, postprocess_response
 
 logger = logging.getLogger(__name__)
 
 MAX_NUM_FILES = 50
 
 
-def parse(string: str):
+def parse_datetime_string(string: str):
     time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
         try:
@@ -25,7 +25,7 @@ def parse(string: str):
 
 class File(object):  # noqa: UP004
     def __init__(self, init_dict):
-        parsed_dict = {k: parse(v) for k, v in init_dict.items()}
+        parsed_dict = {k: parse_datetime_string(v) for k, v in init_dict.items()}
         self.__dict__.update(parsed_dict)
         self.size = File.get_size(self.totalBytes)
 
@@ -60,12 +60,18 @@ def _upload_blob(file_path: str, model_type: str):
     response = api_client.post("/blobs/upload", data=data)
     postprocess_response(response)
 
-    with open(file_path, "rb") as f:
-        file_data = f.read()
+    # Validate response content
+    if "createUrl" not in response:
+        create_url_exception = "'createUrl' field missing from response"
+        raise BackendError(create_url_exception)
+    if "token" not in response:
+        token_exception = "'token' field missing from response"
+        raise BackendError(token_exception)
 
-    headers = {"Content-Type": "application/octet-stream"}
-    # TODO(aminmohamed): add resumable upload
-    requests.put(response["createUrl"], data=file_data, headers=headers, timeout=600, stream=True)
+    with open(file_path, "rb") as f:
+        headers = {"Content-Type": "application/octet-stream"}
+        # TODO(b/312511716): add resumable upload
+        requests.put(response["createUrl"], data=f, headers=headers, timeout=600, stream=True)
 
     postprocess_response(response)
 
@@ -80,7 +86,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
     quiet: suppress verbose output (default is False)
     model_type: Type of the model that is being uploaded.
     """
-    # TODO(aminmohamed): Handle case where more than 50 files are to be uploaded by first zipping the content
+    # TODO(b/312511716): Handle case where more than 50 files are to be uploaded by first zipping the content
 
     # Count the total number of files
     file_count = 0
@@ -89,7 +95,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
 
     if file_count > MAX_NUM_FILES:
         max_num_files_exception = "Cannot upload more than 50 files. Consider zipping the files first."
-        raise RuntimeError(max_num_files_exception)
+        raise ValueError(max_num_files_exception)
 
     tokens = []
     for file_name in os.listdir(folder):
@@ -145,10 +151,6 @@ def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str): 
 
     content_length = os.path.getsize(full_path)
     token = _upload_blob(full_path, model_type)
-    if token is None:
-        if not quiet:
-            logger.info("Upload unsuccessful: " + file_name)
-        return None
     if not quiet:
         logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
     return token

@@ -15,7 +15,7 @@ def _create_model(owner_slug: str, model_slug: str):
     response = api_client.post("/models/create/new", data)
     # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
     postprocess_response(response)
-    logger.info("Model Created.")
+    logger.info(f"Model '{model_slug}' Created.")
 
 
 def _create_model_instance(model_handle: ModelHandle, license_name: str, files: List[str]):
@@ -32,7 +32,7 @@ def _create_model_instance(model_handle: ModelHandle, license_name: str, files: 
     response = api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
     # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
     postprocess_response(response)
-    logger.info("Model Instance Created.")
+    logger.info(logger.info(f"Model Instance for '{model_handle}' Created."))
 
 
 def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes=""):
@@ -44,7 +44,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
     )
     # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
     postprocess_response(response)
-    logger.info("Model Instance Version Created.")
+    logger.info(f"Model Instance Version for '{model_handle}' Created.")
 
 
 def create_model_instance_or_version(
@@ -62,7 +62,7 @@ def create_model_instance_or_version(
             raise (e)
 
 
-def get_or_create_model(owner_slug: str, model_slug: str):
+def create_model_if_missing(owner_slug: str, model_slug: str):
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{owner_slug}/{model_slug}/get")

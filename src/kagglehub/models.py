@@ -4,7 +4,7 @@ from typing import Optional
 from kagglehub import registry
 from kagglehub.gcs_upload import upload_files
 from kagglehub.handle import parse_model_handle
-from kagglehub.models_helpers import create_model_instance_or_version, get_or_create_model
+from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def model_upload(
         raise ValueError(is_versioned_exception)
 
     # Create the model if it doesn't already exist
-    get_or_create_model(h.owner, h.model)
+    create_model_if_missing(h.owner, h.model)
 
     # Upload the model files to GCS
     tokens = upload_files(local_model_dir, model_type)
