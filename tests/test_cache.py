@@ -8,6 +8,7 @@ from kagglehub.cache import (
     get_cached_path,
     load_from_cache,
     mark_as_complete,
+    mark_as_incomplete,
 )
 from kagglehub.handle import ModelHandle
 from tests.fixtures import BaseTestCase
@@ -37,18 +38,12 @@ TEST_MODEL_HANDLE = ModelHandle(
 )
 
 TEST_FILEPATH = "foo.txt"
+TEST_MODEL_VARIABLES_DIR_NAME = "variables"
+TEST_MODEL_VARIABLES_FILE_NAME = "variables.txt"
 
 
 class TestCache(BaseTestCase):
     def test_load_from_cache_miss(self):
-        # Why is this ModelHandle needed?
-        ModelHandle(
-            owner="google",
-            model="bert",
-            framework="tensorFlow2",
-            variation="answer-equivalence-bem",
-            version=2,
-        )
         self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
     def test_load_from_cache_with_path_miss(self):
@@ -75,9 +70,6 @@ class TestCache(BaseTestCase):
 
     def test_load_from_cache_with_complete_marker_no_files_miss(self):
         with create_test_cache():
-            # Why is this line needed?
-            get_cached_path(TEST_MODEL_HANDLE)
-
             # Should be a cache `miss` if completion marker file exists but not the files themselves.
             mark_as_complete(TEST_MODEL_HANDLE)
 
@@ -85,8 +77,6 @@ class TestCache(BaseTestCase):
 
     def test_load_from_cache_with_path_complete_marker_no_files_miss(self):
         with create_test_cache():
-            get_cached_path(TEST_MODEL_HANDLE)
-
             # Should be a cache `miss` if completion marker file exists but not the file itself.
             mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
@@ -141,32 +131,41 @@ class TestCache(BaseTestCase):
                 archive_path,
             )
 
+    def _download_test_model_to_cache(self):
+        cache_path = get_cached_path(TEST_MODEL_HANDLE)
+        model_variable_dir = os.path.join(cache_path, TEST_MODEL_VARIABLES_DIR_NAME)
+
+        os.makedirs(model_variable_dir)
+        Path(os.path.join(cache_path, TEST_FILEPATH)).touch()
+        Path(os.path.join(model_variable_dir, TEST_MODEL_VARIABLES_FILE_NAME)).touch()
+
+        mark_as_complete(TEST_MODEL_HANDLE)
+
+    def _download_test_file_to_cache(self):
+        cache_path = get_cached_path(TEST_MODEL_HANDLE)
+
+        os.makedirs(cache_path)
+        Path(os.path.join(cache_path, TEST_FILEPATH)).touch()
+
+        mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
+
     def test_delete_from_cache(self):
         with create_test_cache() as d:
-            cache_path = get_cached_path(TEST_MODEL_HANDLE)
-            os.makedirs(cache_path)
-            mark_as_complete(TEST_MODEL_HANDLE)
+            self._download_test_model_to_cache()
 
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE)
 
-            self.assertEqual(
-                os.path.join(d, EXPECTED_MODEL_SUBDIR),
-                deleted_path,
-            )
+            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), deleted_path)
+            self.assertFalse(os.path.exists(get_cached_path(TEST_MODEL_HANDLE)))
 
     def test_delete_from_cache_with_path(self):
         with create_test_cache() as d:
-            cache_path = get_cached_path(TEST_MODEL_HANDLE)
-            os.makedirs(cache_path)
-            Path(os.path.join(cache_path, TEST_FILEPATH)).touch()  # Create file
-            mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
+            self._download_test_file_to_cache()
 
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
-            self.assertEqual(
-                os.path.join(d, EXPECTED_MODEL_SUBPATH),
-                deleted_path,
-            )
+            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), deleted_path)
+            self.assertFalse(os.path.exists(os.path.join(get_cached_path(TEST_MODEL_HANDLE), TEST_FILEPATH)))
 
     def test_delete_from_cache_without_files_without_complete_marker(self):
         with create_test_cache():
@@ -198,25 +197,18 @@ class TestCache(BaseTestCase):
 
     def test_delete_from_cache_with_files_without_complete_marker(self):
         with create_test_cache() as d:
-            cache_path = get_cached_path(TEST_MODEL_HANDLE)
-            os.makedirs(cache_path)
+            self._download_test_model_to_cache()
+            mark_as_incomplete(TEST_MODEL_HANDLE)
 
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE)
 
-            self.assertEqual(
-                os.path.join(d, EXPECTED_MODEL_SUBDIR),
-                deleted_path,
-            )
+            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), deleted_path)
 
     def test_delete_from_cache_with_files_without_complete_marker_with_path(self):
         with create_test_cache() as d:
-            cache_path = get_cached_path(TEST_MODEL_HANDLE)
-            os.makedirs(cache_path)
-            Path(os.path.join(cache_path, TEST_FILEPATH)).touch()  # Create file
+            self._download_test_file_to_cache()
+            mark_as_incomplete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
-            self.assertEqual(
-                os.path.join(d, EXPECTED_MODEL_SUBPATH),
-                deleted_path,
-            )
+            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), deleted_path)
