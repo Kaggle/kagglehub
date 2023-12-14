@@ -48,13 +48,29 @@ def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None):
     Path(marker_path).touch()
 
 
+def _delete_from_cache_folder(path):
+    # Delete resource(s) at the given path, whether file or directory, from the cache folder.
+    if os.path.exists(path):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+
+        # Iterate through empty folders in the model path. Avoid using removedirs() because it may remove parents
+        # of the cache folder.
+        curr_dir = os.path.dirname(path)
+        while len(os.listdir(curr_dir)) == 0 and curr_dir != get_cache_folder():
+            parent_dir = os.path.dirname(curr_dir)
+            os.rmdir(curr_dir)
+            curr_dir = parent_dir
+        return path
+    return None
+
+
 def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
     marker_path = _get_completion_marker_filepath(handle, path)
     if os.path.exists(marker_path):
-        os.remove(marker_path)
-        # Delete the parent directory if it's now empty.
-        if len(os.listdir(os.path.dirname(marker_path))) == 0:
-            os.removedirs(os.path.dirname(marker_path))
+        _delete_from_cache_folder(marker_path)
 
 
 def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> Optional[str]:
@@ -69,15 +85,7 @@ def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) ->
     """
     mark_as_incomplete(handle, path)
     model_full_path = get_cached_path(handle, path)
-    if os.path.exists(model_full_path):
-        if path:
-            os.remove(model_full_path)
-        else:
-            shutil.rmtree(model_full_path)
-        if len(os.listdir(os.path.dirname(model_full_path))) == 0:
-            os.removedirs(os.path.dirname(model_full_path))
-        return model_full_path
-    return None
+    return _delete_from_cache_folder(model_full_path)
 
 
 def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
