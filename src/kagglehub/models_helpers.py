@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import List, Optional
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import KaggleApiHTTPError, postprocess_response
+from kagglehub.exceptions import KaggleApiHTTPError, process_post_response
 from kagglehub.handle import ModelHandle
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ def _create_model(owner_slug: str, model_slug: str):
     api_client = KaggleApiV1Client()
     response = api_client.post("/models/create/new", data)
     # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-    postprocess_response(response)
+    process_post_response(response)
     logger.info(f"Model '{model_slug}' Created.")
 
 
@@ -23,15 +23,12 @@ def _create_model_instance(model_handle: ModelHandle, license_name: str, files: 
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
         "licenseName": license_name,
-        "overview": "test",
-        "usage": "test",
-        "trainingData": ["test"],
-        "files": [{"token": files[0]}],
+        "files": [{"token": file_token} for file_token in files],
     }
     api_client = KaggleApiV1Client()
     response = api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
     # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-    postprocess_response(response)
+    process_post_response(response)
     logger.info(logger.info(f"Model Instance for '{model_handle}' Created."))
 
 
@@ -43,7 +40,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
         data,
     )
     # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-    postprocess_response(response)
+    process_post_response(response)
     logger.info(f"Model Instance Version for '{model_handle}' Created.")
 
 

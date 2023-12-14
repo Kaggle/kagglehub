@@ -16,7 +16,7 @@ from kagglehub.exceptions import (
     DataCorruptionError,
     KaggleEnvironmentError,
     kaggle_api_raise_for_status,
-    postprocess_response,
+    process_post_response,
 )
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
 
@@ -67,7 +67,7 @@ class KaggleApiV1Client:
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
-            postprocess_response(response)
+            process_post_response(response)
             return response.json()
 
     def download_file(self, path: str, out_file: str):

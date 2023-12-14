@@ -8,8 +8,6 @@ from kagglehub.models_helpers import create_model_if_missing, create_model_insta
 
 logger = logging.getLogger(__name__)
 
-DOES_NOT_EXIST_ERROR = 404
-
 
 def model_download(handle: str, path: Optional[str] = None):
     """Download model files.

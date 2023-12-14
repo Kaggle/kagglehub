@@ -5,7 +5,7 @@ from datetime import datetime
 import requests
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import BackendError, postprocess_response
+from kagglehub.exceptions import BackendError, process_post_response
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,7 @@ def parse_datetime_string(string: str):
     time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
         try:
-            result = datetime.strptime(string[:26], t).replace(microsecond=0)  # noqa: DTZ007
-            return result
+            return datetime.strptime(string[:26], t).replace(microsecond=0)  # noqa: DTZ007
         except:  # noqa: E722, S110
             pass
     return string
@@ -58,7 +57,7 @@ def _upload_blob(file_path: str, model_type: str):
     }
     api_client = KaggleApiV1Client()
     response = api_client.post("/blobs/upload", data=data)
-    postprocess_response(response)
+    process_post_response(response)
 
     # Validate response content
     if "createUrl" not in response:
