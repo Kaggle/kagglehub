@@ -69,8 +69,7 @@ def _delete_from_cache_folder(path):
 
 def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
     marker_path = _get_completion_marker_filepath(handle, path)
-    if os.path.exists(marker_path):
-        _delete_from_cache_folder(marker_path)
+    _delete_from_cache_folder(marker_path)
 
 
 def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> Optional[str]:
