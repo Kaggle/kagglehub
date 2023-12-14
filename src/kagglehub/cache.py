@@ -56,8 +56,8 @@ def _delete_from_cache_folder(path):
         else:
             os.remove(path)
 
-        # Iterate through empty folders in the model path. Avoid using removedirs() because it may remove parents
-        # of the cache folder.
+        # Remove empty folders in the given path, up until the cache folder.
+        # Avoid using removedirs() because it may remove parents of the cache folder.
         curr_dir = os.path.dirname(path)
         while len(os.listdir(curr_dir)) == 0 and curr_dir != get_cache_folder():
             parent_dir = os.path.dirname(curr_dir)
