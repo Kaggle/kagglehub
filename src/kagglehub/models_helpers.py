@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Optional, List
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError, postprocess_response
@@ -18,7 +18,7 @@ def _create_model(owner_slug: str, model_slug: str):
     logger.info("Model Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, license_name: str, files: list[str]):
+def _create_model_instance(model_handle: ModelHandle, license_name: str, files: List[str]):
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
@@ -35,7 +35,7 @@ def _create_model_instance(model_handle: ModelHandle, license_name: str, files: 
     logger.info("Model Instance Created.")
 
 
-def _create_model_instance_version(model_handle: ModelHandle, files: list[str], version_notes=""):
+def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes=""):
     data = {"versionNotes": version_notes, "files": [{"token": files[0]}]}
     api_client = KaggleApiV1Client()
     response = api_client.post(
@@ -48,7 +48,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: list[str], 
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, license_name: str, files: list[str], version_notes: Optional[str] = None
+    model_handle: ModelHandle, license_name: str, files: List[str], version_notes: Optional[str] = None
 ):
     try:
         api_client = KaggleApiV1Client()
