@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 from typing import Optional, Union
 
@@ -45,6 +46,45 @@ def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None):
     marker_path = _get_completion_marker_filepath(handle, path)
     os.makedirs(os.path.dirname(marker_path), exist_ok=True)
     Path(marker_path).touch()
+
+
+def _delete_from_cache_folder(path):
+    # Delete resource(s) at the given path, whether file or directory, from the cache folder.
+    if os.path.exists(path):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+
+        # Remove empty folders in the given path, up until the cache folder.
+        # Avoid using removedirs() because it may remove parents of the cache folder.
+        curr_dir = os.path.dirname(path)
+        while len(os.listdir(curr_dir)) == 0 and curr_dir != get_cache_folder():
+            parent_dir = os.path.dirname(curr_dir)
+            os.rmdir(curr_dir)
+            curr_dir = parent_dir
+        return path
+    return None
+
+
+def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
+    marker_path = _get_completion_marker_filepath(handle, path)
+    _delete_from_cache_folder(marker_path)
+
+
+def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> Optional[str]:
+    """Delete resource from the cache, even if incomplete.
+
+    Args:
+        handle: Resource handle
+        path: Optional path to a file within the bundle.
+
+    Returns:
+        A string representing the path of the deleted resource or None on cache miss.
+    """
+    mark_as_incomplete(handle, path)
+    model_full_path = get_cached_path(handle, path)
+    return _delete_from_cache_folder(model_full_path)
 
 
 def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:

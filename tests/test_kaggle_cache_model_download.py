@@ -117,3 +117,19 @@ class TestKaggleCacheModelDownload(BaseTestCase):
     def test_versioned_model_download_bad_handle_raises(self):
         with self.assertRaises(ValueError):
             kagglehub.model_download("bad handle")
+
+    def test_versioned_model_download_with_force_download(self):
+        with create_test_jwt_http_server(KaggleJwtHandler):
+            model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
+            model_path_forced = kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=True)
+
+            # Using force_download shouldn't change the expected output of model_download.
+            self.assertTrue(model_path_forced.endswith("/1"))
+            self.assertEqual(["config.json"], sorted(os.listdir(model_path_forced)))
+            self.assertEqual(model_path, model_path_forced)
+
+    def test_versioned_model_download_with_force_download_explicitly_false(self):
+        with create_test_jwt_http_server(KaggleJwtHandler):
+            model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=False)
+            self.assertTrue(model_path.endswith("/1"))
+            self.assertEqual(["config.json"], sorted(os.listdir(model_path)))

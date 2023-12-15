@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class KaggleCacheResolver(Resolver):
-    def is_supported(self, *_) -> bool:
+    def is_supported(self, *_, **__) -> bool:
         if is_kaggle_cache_disabled():
             return False
 
@@ -39,7 +39,10 @@ class KaggleCacheResolver(Resolver):
 
         return False
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None) -> str:
+    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+        if force_download:
+            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
+
         if path:
             logger.info(f"Attaching '{path}' from model '{h}' to your Kaggle notebook...")
         else:
