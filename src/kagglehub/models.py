@@ -24,7 +24,7 @@ def model_download(handle: str, path: Optional[str] = None):
 
 
 def model_upload(
-    handle: str, local_model_dir: str, license_name: str, model_type: str, version_notes: Optional[str] = None
+    handle: str, local_model_dir: str, license_name: str, version_notes: Optional[str] = None
 ):
     """Upload model files.
 
@@ -45,7 +45,7 @@ def model_upload(
     create_model_if_missing(h.owner, h.model)
 
     # Upload the model files to GCS
-    tokens = upload_files(local_model_dir, model_type)
+    tokens = upload_files(local_model_dir, "model")
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
     create_model_instance_or_version(h, license_name, tokens, version_notes)
