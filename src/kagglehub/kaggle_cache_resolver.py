@@ -41,8 +41,7 @@ class KaggleCacheResolver(Resolver):
 
     def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
-            msg = "Invalid input: Cannot force download in a Kaggle notebook"
-            raise ValueError(msg)
+            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
 
         if path:
             logger.info(f"Attaching '{path}' from model '{h}' to your Kaggle notebook...")
