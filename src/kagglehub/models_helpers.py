@@ -29,7 +29,7 @@ def _create_model_instance(model_handle: ModelHandle, license_name: str, files: 
     response = api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
     # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
     process_post_response(response)
-    logger.info(logger.info(f"Model Instance for '{model_handle}' Created."))
+    logger.info(f"Model Instance for '{model_handle}' Created.")
 
 
 def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes=""):
