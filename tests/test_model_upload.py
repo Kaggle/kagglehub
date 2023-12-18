@@ -47,7 +47,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            response = {"status": "success", "message": "Model Instance created successfully"}
+            response = {"status": "success", "message": "Model Instance/Version created successfully"}
             self.wfile.write(json.dumps(response).encode("utf-8"))
         elif self.path == "/api/v1/blobs/upload":
             self.send_response(200)
