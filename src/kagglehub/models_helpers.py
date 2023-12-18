@@ -33,7 +33,7 @@ def _create_model_instance(model_handle: ModelHandle, license_name: str, files: 
 
 
 def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes=""):
-    data = {"versionNotes": version_notes, "files": [{"token": files[0]}]}
+    data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files]}
     api_client = KaggleApiV1Client()
     response = api_client.post(
         f"/models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/create/version",
