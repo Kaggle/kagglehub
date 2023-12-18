@@ -55,7 +55,7 @@ def kaggle_api_raise_for_status(response: requests.Response):
         raise KaggleApiHTTPError(message, response=response) from e
 
 
-def process_post_response(response: requests.Response):
+def process_post_response(response: dict):
     """
     Postprocesses the API response to check for errors.
     """
