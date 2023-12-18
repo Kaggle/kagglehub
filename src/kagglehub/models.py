@@ -23,9 +23,7 @@ def model_download(handle: str, path: Optional[str] = None):
     return registry.resolver(h, path)
 
 
-def model_upload(
-    handle: str, local_model_dir: str, license_name: str, version_notes: Optional[str] = None
-):
+def model_upload(handle: str, local_model_dir: str, license_name: str, version_notes: Optional[str] = None):
     """Upload model files.
 
     Args:
