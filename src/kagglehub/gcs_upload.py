@@ -5,11 +5,11 @@ from datetime import datetime
 import requests
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import BackendError, process_post_response
+from kagglehub.exceptions import BackendError
 
 logger = logging.getLogger(__name__)
 
-MAX_NUM_FILES = 50
+MAX_FILES_TO_UPLOAD = 50
 
 
 def parse_datetime_string(string: str):
@@ -57,7 +57,6 @@ def _upload_blob(file_path: str, model_type: str):
     }
     api_client = KaggleApiV1Client()
     response = api_client.post("/blobs/upload", data=data)
-    process_post_response(response)
 
     # Validate response content
     if "createUrl" not in response:
@@ -70,6 +69,7 @@ def _upload_blob(file_path: str, model_type: str):
     with open(file_path, "rb") as f:
         headers = {"Content-Type": "application/octet-stream"}
         # TODO(b/312511716): add resumable upload
+        # TODO(b/312511716): Implement a progress bar for the upload using tqdm
         gcs_response = requests.put(response["createUrl"], data=f, headers=headers, timeout=600, stream=True)
         if gcs_response.status_code != 200:  # noqa: PLR2004
             gcs_exception = (
@@ -95,9 +95,9 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
     for _, _, files in os.walk(folder):
         file_count += len(files)
 
-    if file_count > MAX_NUM_FILES:
-        max_num_files_exception = "Cannot upload more than 50 files. Consider zipping the files first."
-        raise ValueError(max_num_files_exception)
+    if file_count > MAX_FILES_TO_UPLOAD:
+        max_files_to_upload_exception = "Cannot upload more than 50 files. Consider zipping the files first."
+        raise ValueError(max_files_to_upload_exception)
 
     tokens = []
     for file_name in os.listdir(folder):

@@ -3,6 +3,7 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD
 from kagglehub.models import model_upload
 from tests.fixtures import BaseTestCase
 
@@ -115,7 +116,7 @@ class TestModelUpload(BaseTestCase):
             with self.assertRaises(ValueError):
                 with TemporaryDirectory() as temp_dir:
                     # Create more than 50 temporary files in the directory
-                    for i in range(51):
+                    for i in range(MAX_FILES_TO_UPLOAD + 1):
                         test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
                         test_filepath.touch()
 

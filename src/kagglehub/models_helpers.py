@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import List, Optional
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import KaggleApiHTTPError, process_post_response
+from kagglehub.exceptions import KaggleApiHTTPError
 from kagglehub.handle import ModelHandle
 
 logger = logging.getLogger(__name__)
@@ -12,9 +12,7 @@ logger = logging.getLogger(__name__)
 def _create_model(owner_slug: str, model_slug: str):
     data = {"ownerSlug": owner_slug, "slug": model_slug, "title": model_slug, "isPrivate": True}
     api_client = KaggleApiV1Client()
-    response = api_client.post("/models/create/new", data)
-    # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-    process_post_response(response)
+    api_client.post("/models/create/new", data)
     logger.info(f"Model '{model_slug}' Created.")
 
 
@@ -26,21 +24,17 @@ def _create_model_instance(model_handle: ModelHandle, license_name: str, files: 
         "files": [{"token": file_token} for file_token in files],
     }
     api_client = KaggleApiV1Client()
-    response = api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
-    # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-    process_post_response(response)
+    api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
     logger.info(f"Model Instance for '{model_handle}' Created.")
 
 
 def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes=""):
     data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files]}
     api_client = KaggleApiV1Client()
-    response = api_client.post(
+    api_client.post(
         f"/models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/create/version",
         data,
     )
-    # Note: The API doesn't throw on error. It returns 200 and you need to check the 'error' field.
-    process_post_response(response)
     logger.info(f"Model Instance Version for '{model_handle}' Created.")
 
 
