@@ -49,8 +49,7 @@ Note for Windows users: The default directory is `%HOMEPATH%/kaggle.json`.
 
 ### Download Model
 
-The following examples download the `answer-equivalence-bem` variation of this Kaggle model: https://www.kaggle.com/models/google/bert
-
+The following examples download the `answer-equivalence-bem` variation of this Kaggle model: https://www.kaggle.com/models/google/bert/frameworks/tensorFlow2/variations/answer-equivalence-bem
 
 ```python
 import kagglehub
@@ -60,6 +59,9 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem')
 
 # Download a specific version.
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem/1')
+
+# Download a single file.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', path='variables/variables.index')
 ```
 
 ## Development
