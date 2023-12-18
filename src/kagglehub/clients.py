@@ -67,8 +67,9 @@ class KaggleApiV1Client:
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
-            process_post_response(response)
-            return response.json()
+            response_dict = response.json()
+            process_post_response(response_dict)
+            return response_dict
 
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)

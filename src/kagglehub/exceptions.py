@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -55,7 +55,7 @@ def kaggle_api_raise_for_status(response: requests.Response):
         raise KaggleApiHTTPError(message, response=response) from e
 
 
-def process_post_response(response: dict):
+def process_post_response(response: Dict[str, Any]):
     """
     Postprocesses the API response to check for errors.
     """
