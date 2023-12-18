@@ -62,6 +62,9 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem/1')
 
 # Download a single file.
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', path='variables/variables.index')
+
+# Download a model or file, even if previously downloaded to cache. Only available outside Kaggle notebooks.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', force_download=True)
 ```
 
 ## Development
