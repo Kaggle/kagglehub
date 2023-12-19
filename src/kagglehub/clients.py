@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 import requests
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
+import kagglehub
 
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.exceptions import (
@@ -16,6 +17,7 @@ from kagglehub.exceptions import (
     DataCorruptionError,
     KaggleEnvironmentError,
     kaggle_api_raise_for_status,
+    process_post_response,
 )
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
 
@@ -50,19 +52,43 @@ class KaggleApiV1Client:
 
     def get(self, path: str) -> dict:
         url = self._build_url(path)
+        headers = {
+            "User-Agent": f"kagglehub/{kagglehub.__version__}"
+        }
         with requests.get(
             url,
+            headers=headers,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response)
             return response.json()
 
+    def post(self, path: str, data: dict):
+        url = self._build_url(path)
+        headers = {
+            "User-Agent": f"kagglehub/{kagglehub.__version__}"
+        }
+        with requests.post(
+            url,
+            json=data,
+            headers=headers,
+            auth=self._get_http_basic_auth(),
+            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+        ) as response:
+            response_dict = response.json()
+            process_post_response(response_dict)
+            return response_dict
+
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)
+        headers = {
+            "User-Agent": f"kagglehub/{kagglehub.__version__}"
+        }
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
+            headers=headers,
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
