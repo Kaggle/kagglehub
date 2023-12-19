@@ -59,7 +59,7 @@ def process_post_response(response: Dict[str, Any]):
     """
     Postprocesses the API response to check for errors.
     """
-    if not (200 <= response.get("code", 200) < 300): # noqa: PLR2004
+    if not (200 <= response.get("code", 200) < 300):  # noqa: PLR2004
         error_message = response.get("message", "No error message provided")
         raise BackendError(error_message)
     elif "error" in response and response["error"] != "":
