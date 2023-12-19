@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -53,3 +53,14 @@ def kaggle_api_raise_for_status(response: requests.Response):
 
         # Default handling
         raise KaggleApiHTTPError(message, response=response) from e
+
+
+def process_post_response(response: Dict[str, Any]):
+    """
+    Postprocesses the API response to check for errors.
+    """
+    if not (200 <= response.get("code", 200) < 300):  # noqa: PLR2004
+        error_message = response.get("message", "No error message provided")
+        raise BackendError(error_message)
+    elif "error" in response and response["error"] != "":
+        raise BackendError(response["error"])
