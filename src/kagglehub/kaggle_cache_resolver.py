@@ -7,7 +7,7 @@ from kagglehub.clients import DEFAULT_CONNECT_TIMEOUT, KAGGLE_DATA_PROXY_URL_ENV
 from kagglehub.config import is_kaggle_cache_disabled
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import ModelHandle
-from kagglehub.resolver import Resolver
+from kagglehub.resolver import ModelResolver
 
 KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
@@ -21,7 +21,7 @@ DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER = "/kaggle/input"
 logger = logging.getLogger(__name__)
 
 
-class KaggleCacheResolver(Resolver):
+class KaggleCacheResolver(ModelResolver):
     def is_supported(self, *_, **__) -> bool:
         if is_kaggle_cache_disabled():
             return False

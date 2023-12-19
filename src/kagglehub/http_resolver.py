@@ -11,12 +11,12 @@ from kagglehub.cache import (
 )
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.handle import ModelHandle
-from kagglehub.resolver import Resolver
+from kagglehub.resolver import ModelResolver
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 
 
-class HttpResolver(Resolver):
+class HttpResolver(ModelResolver):
     def is_supported(self, *_, **__) -> bool:
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True

@@ -4,8 +4,8 @@ from typing import Optional
 from kagglehub.handle import ModelHandle
 
 
-class Resolver:
-    """Resolver base class: all resolvers inherit from this class."""
+class ModelResolver:
+    """ModelResolver base class: all model resolvers inherit from this class."""
 
     __metaclass__ = abc.ABCMeta
 
