@@ -7,6 +7,7 @@ NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
 # TODO(b/313706281): Implement a DatasetHandle class & parse_dataset_handle method.
 
+
 @dataclass
 class ModelHandle:
     owner: str
