@@ -71,7 +71,7 @@ class KaggleJwtHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(f"Unhandled path: {self.path}", "utf-8"))
 
 
-# Test cases for the KaggleCacheResolver.
+# Test cases for the ModelKaggleCacheResolver.
 class TestKaggleCacheModelDownload(BaseTestCase):
     def test_unversioned_model_download(self):
         with create_test_jwt_http_server(KaggleJwtHandler):

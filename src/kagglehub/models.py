@@ -22,7 +22,7 @@ def model_download(handle: str, path: Optional[str] = None, *, force_download: O
         A string representing the path to the requested model files.
     """
     h = parse_model_handle(handle)
-    return registry.resolver(h, path, force_download=force_download)
+    return registry.model_resolver(h, path, force_download=force_download)
 
 
 def model_upload(handle: str, local_model_dir: str, license_name: str, version_notes: Optional[str] = ""):

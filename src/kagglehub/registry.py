@@ -27,5 +27,5 @@ class MultiImplRegistry:
         msg = f"Missing implementation that supports: {self._name}(*{args!r}, **{kwargs!r}). Tried {fails!r}"
         raise RuntimeError(msg)
 
-
-resolver = MultiImplRegistry("resolver")
+model_resolver = MultiImplRegistry("ModelResolver")
+# TODO(b/313706281): Add a dataset_resolver here.

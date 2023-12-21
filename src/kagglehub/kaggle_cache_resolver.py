@@ -21,7 +21,7 @@ DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER = "/kaggle/input"
 logger = logging.getLogger(__name__)
 
 
-class KaggleCacheResolver(Resolver):
+class ModelKaggleCacheResolver(Resolver[ModelHandle]):
     def is_supported(self, *_, **__) -> bool:
         if is_kaggle_cache_disabled():
             return False

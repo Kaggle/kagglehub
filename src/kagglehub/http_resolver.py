@@ -16,7 +16,7 @@ from kagglehub.resolver import Resolver
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 
 
-class HttpResolver(Resolver):
+class ModelHttpResolver(Resolver[ModelHandle]):
     def is_supported(self, *_, **__) -> bool:
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
