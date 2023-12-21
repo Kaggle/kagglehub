@@ -6,6 +6,7 @@ from typing import Tuple
 from urllib.parse import urljoin
 
 import requests
+import kagglehub
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
@@ -38,6 +39,8 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
+KAGGLEHUB_USER_AGENT = f"kagglehub/{kagglehub.__version__}"
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +56,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
+            headers=KAGGLEHUB_USER_AGENT,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -63,6 +67,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
+            headers=KAGGLEHUB_USER_AGENT,
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -76,6 +81,7 @@ class KaggleApiV1Client:
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
+            headers=KAGGLEHUB_USER_AGENT,
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
