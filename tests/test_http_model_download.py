@@ -83,7 +83,7 @@ EXPECTED_MODEL_SUBPATH = os.path.join(
 )
 
 
-# Test cases for the HttpResolver.
+# Test cases for the ModelHttpResolver.
 class TestHttpModelDownload(BaseTestCase):
     def _download_model_and_assert_downloaded(self, d, model_handle, expected_subdir_or_subpath, **kwargs):
         # Download the full model and ensure all files are there.

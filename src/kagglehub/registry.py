@@ -28,4 +28,5 @@ class MultiImplRegistry:
         raise RuntimeError(msg)
 
 
-resolver = MultiImplRegistry("resolver")
+model_resolver = MultiImplRegistry("ModelResolver")
+# TODO(b/313706281): Add a dataset_resolver here.
