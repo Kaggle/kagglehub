@@ -6,6 +6,7 @@ from typing import Tuple
 from urllib.parse import urljoin
 
 import requests
+import kagglehub
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 import kagglehub
