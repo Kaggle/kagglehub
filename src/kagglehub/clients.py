@@ -39,6 +39,8 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
+KAGGLEHUB_USER_AGENT = {"User-Agent": f"kagglehub/{kagglehub.__version__}"}
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,10 +54,9 @@ class KaggleApiV1Client:
 
     def get(self, path: str) -> dict:
         url = self._build_url(path)
-        headers = {"User-Agent": f"kagglehub/{kagglehub.__version__}"}
         with requests.get(
             url,
-            headers=headers,
+            headers=KAGGLEHUB_USER_AGENT,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -64,11 +65,10 @@ class KaggleApiV1Client:
 
     def post(self, path: str, data: dict):
         url = self._build_url(path)
-        headers = {"User-Agent": f"kagglehub/{kagglehub.__version__}"}
         with requests.post(
             url,
             json=data,
-            headers=headers,
+            headers=KAGGLEHUB_USER_AGENT,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -78,11 +78,10 @@ class KaggleApiV1Client:
 
     def download_file(self, path: str, out_file: str):
         url = self._build_url(path)
-        headers = {"User-Agent": f"kagglehub/{kagglehub.__version__}"}
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
-            headers=headers,
+            headers=KAGGLEHUB_USER_AGENT,
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
