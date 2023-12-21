@@ -6,10 +6,10 @@ from typing import Tuple
 from urllib.parse import urljoin
 
 import requests
-import kagglehub
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
+import kagglehub
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.exceptions import (
     BackendError,
@@ -39,7 +39,7 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
-KAGGLEHUB_USER_AGENT = f"kagglehub/{kagglehub.__version__}"
+KAGGLEHUB_USER_AGENT = { 'User-Agent': f"kagglehub/{kagglehub.__version__}" }
 
 logger = logging.getLogger(__name__)
 
