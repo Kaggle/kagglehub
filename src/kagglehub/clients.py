@@ -9,6 +9,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
+import kagglehub
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.exceptions import (
     BackendError,
@@ -38,6 +39,8 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
+KAGGLEHUB_USER_AGENT = {"User-Agent": f"kagglehub/{kagglehub.__version__}"}
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +56,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
+            headers=KAGGLEHUB_USER_AGENT,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -63,6 +67,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
+            headers=KAGGLEHUB_USER_AGENT,
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -76,6 +81,7 @@ class KaggleApiV1Client:
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
+            headers=KAGGLEHUB_USER_AGENT,
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
