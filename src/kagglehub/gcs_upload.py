@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 import requests
+from tqdm import tqdm
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
@@ -49,11 +50,13 @@ def _upload_blob(file_path: str, model_type: str):
     file_path: The path to the file to be uploaded.
     model_type : The type of the model associated with the file.
     """
+    file_size = os.path.getsize(file_path)
     data = {
         "type": model_type,
         "name": os.path.basename(file_path),
-        "contentLength": os.path.getsize(file_path),
+        "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
+        "resumable": True,
     }
     api_client = KaggleApiV1Client()
     response = api_client.post("/blobs/upload", data=data)
@@ -66,16 +69,27 @@ def _upload_blob(file_path: str, model_type: str):
         token_exception = "'token' field missing from response"
         raise BackendError(token_exception)
 
+    # Define chunk size (e.g., 1 MB)
+    chunk_size = 1024 * 1024
+    headers = {"Content-Type": "application/octet-stream"}
+
     with open(file_path, "rb") as f:
-        headers = {"Content-Type": "application/octet-stream"}
-        # TODO(b/312511716): add resumable upload
-        # TODO(b/312511716): Implement a progress bar for the upload using tqdm
-        gcs_response = requests.put(response["createUrl"], data=f, headers=headers, timeout=600, stream=True)
-        if gcs_response.status_code != 200:  # noqa: PLR2004
-            gcs_exception = (
-                f"Failed to upload to GCS. Status: {gcs_response.status_code}, Response: {gcs_response.text}"
-            )
-            raise Exception(gcs_exception)
+        for i in tqdm(range(0, file_size, chunk_size), desc="Uploading"):
+            chunk = f.read(chunk_size)
+            while True:
+                try:
+                    headers["Content-Range"] = f"bytes {i}-{i + len(chunk) - 1}/{file_size}"
+                    gcs_response = requests.put(response["createUrl"], data=chunk, headers=headers, timeout=600)
+                    if gcs_response.status_code in [200, 201]:
+                        break
+                    elif gcs_response.status_code in [308]:  # Resumable upload incomplete
+                        continue
+                    else:
+                        upload_fail_message = f"Upload failed with status code: {gcs_response.status_code}"
+                        raise BackendError(upload_fail_message)
+                except requests.RequestException as e:
+                    logger.info(f"Encountered an error during upload: {e}. Retrying...")
+                    continue
 
     return response["token"]
 
