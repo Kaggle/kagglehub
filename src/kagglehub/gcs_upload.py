@@ -4,6 +4,7 @@ from datetime import datetime
 
 import requests
 from tqdm import tqdm
+from tqdm import tqdm
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
@@ -53,11 +54,14 @@ def _upload_blob(file_path: str, model_type: str):
     model_type : The type of the model associated with the file.
     """
     file_size = os.path.getsize(file_path)
+    file_size = os.path.getsize(file_path)
     data = {
         "type": model_type,
         "name": os.path.basename(file_path),
         "contentLength": file_size,
+        "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
+        "resumable": True,
         "resumable": True,
     }
     api_client = KaggleApiV1Client()
