@@ -2,6 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import os
 
 from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD
 from kagglehub.models import model_upload
@@ -113,11 +114,15 @@ class TestModelUpload(BaseTestCase):
 
     def test_model_upload_with_too_many_files(self):
         with create_test_http_server(KaggleAPIHandler):
-            with self.assertRaises(ValueError):
+            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
                     # Create more than 50 temporary files in the directory
                     for i in range(MAX_FILES_TO_UPLOAD + 1):
                         test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
                         test_filepath.touch()
 
-                    model_upload("valid/owner/slug", temp_dir, "Apache 2.0", "model_type")
+                    model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Apache 2.0", "model_type")
+
+                    # Check if a zip file was created in the temp_dir
+                    zip_file_created = any(f.endswith('.zip') for f in os.listdir(temp_dir))
+                    self.assertTrue(zip_file_created, "Zip file was not created when more than the maximum allowed files were present.")
