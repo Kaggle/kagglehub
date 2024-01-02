@@ -1,8 +1,8 @@
 import json
+import os
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import os
 
 from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD
 from kagglehub.models import model_upload
@@ -124,5 +124,8 @@ class TestModelUpload(BaseTestCase):
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Apache 2.0", "model_type")
 
                     # Check if a zip file was created in the temp_dir
-                    zip_file_created = any(f.endswith('.zip') for f in os.listdir(temp_dir))
-                    self.assertTrue(zip_file_created, "Zip file was not created when more than the maximum allowed files were present.")
+                    zip_file_created = any(f.endswith(".zip") for f in os.listdir(temp_dir))
+                    self.assertTrue(
+                        zip_file_created,
+                        "Zip file was not created when more than the maximum allowed files were present.",
+                    )
