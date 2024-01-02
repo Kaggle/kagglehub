@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 
 import requests
+from tqdm import tqdm
+from tqdm.utils import CallbackIOWrapper
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
@@ -49,10 +51,11 @@ def _upload_blob(file_path: str, model_type: str):
     file_path: The path to the file to be uploaded.
     model_type : The type of the model associated with the file.
     """
+    file_size = os.path.getsize(file_path)
     data = {
         "type": model_type,
         "name": os.path.basename(file_path),
-        "contentLength": os.path.getsize(file_path),
+        "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
     api_client = KaggleApiV1Client()
@@ -66,16 +69,18 @@ def _upload_blob(file_path: str, model_type: str):
         token_exception = "'token' field missing from response"
         raise BackendError(token_exception)
 
+    headers = {"Content-Type": "application/octet-stream"}
+
+    # TODO(312511716): add resumable upload
     with open(file_path, "rb") as f:
-        headers = {"Content-Type": "application/octet-stream"}
-        # TODO(b/312511716): add resumable upload
-        # TODO(b/312511716): Implement a progress bar for the upload using tqdm
-        gcs_response = requests.put(response["createUrl"], data=f, headers=headers, timeout=600, stream=True)
-        if gcs_response.status_code != 200:  # noqa: PLR2004
-            gcs_exception = (
-                f"Failed to upload to GCS. Status: {gcs_response.status_code}, Response: {gcs_response.text}"
-            )
-            raise Exception(gcs_exception)
+        with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
+            reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
+            gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
+            if gcs_response.status_code not in [200, 201]:
+                upload_fail_message = (
+                    f"Upload failed with status code: {gcs_response.status_code}, Response: {gcs_response.text}"
+                )
+                raise BackendError(upload_fail_message)
 
     return response["token"]
 
