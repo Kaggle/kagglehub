@@ -11,8 +11,6 @@ from kagglehub.exceptions import BackendError
 logger = logging.getLogger(__name__)
 
 MAX_FILES_TO_UPLOAD = 50
-# 1 MB chosen as a balance between upload efficiency and memory usage
-CHUNK_SIZE = 1024 * 1024
 
 
 def parse_datetime_string(string: str):
@@ -73,24 +71,29 @@ def _upload_blob(file_path: str, model_type: str):
 
     headers = {"Content-Type": "application/octet-stream"}
 
-    with open(file_path, "rb") as f:
-        for i in tqdm(range(0, file_size, CHUNK_SIZE), desc="Uploading"):
-            f.seek(i)  # Seek to the start of the chunk
-            chunk = f.read(CHUNK_SIZE)
-            while True:
+    uploaded = 0
+    with tqdm(total=file_size, desc="Uploading", unit='B', unit_scale=True, unit_divisor=1024) as pbar:
+        while uploaded < file_size:
+            with open(file_path, "rb") as f:
+                chunk = f.read(file_size - uploaded)
+                headers["Content-Range"] = f"bytes {uploaded}-{file_size - 1}/{file_size}"
                 try:
-                    headers["Content-Range"] = f"bytes {i}-{i + len(chunk) - 1}/{file_size}"
                     gcs_response = requests.put(response["createUrl"], data=chunk, headers=headers, timeout=600)
                     if gcs_response.status_code in [200, 201]:
-                        break
+                        uploaded = file_size
+                        pbar.update(file_size)
                     elif gcs_response.status_code in [308]:  # Resumable upload incomplete
+                        # Update the uploaded byte count based on the server's response
+                        range_header = gcs_response.headers.get("Range")
+                        if range_header:
+                            uploaded = int(range_header.split('-')[1]) + 1
+                        pbar.update(uploaded - pbar.n)
                         continue
                     else:
                         upload_fail_message = f"Upload failed with status code: {gcs_response.status_code}"
                         raise BackendError(upload_fail_message)
                 except requests.RequestException as e:
                     logger.info(f"Encountered an error during upload: {e}. Retrying...")
-                    continue
 
     return response["token"]
 
