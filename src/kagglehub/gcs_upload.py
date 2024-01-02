@@ -4,6 +4,7 @@ from datetime import datetime
 
 import requests
 from tqdm import tqdm
+from tqdm.utils import CallbackIOWrapper
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
@@ -71,29 +72,15 @@ def _upload_blob(file_path: str, model_type: str):
 
     headers = {"Content-Type": "application/octet-stream"}
 
-    uploaded = 0
-    with tqdm(total=file_size, desc="Uploading", unit='B', unit_scale=True, unit_divisor=1024) as pbar:
-        while uploaded < file_size:
-            with open(file_path, "rb") as f:
-                chunk = f.read(file_size - uploaded)
-                headers["Content-Range"] = f"bytes {uploaded}-{file_size - 1}/{file_size}"
-                try:
-                    gcs_response = requests.put(response["createUrl"], data=chunk, headers=headers, timeout=600)
-                    if gcs_response.status_code in [200, 201]:
-                        uploaded = file_size
-                        pbar.update(file_size)
-                    elif gcs_response.status_code in [308]:  # Resumable upload incomplete
-                        # Update the uploaded byte count based on the server's response
-                        range_header = gcs_response.headers.get("Range")
-                        if range_header:
-                            uploaded = int(range_header.split('-')[1]) + 1
-                        pbar.update(uploaded - pbar.n)
-                        continue
-                    else:
-                        upload_fail_message = f"Upload failed with status code: {gcs_response.status_code}"
-                        raise BackendError(upload_fail_message)
-                except requests.RequestException as e:
-                    logger.info(f"Encountered an error during upload: {e}. Retrying...")
+    # TODO(312511716): add resumable upload
+    with open(file_path, "rb") as f:
+        with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
+            reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
+            gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
+            gcs_response.raise_for_status()
+            if gcs_response.status_code not in [200, 201]:
+                upload_fail_message = f"Upload failed with status code: {gcs_response.status_code}"
+                raise BackendError(upload_fail_message)
 
     return response["token"]
 
