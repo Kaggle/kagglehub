@@ -2,6 +2,7 @@ import logging
 import os
 import zipfile
 from datetime import datetime
+from tempfile import TemporaryDirectory
 
 import requests
 
@@ -99,15 +100,16 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
         if not quiet:
             logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
 
-        zip_path = os.path.join(folder, "archive.zip")
-        with zipfile.ZipFile(zip_path, "w") as zipf:
-            for root, _, files in os.walk(folder):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    zipf.write(file_path, os.path.relpath(file_path, folder))
+        with TemporaryDirectory() as temp_dir:
+            zip_path = os.path.join(temp_dir, "archive.zip")
+            with zipfile.ZipFile(zip_path, "w") as zipf:
+                for root, _, files in os.walk(folder):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        zipf.write(file_path, os.path.relpath(file_path, folder))
 
-        # Upload the zip file
-        return [_upload_file_or_folder(folder, "archive.zip", model_type, quiet)]
+            # Upload the zip file
+            return [_upload_file_or_folder(temp_dir, "archive.zip", model_type, quiet)]
 
     tokens = []
     for file_name in os.listdir(folder):
