@@ -57,7 +57,6 @@ def _upload_blob(file_path: str, model_type: str):
         "name": os.path.basename(file_path),
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
-        "resumable": True,
     }
     api_client = KaggleApiV1Client()
     response = api_client.post("/blobs/upload", data=data)
@@ -78,7 +77,7 @@ def _upload_blob(file_path: str, model_type: str):
             reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
             gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
             if gcs_response.status_code not in [200, 201]:
-                upload_fail_message = f"Upload failed with status code: {gcs_response.status_code}"
+                upload_fail_message = f"Upload failed with status code: {gcs_response.status_code}, Response: {gcs_response.text}"
                 raise BackendError(upload_fail_message)
 
     return response["token"]
