@@ -12,6 +12,7 @@ from kagglehub.exceptions import BackendError
 logger = logging.getLogger(__name__)
 
 MAX_FILES_TO_UPLOAD = 50
+TEMP_ARCHIVE_FILE = "archive.zip"
 
 
 def parse_datetime_string(string: str):
@@ -101,7 +102,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
             logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
 
         with TemporaryDirectory() as temp_dir:
-            zip_path = os.path.join(temp_dir, "archive.zip")
+            zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
             with zipfile.ZipFile(zip_path, "w") as zipf:
                 for root, _, files in os.walk(folder):
                     for file in files:
@@ -109,7 +110,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
             # Upload the zip file
-            return [_upload_file_or_folder(temp_dir, "archive.zip", model_type, quiet)]
+            return [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
 
     tokens = []
     for file_name in os.listdir(folder):
