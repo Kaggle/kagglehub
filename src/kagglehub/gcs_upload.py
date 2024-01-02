@@ -77,7 +77,6 @@ def _upload_blob(file_path: str, model_type: str):
         with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
             reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
             gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
-            gcs_response.raise_for_status()
             if gcs_response.status_code not in [200, 201]:
                 upload_fail_message = f"Upload failed with status code: {gcs_response.status_code}"
                 raise BackendError(upload_fail_message)
