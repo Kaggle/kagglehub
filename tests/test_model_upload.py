@@ -14,6 +14,7 @@ GET_INSTANCE = "/models/metaresearch/llama-2/pyTorch/1/get"
 GET_MODEL = "/models/metaresearch/llama-2/get"
 CREATE_MODEL = "/models/create/new"
 MODEL_HANDLE = "metaresearch/llama-2/pyTorch/1"
+TEMP_TEST_FILE = "temp_test_file"
 
 
 class KaggleAPIHandler(BaseHTTPRequestHandler):
@@ -94,22 +95,29 @@ class GcsAPIHandler(BaseHTTPRequestHandler):
 
 
 class TestModelUpload(BaseTestCase):
+    def setUp(self):
+        KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES = []
+
     def test_model_upload_with_invalid_handle(self):
         with create_test_http_server(KaggleAPIHandler):
             with self.assertRaises(ValueError):
                 with TemporaryDirectory() as temp_dir:
-                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath = Path(temp_dir) / TEMP_TEST_FILE
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("invalid/invalid/invalid", temp_dir, "Apache 2.0", "model_type")
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
+                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_instance_with_valid_handle(self):
         # execution path: get_model -> create_model -> get_instance -> create_version
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
-                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath = Path(temp_dir) / TEMP_TEST_FILE
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Apache 2.0", "model_type")
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
+                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_version_with_valid_handle(self):
         # execution path: get_model -> get_instance -> create_instance
@@ -117,12 +125,13 @@ class TestModelUpload(BaseTestCase):
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
-                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath = Path(temp_dir) / TEMP_TEST_FILE
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, "Apache 2.0", "model_type")
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
+                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_with_too_many_files(self):
-        KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES = []
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
