@@ -1,6 +1,8 @@
 import logging
 import os
+import zipfile
 from datetime import datetime
+from tempfile import TemporaryDirectory
 
 import requests
 from tqdm import tqdm
@@ -12,6 +14,7 @@ from kagglehub.exceptions import BackendError
 logger = logging.getLogger(__name__)
 
 MAX_FILES_TO_UPLOAD = 50
+TEMP_ARCHIVE_FILE = "archive.zip"
 
 
 def parse_datetime_string(string: str):
@@ -86,14 +89,13 @@ def _upload_blob(file_path: str, model_type: str):
 
 
 def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FBT002, FBT001
-    """upload files in a folder. Throws an exception if more than 50 files are found.
+    """upload files in a folder. Zips the files if there are more than 50.
     Parameters
     ==========
     folder: the folder to upload from
     quiet: suppress verbose output (default is False)
     model_type: Type of the model that is being uploaded.
     """
-    # TODO(b/312511716): Handle case where more than 50 files are to be uploaded by first zipping the content
 
     # Count the total number of files
     file_count = 0
@@ -101,8 +103,19 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
         file_count += len(files)
 
     if file_count > MAX_FILES_TO_UPLOAD:
-        max_files_to_upload_exception = "Cannot upload more than 50 files. Consider zipping the files first."
-        raise ValueError(max_files_to_upload_exception)
+        if not quiet:
+            logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
+
+        with TemporaryDirectory() as temp_dir:
+            zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
+            with zipfile.ZipFile(zip_path, "w") as zipf:
+                for root, _, files in os.walk(folder):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        zipf.write(file_path, os.path.relpath(file_path, folder))
+
+            # Upload the zip file
+            return [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
 
     tokens = []
     for file_name in os.listdir(folder):
