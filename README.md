@@ -116,7 +116,7 @@ hatch cov
 hatch build
 ```
 
-### Running hatch inside Docker
+### Running `hatch` commands inside Docker
 
 This is useful to run in a consistent environment and easily switch between Python versions.
 
@@ -126,6 +126,6 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 # Use default Python version
 ./docker-hatch run lint:all
 
-# Use specific Python version (Must be a valid tag from this [python Docker image](https://hub.docker.com/_/python))
+# Use specific Python version (Must be a valid tag from: https://hub.docker.com/_/python)
 ./docker-hatch -v 3.9 run lint:all
 ```
