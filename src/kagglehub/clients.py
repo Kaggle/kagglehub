@@ -17,9 +17,9 @@ from kagglehub.exceptions import (
     CredentialError,
     DataCorruptionError,
     KaggleEnvironmentError,
+    NotFoundError,
     kaggle_api_raise_for_status,
     process_post_response,
-    NotFoundError,
 )
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
 
@@ -30,6 +30,7 @@ CHUNK_SIZE = 1048576
 DEFAULT_CONNECT_TIMEOUT = 5  # seconds
 DEFAULT_READ_TIMEOUT = 15  # seconds
 ACCEPT_RANGE_HTTP_HEADER = "Accept-Ranges"
+HTTP_STATUS_404 = 404
 
 _CHECKSUM_MISMATCH_MSG_TEMPLATE = """\
 The X-Goog-Hash header indicated a MD5 checksum of:
@@ -216,32 +217,29 @@ class KaggleJwtClient:
 class ColabClient:
     IS_SUPPORTED_PATH = "/kagglehub/models/is_supported"
     MOUNT_PATH = "/kagglehub/models/mount"
+    # TBE_RUNTIME_ADDR serves requests made from `is_supported` and  `__call__`
+    # of ModelColabCacheResolver.
     TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 
     def __init__(self):
         self.endpoint = os.getenv(self.TBE_RUNTIME_ADDR_ENV_VAR_NAME)
         if self.endpoint is None:
-            msg = (
-                f"The {self.TBE_RUNTIME_ADDR_ENV_VAR_NAME} should be set."
-            )
+            msg = f"The {self.TBE_RUNTIME_ADDR_ENV_VAR_NAME} should be set."
             raise ColabEnvironmentError(msg)
 
         self.credentials = get_kaggle_credentials()
         self.headers = {"Content-type": "application/json"}
 
-    def post(
-        self,
-        data: dict,
-        handle_path
-    ) -> dict:
+    def post(self, data: dict, handle_path):
         url = f"http://{self.endpoint}{handle_path}"
         with requests.post(
             url,
             data=json.dumps(data),
             auth=self._get_http_basic_auth(),
             headers=self.headers,
+            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
-            if response.status_code == 404:
+            if response.status_code == HTTP_STATUS_404:
                 raise NotFoundError()
             response.raise_for_status()
             if response.text:

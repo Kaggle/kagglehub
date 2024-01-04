@@ -3,12 +3,10 @@ import os
 from typing import Optional
 
 from kagglehub.clients import ColabClient
-from kagglehub.exceptions import BackendError
-from kagglehub.exceptions import NotFoundError
+from kagglehub.config import is_colab_cache_disabled
+from kagglehub.exceptions import BackendError, NotFoundError
 from kagglehub.handle import ModelHandle
 from kagglehub.resolver import Resolver
-from kagglehub.config import is_colab_cache_disabled
-
 
 COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "COLAB_CACHE_MOUNT_FOLDER"
 DEFAULT_COLAB_CACHE_MOUNT_FOLDER = "/kaggle/input"
@@ -17,20 +15,21 @@ logger = logging.getLogger(__name__)
 
 
 class ModelColabCacheResolver(Resolver[ModelHandle]):
-    def is_supported(self, h: ModelHandle, *_, **__) -> bool:
-        if not ColabClient.TBE_RUNTIME_ADDR_ENV_VAR_NAME in os.environ or is_colab_cache_disabled():
+    def is_supported(self, handle: ModelHandle, *_, **__) -> bool:
+        if ColabClient.TBE_RUNTIME_ADDR_ENV_VAR_NAME not in os.environ or is_colab_cache_disabled():
             return False
 
         api_client = ColabClient()
         data = {
-            "owner": h.owner,
-            "model": h.model,
-            "framework": h.framework,
-            "variation": h.variation,
+            "owner": handle.owner,
+            "model": handle.model,
+            "framework": handle.framework,
+            "variation": handle.variation,
         }
 
-        if h.is_versioned():
-            data["version"] = h.version
+        if handle.is_versioned():
+            # Colab treats version as int in the request
+            data["version"] = handle.version  # type: ignore
 
         try:
             api_client.post(data, ColabClient.IS_SUPPORTED_PATH)
@@ -38,7 +37,7 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             return False
         return True
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, force_download: Optional[bool] = False) -> str:
+    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
             logger.warning("Ignoring invalid input: force_download flag cannot be used in a Colab notebook")
 
@@ -52,7 +51,8 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             "variation": h.variation,
         }
         if h.is_versioned():
-            data["version"] = h.version
+            # Colab treats version as int in the request
+            data["version"] = h.version  # type: ignore
 
         response = api_client.post(data, ColabClient.MOUNT_PATH)
 

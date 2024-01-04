@@ -1,22 +1,25 @@
-import requests
-import os
 import json
-import kagglehub
-from .utils import create_test_server_colab
-from pathlib import Path
+import os
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
 from unittest import mock
-from kagglehub.colab_cache_resolver import COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
+
+import requests
+
+import kagglehub
 from kagglehub.clients import ColabClient
+from kagglehub.colab_cache_resolver import COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 from kagglehub.config import DISABLE_COLAB_CACHE_ENV_VAR_NAME
 from tests.fixtures import BaseTestCase
 
+from .utils import create_test_server_colab
 
 INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
 VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/1"
 LATEST_MODEL_VERSION = 2
 UNVERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b"
 TEST_FILEPATH = "config.json"
+UNAVAILABLE_MODEL_HANDLE = "unavailable/model/handle/colab/1"
 
 
 class ColabTBERuntimeHandler(BaseHTTPRequestHandler):
@@ -29,16 +32,19 @@ class ColabTBERuntimeHandler(BaseHTTPRequestHandler):
         version = LATEST_MODEL_VERSION
         if "version" in request:
             version = request["version"]
-        print("request ", request)
 
-        slug =  (f"{request['model']}/{request['framework']}/{request['variation']}/{version}")
+        slug = f"{request['model']}/{request['framework']}/{request['variation']}/{version}"
 
         if self.path.endswith(ColabClient.IS_SUPPORTED_PATH):
+            if request["owner"] == "unavailable":
+                self.send_response(404)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-        if self.path.endswith(ColabClient.MOUNT_PATH):
+        elif self.path.endswith(ColabClient.MOUNT_PATH):
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
@@ -64,6 +70,9 @@ class ColabTBERuntimeHandler(BaseHTTPRequestHandler):
                     "utf-8",
                 )
             )
+        else:
+            self.send_response(404)
+            self.wfile.write(bytes(f"Unhandled path: {self.path}", "utf-8"))
 
 
 class TestColabCacheModelDownload(BaseTestCase):
@@ -71,7 +80,6 @@ class TestColabCacheModelDownload(BaseTestCase):
         with create_test_server_colab(ColabTBERuntimeHandler):
             model_path = kagglehub.model_download(UNVERSIONED_MODEL_HANDLE)
             self.assertTrue(model_path.endswith("/2"))
-            print("model_path ", os.listdir(model_path))
             self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
 
     def test_versioned_model_download(self):
@@ -102,12 +110,18 @@ class TestColabCacheModelDownload(BaseTestCase):
             with self.assertRaises(ValueError):
                 kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, "missing.txt")
 
-    def test_colab_resolver_skipped(self):
+    def test_colab_resolver_skipped_when_disable_colab_cache_env_var_name(self):
         with mock.patch.dict(os.environ, {DISABLE_COLAB_CACHE_ENV_VAR_NAME: "true"}):
             with create_test_server_colab(ColabTBERuntimeHandler):
                 # Assert that a ConnectionError is set (uses HTTP server which is not set)
                 with self.assertRaises(requests.exceptions.ConnectionError):
                     kagglehub.model_download(VERSIONED_MODEL_HANDLE)
+
+    def test_colab_resolver_skipped_when_model_not_present(self):
+        with create_test_server_colab(ColabTBERuntimeHandler):
+            # Assert that a ConnectionError is set (uses HTTP server which is not set)
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                kagglehub.model_download(UNAVAILABLE_MODEL_HANDLE)
 
     def test_versioned_model_download_bad_handle_raises(self):
         with self.assertRaises(ValueError):
