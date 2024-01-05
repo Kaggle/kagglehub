@@ -72,20 +72,57 @@ def _upload_blob(file_path: str, model_type: str):
         token_exception = "'token' field missing from response"
         raise BackendError(token_exception)
 
-    headers = {"Content-Type": "application/octet-stream"}
+    session_uri = response["createUrl"]
+    headers = {
+        "Content-Length": str(file_size),
+        "Content-Type": "application/octet-stream"
+    }
+    file_size = os.path.getsize(file_path)
 
-    # TODO(312511716): add resumable upload
+    # Upload the file
     with open(file_path, "rb") as f:
-        with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
-            reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
-            gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
-            if gcs_response.status_code not in [200, 201]:
-                upload_fail_message = (
-                    f"Upload failed with status code: {gcs_response.status_code}, Response: {gcs_response.text}"
-                )
-                raise BackendError(upload_fail_message)
+        with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True) as pbar:
+            while True:
+                try:
+                    reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
+                    upload_response = requests.put(session_uri, headers=headers, data=reader_wrapper)
+                    if upload_response.status_code in [200, 201]:
+                        pbar.update(file_size)
+                        return response["token"]
+                    else:
+                        # If upload is not successful, check how much was uploaded and resume
+                        uploaded_bytes = _check_uploaded_size(session_uri, file_size)
+                        pbar.update(uploaded_bytes)
+                        f.seek(uploaded_bytes)  # Resume file reading from where it was left
+                except requests.RequestException as e:
+                    pass
 
-    return response["token"]
+def _check_uploaded_size(session_uri, file_size):
+    """Check the status of the resumable upload"""
+    headers = {
+        "Content-Length": "0",
+        "Content-Range": f"bytes */{file_size}"
+    }
+    response = requests.put(session_uri, headers=headers)
+    if response.status_code == 308:  # Resume Incomplete
+        range_header = response.headers.get("Range")
+        if range_header:
+            bytes_uploaded = int(range_header.split("-")[1]) + 1
+            return bytes_uploaded
+    return 0
+
+    # # TODO(312511716): add resumable upload
+    # with open(file_path, "rb") as f:
+    #     with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
+    #         reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
+    #         gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
+    #         if gcs_response.status_code not in [200, 201]:
+    #             upload_fail_message = (
+    #                 f"Upload failed with status code: {gcs_response.status_code}, Response: {gcs_response.text}"
+    #             )
+    #             raise BackendError(upload_fail_message)
+
+    # return response["token"]
 
 
 def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FBT002, FBT001
