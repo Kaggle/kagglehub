@@ -12,7 +12,7 @@ Run the given HATCH-OPTIONS-COMMAND-ARGS in a container.
 Options:
     -v, --python-version PYTHON-VERSION     Run in a container using this specfic Python version.
                                             Valid versions are tags of the `python` Docker image: https://hub.docker.com/_/python
-    -f, --force-rebuild-docker-image              Force re-build the Docker image.
+    -f, --force-rebuild-docker-image        Force re-build the Docker image.
 EOF
 }
 
