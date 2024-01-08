@@ -4,6 +4,14 @@
 
 *
 
+## v0.1.5 (January 8th, 2023)
+
+* Prevent log message from being printed twice in some environment ([#57](https://github.com/Kaggle/kagglehub/pull/57))
+* Add Colab model resolver ([#53](https://github.com/Kaggle/kagglehub/pull/53))
+* Add `kagglehub.model_upload(...)` ([#43](https://github.com/Kaggle/kagglehub/pull/43), [#51](https://github.com/Kaggle/kagglehub/pull/51), [#52](https://github.com/Kaggle/kagglehub/pull/52))
+* Add `kagglehub` user agent to Kaggle API V1 calls ([#50](https://github.com/Kaggle/kagglehub/pull/50))
+* Add `force_download` option to `kagglehub.model_download()` ([#44](https://github.com/Kaggle/kagglehub/pull/44))
+
 ## v0.1.4 (Dec 11th, 2023)
 
 * Improve error messages for `KaggleCacheResolver` ([#40](https://github.com/Kaggle/kagglehub/pull/40))
