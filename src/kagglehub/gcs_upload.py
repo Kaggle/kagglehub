@@ -69,7 +69,7 @@ def _check_uploaded_size(session_uri, file_size, backoff_factor=1):
         except (ConnectionError, Timeout):
             logger.info(f"Network issue while checking uploaded size, retrying in {backoff_factor} seconds...")
             time.sleep(backoff_factor)
-            backoff_factor *= 2
+            backoff_factor = min(backoff_factor * 2, 60)
             retry_count += 1
 
     return 0  # Return 0 if all retries fail
@@ -106,6 +106,7 @@ def _upload_blob(file_path: str, model_type: str):
 
     retry_count = 0
     uploaded_bytes = 0
+    backoff_factor = 1  # Initial backoff duration in seconds
 
     with open(file_path, "rb") as f, tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True) as pbar:
         while uploaded_bytes < file_size and retry_count < MAX_RETRIES:
@@ -122,12 +123,17 @@ def _upload_blob(file_path: str, model_type: str):
                 elif upload_response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
                     uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 else:
-                    upload_failed_exception = f"Upload failed: {upload_response.text}"
-                    raise Exception(upload_failed_exception)
+                    upload_failed_exception = (
+                        f"Upload failed with status code {upload_response.status_code}: {upload_response.text}"
+                    )
+                    raise BackendError(upload_failed_exception)
             except (requests.ConnectionError, requests.Timeout) as e:
-                logger.info(f"Network issue: {e}, retrying...")
+                logger.info(f"Network issue: {e}, retrying in {backoff_factor} seconds...")
+                time.sleep(backoff_factor)
+                backoff_factor = min(backoff_factor * 2, 60)
                 retry_count += 1
                 uploaded_bytes = _check_uploaded_size(session_uri, file_size)
+                pbar.n = uploaded_bytes  # Update progress bar to reflect actual uploaded bytes
 
     return response["token"]
 

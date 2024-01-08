@@ -1,4 +1,5 @@
 import json
+import os
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -84,14 +85,24 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
 
 
 class GcsAPIHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
-        self.send_response(200)
+    simulate_308 = False
+    put_requests_count = 0
 
     def do_PUT(self):  # noqa: N802
-        self.send_response(200)
-        self.send_header("Content-type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps({"status": "success", "message": "File uploaded"}).encode("utf-8"))
+        GcsAPIHandler.put_requests_count += 1
+        if GcsAPIHandler.simulate_308:
+            # Simulate "308 Resume Incomplete" response
+            self.send_response(308)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Range", "bytes=0-499")
+            self.end_headers()
+            GcsAPIHandler.simulate_308 = False
+        else:
+            # Simulate successful upload
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": "File uploaded"}).encode("utf-8"))
 
 
 class TestModelUpload(BaseTestCase):
@@ -143,3 +154,21 @@ class TestModelUpload(BaseTestCase):
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Apache 2.0", "model_type")
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+
+    def test_model_upload_resumable(self):
+        GcsAPIHandler.simulate_308 = True  # Enable simulation of 308 response for this test
+
+        with create_test_http_server(KaggleAPIHandler):
+            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
+                with TemporaryDirectory() as temp_dir:
+                    test_filepath = Path(temp_dir) / TEMP_TEST_FILE
+                    test_filepath.touch()
+                    with open(test_filepath, "wb") as f:
+                        f.write(os.urandom(1000))
+
+                    model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Apache 2.0", "model_type")
+
+                    # Check that GcsAPIHandler received two PUT requests
+                    self.assertEqual(GcsAPIHandler.put_requests_count, 2)
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
+                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
