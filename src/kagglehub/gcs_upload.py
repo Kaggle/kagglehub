@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 MAX_FILES_TO_UPLOAD = 50
 TEMP_ARCHIVE_FILE = "archive.zip"
+MAX_RETRIES = 5
+REQUEST_TIMEOUT = 600
 
 
 def parse_datetime_string(string: str):
@@ -48,14 +50,14 @@ class File(object):  # noqa: UP004
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
 
-def check_uploaded_size(session_uri, file_size, max_retries=5, backoff_factor=1):
+def check_uploaded_size(session_uri, file_size, backoff_factor=1):
     """Check the status of the resumable upload."""
     headers = {"Content-Length": "0", "Content-Range": f"bytes */{file_size}"}
     retry_count = 0
 
-    while retry_count < max_retries:
+    while retry_count < MAX_RETRIES:
         try:
-            response = requests.put(session_uri, headers=headers, timeout=600)
+            response = requests.put(session_uri, headers=headers, timeout=REQUEST_TIMEOUT)
             if response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
                 range_header = response.headers.get("Range")
                 if range_header:
@@ -102,17 +104,16 @@ def _upload_blob(file_path: str, model_type: str):
     session_uri = response["createUrl"]
     headers = {"Content-Type": "application/octet-stream", "Content-Range": f"bytes 0-{file_size - 1}/{file_size}"}
 
-    max_retries = 5
     retry_count = 0
     uploaded_bytes = 0
 
     with open(file_path, "rb") as f, tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True) as pbar:
-        while uploaded_bytes < file_size and retry_count < max_retries:
+        while uploaded_bytes < file_size and retry_count < MAX_RETRIES:
             try:
                 f.seek(uploaded_bytes)
                 reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
                 headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
-                upload_response = requests.put(session_uri, headers=headers, data=reader_wrapper, timeout=600)
+                upload_response = requests.put(session_uri, headers=headers, data=reader_wrapper, timeout=REQUEST_TIMEOUT)
 
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
