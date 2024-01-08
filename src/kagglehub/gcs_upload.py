@@ -113,7 +113,7 @@ def _upload_blob(file_path: str, model_type: str):
                 f.seek(uploaded_bytes)
                 reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
                 headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
-                upload_response = requests.put( # noqa: E501
+                upload_response = requests.put(
                     session_uri, headers=headers, data=reader_wrapper, timeout=REQUEST_TIMEOUT
                 )
 
