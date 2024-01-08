@@ -61,27 +61,6 @@ steps:
   - run
   - lint:all
 
-# Create a release on GitHub.
-# The `hub` image has been built previously in the project:
-# $ git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git
-# $ cd cloud-builders-community/hub
-# $ gcloud builds submit
-- name: 'gcr.io/$PROJECT_ID/hub'
-  id: 'release'
-  dir: $_GITHUB_REPOSITORY
-  args:
-  - '-c'
-  - |
-    export GITHUB_TOKEN=$(</root/github_token)
-    hub release create -m "release v$_NEW_VERSION" "v$_NEW_VERSION"
-  env:
-  - GITHUB_USER=kaggle
-  - GITHUB_REPOSITORY=$_GITHUB_REPOSITORY
-  - HUB_PROTOCOL=https
-  volumes:
-  - name: 'root'
-    path: /root
-
 # Delete old releases if exist.
 - name: 'ubuntu'
   id: clean
@@ -98,22 +77,29 @@ steps:
   args:
   - build
 
-- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
-  id: release-pypitest
+# Create a release on GitHub.
+# The `hub` image has been built previously in the project:
+# $ git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git
+# $ cd cloud-builders-community/hub
+# $ gcloud builds submit
+- name: 'gcr.io/$PROJECT_ID/hub'
+  id: 'release'
   dir: $_GITHUB_REPOSITORY
-  entrypoint: bash
+  entrypoint: 'bash'
   args:
   - '-c'
   - |
-    if [ "$_TO_TEST" = "false" ] ; then
-        echo "Deployment to pypitest disabled, set substitution _TO_TEST to true if you want otherwise."
-        exit 0
-    fi
-    twine upload dist/* -r pypitest
+    export GITHUB_TOKEN=$(</root/github_token)
+    hub release create -m "release v$_NEW_VERSION" "v$_NEW_VERSION"
+  env:
+  - GITHUB_USER=kaggle
+  - GITHUB_REPOSITORY=$_GITHUB_REPOSITORY
+  - HUB_PROTOCOL=https
   volumes:
   - name: 'root'
     path: /root
 
+# Release package to pypi.
 - name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   id: release-pypi
   dir: $_GITHUB_REPOSITORY
@@ -121,10 +107,6 @@ steps:
   args:
   - '-c'
   - |
-    if [ "$_TO_PROD" = "false" ] ; then
-        echo "Deployment to pypi disabled, set substitution _TO_PROD to true if you want otherwise."
-        exit 0
-    fi
     twine upload dist/* -r pypi
   volumes:
   - name: 'root'
@@ -134,6 +116,4 @@ substitutions:
   _GITHUB_REPOSITORY: kagglehub
   _PYTHON_VERSION: 3.9.18
   _NEW_VERSION: 0.0.1
-  _TO_TEST: "true"
-  _TO_PROD: "false"
 
