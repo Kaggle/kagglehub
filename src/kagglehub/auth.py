@@ -33,7 +33,6 @@ def _capture_logger_output():
     """
     buffer = io.StringIO()
     handler = logging.StreamHandler(buffer)
-    logger = logging.getLogger()
     logger.addHandler(handler)
     try:
         yield buffer
