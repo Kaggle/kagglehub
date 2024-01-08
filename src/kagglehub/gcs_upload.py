@@ -50,7 +50,7 @@ class File(object):  # noqa: UP004
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
 
-def check_uploaded_size(session_uri, file_size, backoff_factor=1):
+def _check_uploaded_size(session_uri, file_size, backoff_factor=1):
     """Check the status of the resumable upload."""
     headers = {"Content-Length": "0", "Content-Range": f"bytes */{file_size}"}
     retry_count = 0
@@ -118,14 +118,14 @@ def _upload_blob(file_path: str, model_type: str):
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
                 elif upload_response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
-                    uploaded_bytes = check_uploaded_size(session_uri, file_size)
+                    uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 else:
                     upload_failed_exception = f"Upload failed: {upload_response.text}"
                     raise Exception(upload_failed_exception)
             except (requests.ConnectionError, requests.Timeout) as e:
                 logger.info(f"Network issue: {e}, retrying...")
                 retry_count += 1
-                uploaded_bytes = check_uploaded_size(session_uri, file_size)
+                uploaded_bytes = _check_uploaded_size(session_uri, file_size)
 
     return response["token"]
 
