@@ -1,0 +1,126 @@
+steps:
+
+# Validate substitution variables.
+- name: 'ubuntu'
+  id: validation
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    if [[ $_NEW_VERSION == "default" ]]; then
+      echo "Specify _NEW_VERSION"
+      exit 1
+    elif [[ $_NEW_VERSION =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
+      echo "_NEW_VERSION format validated."
+    else
+      echo "_NEW_VERSION=$_NEW_VERSION must follow the format '^[0-9]+.[0-9]+.[0-9]+$' (example: 1.2.3)"
+      exit 1
+    fi
+
+# Get the GitHub access token from Secret Manager.
+# The token is used to talk to GitHub API, specifically to create a release.
+- name: gcr.io/cloud-builders/gcloud
+  id: 'github-token'
+  entrypoint: 'bash'
+  args: 
+  - '-c'
+  - 'gcloud secrets versions access latest --secret=kaggleteam-github-access-token > /root/github_token'
+  volumes:
+  - name: 'root'
+    path: /root
+
+# Get the pypi password from Secret Manager, and create the ~/.pypirc file.
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: create-credentials-pypirc
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      token_test=$(gcloud secrets versions access latest --secret=test-pypi-token)
+      token=$(gcloud secrets versions access latest --secret=pypi-token)
+      cat >~/.pypirc <<EOL
+      [distutils]
+      index-servers =
+        pypi
+        pypitest
+      [pypi]
+      repository: https://upload.pypi.org/legacy/
+      username=__token__
+      password=${token}
+      [pypitest]
+      repository: https://test.pypi.org/legacy/
+      username=__token__
+      password=${token_test}
+      EOL
+  volumes:
+  - name: 'root'
+    path: /root
+
+# Pull the repository from GitHub.
+- name: 'gcr.io/cloud-builders/git'
+  id: clone-repo
+  args:
+  - clone
+  - https://github.com/kaggle/$_GITHUB_REPOSITORY.git
+
+# The hatch docker image is built with the tools/cicd/cloudbuild.yaml build.
+- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+  id: tests
+  dir: $_GITHUB_REPOSITORY
+  args:
+  - run
+  - test
+
+- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+  id: lint
+  dir: $_GITHUB_REPOSITORY
+  args:
+  - run
+  - lint:all
+
+- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+  id: build
+  dir: $_GITHUB_REPOSITORY
+  args:
+  - build
+
+# Create a release on GitHub.
+# The `hub` image has been built previously in the project:
+# $ git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git
+# $ cd cloud-builders-community/hub
+# $ gcloud builds submit
+- name: 'gcr.io/$PROJECT_ID/hub'
+  id: 'release'
+  dir: $_GITHUB_REPOSITORY
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    export GITHUB_TOKEN=$(</root/github_token)
+    hub release create -m "release v$_NEW_VERSION" "v$_NEW_VERSION"
+  env:
+  - GITHUB_USER=kaggle
+  - GITHUB_REPOSITORY=$_GITHUB_REPOSITORY
+  - HUB_PROTOCOL=https
+  volumes:
+  - name: 'root'
+    path: /root
+
+# Release package to pypi.
+- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+  id: release-pypi
+  dir: $_GITHUB_REPOSITORY
+  entrypoint: bash 
+  args:
+  - '-c'
+  - |
+    twine upload dist/* -r pypi
+  volumes:
+  - name: 'root'
+    path: /root
+
+substitutions:
+  _GITHUB_REPOSITORY: kagglehub
+  _PYTHON_VERSION: 3.9.18
+  _NEW_VERSION: default
+
