@@ -12,7 +12,15 @@ class KaggleEnvironmentError(Exception):
     pass
 
 
+class ColabEnvironmentError(Exception):
+    pass
+
+
 class BackendError(Exception):
+    pass
+
+
+class NotFoundError(Exception):
     pass
 
 

@@ -19,6 +19,7 @@ from kagglehub.config import (
     get_kaggle_api_endpoint,
     get_kaggle_credentials,
     get_log_verbosity,
+    is_colab_cache_disabled,
     is_kaggle_cache_disabled,
     set_kaggle_credentials,
 )
@@ -119,6 +120,10 @@ class TestConfig(BaseTestCase):
     def test_is_kaggle_cache_disabled_default(self):
         # By default, the Kaggle cache is not disabled.
         self.assertFalse(is_kaggle_cache_disabled())
+
+    def test_is_colab_cache_disabled_default(self):
+        # By default, the colab cache is not disabled.
+        self.assertFalse(is_colab_cache_disabled())
 
     def test_is_kaggle_cache_disabled(self):
         cases = [

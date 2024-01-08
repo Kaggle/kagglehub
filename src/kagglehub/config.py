@@ -23,6 +23,8 @@ KEY_ENV_VAR_NAME = "KAGGLE_KEY"
 CREDENTIALS_FOLDER_ENV_VAR_NAME = "KAGGLE_CONFIG_DIR"
 LOG_VERBOSITY_ENV_VAR_NAME = "KAGGLEHUB_VERBOSITY"
 DISABLE_KAGGLE_CACHE_ENV_VAR_NAME = "DISABLE_KAGGLE_CACHE"
+DISABLE_COLAB_CACHE_ENV_VAR_NAME = "DISABLE_COLAB_CACHE"
+TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 
 CREDENTIALS_JSON_USERNAME = "username"
 CREDENTIALS_JSON_KEY = "key"
@@ -102,6 +104,10 @@ def get_log_verbosity() -> int:
                 f"Accepted values are: {', '.join(LOG_LEVELS_MAP.keys())}"
             )
     return DEFAULT_LOG_LEVEL
+
+
+def is_colab_cache_disabled() -> bool:
+    return _is_env_var_truthy(DISABLE_COLAB_CACHE_ENV_VAR_NAME)
 
 
 def is_kaggle_cache_disabled() -> bool:
