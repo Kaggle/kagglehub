@@ -13,7 +13,8 @@ from kagglehub.clients import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KAGGLE_JWT_TOKEN_ENV_VAR_NAME,
 )
-from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KAGGLE_API_ENDPOINT_ENV_VAR_NAME
+from kagglehub.colab_cache_resolver import COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
+from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KAGGLE_API_ENDPOINT_ENV_VAR_NAME, TBE_RUNTIME_ADDR_ENV_VAR_NAME
 from kagglehub.kaggle_cache_resolver import KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, KAGGLE_NOTEBOOK_ENV_VAR_NAME
 
 
@@ -65,6 +66,29 @@ def create_test_jwt_http_server(handler_class: Type[BaseHTTPRequestHandler]):
             with HTTPServer((test_server_address.hostname, test_server_address.port), handler_class) as httpd:
                 threading.Thread(target=httpd.serve_forever).start()
 
+                try:
+                    yield httpd
+                finally:
+                    httpd.shutdown()
+
+
+@contextmanager
+def create_test_server_colab(handler_class: Type[BaseHTTPRequestHandler]):
+    with TemporaryDirectory() as cache_mount_folder:
+        with mock.patch.dict(
+            os.environ,
+            {
+                TBE_RUNTIME_ADDR_ENV_VAR_NAME: "localhost:7779",
+                COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME: cache_mount_folder,
+            },
+        ):
+            endpoint = os.getenv(TBE_RUNTIME_ADDR_ENV_VAR_NAME)
+            test_server_address = urlparse(f"http://{endpoint}")
+            if not test_server_address.hostname or not test_server_address.port:
+                msg = f"Invalid test server address: {endpoint}. You must specify a hostname & port"
+                raise ValueError(msg)
+            with HTTPServer((test_server_address.hostname, test_server_address.port), handler_class) as httpd:
+                threading.Thread(target=httpd.serve_forever).start()
                 try:
                     yield httpd
                 finally:

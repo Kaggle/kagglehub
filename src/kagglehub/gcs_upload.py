@@ -3,8 +3,10 @@ import os
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
+import time
 
 import requests
+from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
@@ -46,6 +48,34 @@ class File(object):  # noqa: UP004
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
 
+def check_uploaded_size(session_uri, file_size, max_retries=5, backoff_factor=1):
+    """Check the status of the resumable upload."""
+    headers = {
+        "Content-Length": "0",
+        "Content-Range": f"bytes */{file_size}"
+    }
+    retry_count = 0
+
+    while retry_count < max_retries:
+        try:
+            response = requests.put(session_uri, headers=headers)
+            if response.status_code == 308:  # Resume Incomplete
+                range_header = response.headers.get("Range")
+                if range_header:
+                    bytes_uploaded = int(range_header.split("-")[1]) + 1
+                    return bytes_uploaded
+                return 0  # If no Range header, assume no bytes were uploaded
+            else:
+                return file_size
+        except (ConnectionError, Timeout):
+            logger.info(f"Network issue while checking uploaded size, retrying in {backoff_factor} seconds...")
+            time.sleep(backoff_factor)
+            backoff_factor *= 2
+            retry_count += 1
+    
+    return 0  # Return 0 if all retries fail
+
+
 def _upload_blob(file_path: str, model_type: str):
     """Uploads a file to a remote server as a blob and returns an upload token.
 
@@ -72,20 +102,34 @@ def _upload_blob(file_path: str, model_type: str):
         token_exception = "'token' field missing from response"
         raise BackendError(token_exception)
 
+    session_uri = response["createUrl"]
     headers = {
-        "Content-Type": "application/octet-stream"
+        "Content-Type": "application/octet-stream",
+        "Content-Range": f"bytes 0-{file_size - 1}/{file_size}"
     }
     
-    # TODO(312511716): add resumable upload
-    with open(file_path, "rb") as f:
-        with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
-            reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
-            gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
-            if gcs_response.status_code not in [200, 201]:
-                upload_fail_message = (
-                    f"Upload failed with status code: {gcs_response.status_code}, Response: {gcs_response.text}"
-                )
-                raise BackendError(upload_fail_message)
+    max_retries = 5
+    retry_count = 0
+    uploaded_bytes = 0
+
+    with open(file_path, "rb") as f, tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True) as pbar:
+        while uploaded_bytes < file_size and retry_count < max_retries:
+            try:
+                f.seek(uploaded_bytes)
+                reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
+                headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
+                upload_response = requests.put(session_uri, headers=headers, data=reader_wrapper, timeout=600)
+
+                if upload_response.status_code in [200, 201]:
+                    return response["token"]
+                elif upload_response.status_code == 308:  # Resume Incomplete
+                    uploaded_bytes = check_uploaded_size(session_uri, file_size)
+                else:
+                    raise Exception(f"Upload failed: {upload_response.text}")
+            except (requests.ConnectionError, requests.Timeout) as e:
+                logger.info(f"Network issue: {e}, retrying...")
+                retry_count += 1
+                uploaded_bytes = check_uploaded_size(session_uri, file_size)
 
     return response["token"]
 
