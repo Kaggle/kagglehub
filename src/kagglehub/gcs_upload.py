@@ -113,7 +113,9 @@ def _upload_blob(file_path: str, model_type: str):
                 f.seek(uploaded_bytes)
                 reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
                 headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
-                upload_response = requests.put(session_uri, headers=headers, data=reader_wrapper, timeout=REQUEST_TIMEOUT)
+                upload_response = requests.put( # noqa: E501
+                    session_uri, headers=headers, data=reader_wrapper, timeout=REQUEST_TIMEOUT
+                )
 
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
