@@ -1,9 +1,9 @@
 import logging
 import os
+import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
-import time
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -50,16 +50,13 @@ class File(object):  # noqa: UP004
 
 def check_uploaded_size(session_uri, file_size, max_retries=5, backoff_factor=1):
     """Check the status of the resumable upload."""
-    headers = {
-        "Content-Length": "0",
-        "Content-Range": f"bytes */{file_size}"
-    }
+    headers = {"Content-Length": "0", "Content-Range": f"bytes */{file_size}"}
     retry_count = 0
 
     while retry_count < max_retries:
         try:
-            response = requests.put(session_uri, headers=headers)
-            if response.status_code == 308:  # Resume Incomplete
+            response = requests.put(session_uri, headers=headers, timeout=600)
+            if response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
                 range_header = response.headers.get("Range")
                 if range_header:
                     bytes_uploaded = int(range_header.split("-")[1]) + 1
@@ -72,7 +69,7 @@ def check_uploaded_size(session_uri, file_size, max_retries=5, backoff_factor=1)
             time.sleep(backoff_factor)
             backoff_factor *= 2
             retry_count += 1
-    
+
     return 0  # Return 0 if all retries fail
 
 
@@ -103,11 +100,8 @@ def _upload_blob(file_path: str, model_type: str):
         raise BackendError(token_exception)
 
     session_uri = response["createUrl"]
-    headers = {
-        "Content-Type": "application/octet-stream",
-        "Content-Range": f"bytes 0-{file_size - 1}/{file_size}"
-    }
-    
+    headers = {"Content-Type": "application/octet-stream", "Content-Range": f"bytes 0-{file_size - 1}/{file_size}"}
+
     max_retries = 5
     retry_count = 0
     uploaded_bytes = 0
@@ -122,10 +116,11 @@ def _upload_blob(file_path: str, model_type: str):
 
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
-                elif upload_response.status_code == 308:  # Resume Incomplete
+                elif upload_response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
                     uploaded_bytes = check_uploaded_size(session_uri, file_size)
                 else:
-                    raise Exception(f"Upload failed: {upload_response.text}")
+                    upload_failed_exception = f"Upload failed: {upload_response.text}"
+                    raise Exception(upload_failed_exception)
             except (requests.ConnectionError, requests.Timeout) as e:
                 logger.info(f"Network issue: {e}, retrying...")
                 retry_count += 1
