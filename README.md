@@ -129,3 +129,22 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 # Use specific Python version (Must be a valid tag from: https://hub.docker.com/_/python)
 ./docker-hatch -v 3.9 run lint:all
 ```
+
+## Release
+
+### Prerequisite
+
+Create a new version: 
+
+```
+NEW_VERSION=X.Y.X
+hatch version $NEW_VERSION
+```
+
+Update and commit CHANGELOG.md with the new version `X.Y.Z`
+
+### Create a new release
+
+```
+gcloud builds submit --project=kaggle-cicd --config=tools/release/cloudbuild.yaml . --substitutions=_NEW_VERSION=$NEW_VERSION
+```
