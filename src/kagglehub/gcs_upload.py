@@ -1,10 +1,12 @@
 import logging
 import os
+import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
 
 import requests
+from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
@@ -15,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 MAX_FILES_TO_UPLOAD = 50
 TEMP_ARCHIVE_FILE = "archive.zip"
+MAX_RETRIES = 5
+REQUEST_TIMEOUT = 600
 
 
 def parse_datetime_string(string: str):
@@ -46,6 +50,31 @@ class File(object):  # noqa: UP004
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
 
+def _check_uploaded_size(session_uri, file_size, backoff_factor=1):
+    """Check the status of the resumable upload."""
+    headers = {"Content-Length": "0", "Content-Range": f"bytes */{file_size}"}
+    retry_count = 0
+
+    while retry_count < MAX_RETRIES:
+        try:
+            response = requests.put(session_uri, headers=headers, timeout=REQUEST_TIMEOUT)
+            if response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
+                range_header = response.headers.get("Range")
+                if range_header:
+                    bytes_uploaded = int(range_header.split("-")[1]) + 1
+                    return bytes_uploaded
+                return 0  # If no Range header, assume no bytes were uploaded
+            else:
+                return file_size
+        except (ConnectionError, Timeout):
+            logger.info(f"Network issue while checking uploaded size, retrying in {backoff_factor} seconds...")
+            time.sleep(backoff_factor)
+            backoff_factor = min(backoff_factor * 2, 60)
+            retry_count += 1
+
+    return 0  # Return 0 if all retries fail
+
+
 def _upload_blob(file_path: str, model_type: str):
     """Uploads a file to a remote server as a blob and returns an upload token.
 
@@ -72,18 +101,39 @@ def _upload_blob(file_path: str, model_type: str):
         token_exception = "'token' field missing from response"
         raise BackendError(token_exception)
 
-    headers = {"Content-Type": "application/octet-stream"}
+    session_uri = response["createUrl"]
+    headers = {"Content-Type": "application/octet-stream", "Content-Range": f"bytes 0-{file_size - 1}/{file_size}"}
 
-    # TODO(312511716): add resumable upload
-    with open(file_path, "rb") as f:
-        with tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
-            reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
-            gcs_response = requests.put(response["createUrl"], data=reader_wrapper, headers=headers, timeout=600)
-            if gcs_response.status_code not in [200, 201]:
-                upload_fail_message = (
-                    f"Upload failed with status code: {gcs_response.status_code}, Response: {gcs_response.text}"
+    retry_count = 0
+    uploaded_bytes = 0
+    backoff_factor = 1  # Initial backoff duration in seconds
+
+    with open(file_path, "rb") as f, tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True) as pbar:
+        while uploaded_bytes < file_size and retry_count < MAX_RETRIES:
+            try:
+                f.seek(uploaded_bytes)
+                reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
+                headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
+                upload_response = requests.put(
+                    session_uri, headers=headers, data=reader_wrapper, timeout=REQUEST_TIMEOUT
                 )
-                raise BackendError(upload_fail_message)
+
+                if upload_response.status_code in [200, 201]:
+                    return response["token"]
+                elif upload_response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
+                    uploaded_bytes = _check_uploaded_size(session_uri, file_size)
+                else:
+                    upload_failed_exception = (
+                        f"Upload failed with status code {upload_response.status_code}: {upload_response.text}"
+                    )
+                    raise BackendError(upload_failed_exception)
+            except (requests.ConnectionError, requests.Timeout) as e:
+                logger.info(f"Network issue: {e}, retrying in {backoff_factor} seconds...")
+                time.sleep(backoff_factor)
+                backoff_factor = min(backoff_factor * 2, 60)
+                retry_count += 1
+                uploaded_bytes = _check_uploaded_size(session_uri, file_size)
+                pbar.n = uploaded_bytes  # Update progress bar to reflect actual uploaded bytes
 
     return response["token"]
 
