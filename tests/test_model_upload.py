@@ -107,6 +107,11 @@ class GcsAPIHandler(BaseHTTPRequestHandler):
 
 class TestModelUpload(BaseTestCase):
     def setUp(self):
+        # Resetting shared variables in GcsAPIHandler
+        GcsAPIHandler.simulate_308 = False
+        GcsAPIHandler.put_requests_count = 0
+
+        # Resetting any other necessary setup for KaggleAPIHandler
         KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES = []
 
     def test_model_upload_with_invalid_handle(self):
