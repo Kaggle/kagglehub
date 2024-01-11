@@ -33,6 +33,12 @@ steps:
   - test
 
 - name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+  id: integration-tests
+  args:
+  - run
+  - integration-test
+
+- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   id: lint
   args:
   - run
