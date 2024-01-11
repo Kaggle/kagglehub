@@ -13,6 +13,14 @@ class TestModelDownload(unittest.TestCase):
         actual_path = model_download(HANDLE)
         self.assertEqual(actual_path, expected_path, "Model download path did not match expected path")
 
+    def test_model_unversioned_succeeds(self):
+        unversioned_handle = "keras/bert/keras/bert_base_en"
+        expected_path = "/usr/local/google/home/aminmohamed/.cache/kagglehub/models/keras/bert/keras/bert_base_en/2"
+        actual_path = model_download(unversioned_handle)
+        self.assertEqual(
+            actual_path, expected_path, "Model download path for unversioned handle did not match expected path"
+        )
+
     def test_download_multiple_files(self):
         file_paths = ["?select=tokenizer.json", "?select=config.json"]
         expected_paths = [
