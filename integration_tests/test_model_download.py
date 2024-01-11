@@ -9,14 +9,18 @@ HANDLE = "keras/bert/keras/bert_base_en/2"
 
 class TestModelDownload(unittest.TestCase):
     def test_model_versioned_succeeds(self):
-        expected_path = "/usr/local/google/home/aminmohamed/.cache/kagglehub/models/keras/bert/keras/bert_base_en/2"
+        expected_path = "kagglehub/models/keras/bert/keras/bert_base_en/2"
         actual_path = model_download(HANDLE)
+        split_index = actual_path.find("kagglehub")
+        actual_path = actual_path[split_index:]
         self.assertEqual(actual_path, expected_path, "Model download path did not match expected path")
 
     def test_model_unversioned_succeeds(self):
         unversioned_handle = "keras/bert/keras/bert_base_en"
-        expected_path = "/usr/local/google/home/aminmohamed/.cache/kagglehub/models/keras/bert/keras/bert_base_en/2"
+        expected_path = "kagglehub/models/keras/bert/keras/bert_base_en/2"
         actual_path = model_download(unversioned_handle)
+        split_index = actual_path.find("kagglehub")
+        actual_path = actual_path[split_index:]
         self.assertEqual(
             actual_path, expected_path, "Model download path for unversioned handle did not match expected path"
         )
@@ -24,11 +28,14 @@ class TestModelDownload(unittest.TestCase):
     def test_download_multiple_files(self):
         file_paths = ["?select=tokenizer.json", "?select=config.json"]
         expected_paths = [
-            "/usr/local/google/home/aminmohamed/.cache/kagglehub/models/keras/bert/keras/bert_base_en/2/?select=tokenizer.json",
-            "/usr/local/google/home/aminmohamed/.cache/kagglehub/models/keras/bert/keras/bert_base_en/2/?select=config.json",
+            "kagglehub/models/keras/bert/keras/bert_base_en/2/?select=tokenizer.json",
+            "kagglehub/models/keras/bert/keras/bert_base_en/2/?select=config.json",
         ]
         for p, e in zip(file_paths, expected_paths):
-            self.assertEqual(model_download(HANDLE, path=p), e, "Path for file did not match expected path")
+            actual_path = model_download(HANDLE, path=p)
+            split_index = actual_path.find("kagglehub")
+            actual_path = actual_path[split_index:]
+            self.assertEqual(actual_path, e, "Path for file did not match expected path")
 
     def test_validate_downloaded_file_content(self):
         file_path = "?select=tokenizer.json"
