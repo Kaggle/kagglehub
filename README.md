@@ -68,14 +68,25 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', force
 ```
 
 ### Upload Model
-To upload a model to Kaggle, use the `model_upload` function. This function allows you to upload model files to a specified handle on Kaggle.
+Uploads a new variation (or a new variation's version if it already exists).
 
 ```python
 import kagglehub
 
-kagglehub.model_upload(handle='your/model/handle',
-                       local_model_dir='path/to/local/model/directory',
-                       version_notes='Initial version')
+# For example, to upload a new variation to this model:
+# - https://www.kaggle.com/models/google/bert/frameworks/tensorFlow2/variations/answer-equivalence-bem
+# 
+# You would use the following handle: `google/bert/tensorFlow2/answer-equivalence-bem`
+handle = '<KAGGLE_USERNAME>/<MODEL>/<FRAMEWORK>/<VARIATION>'
+local_model_dir = 'path/to/local/model/dir'
+
+kagglehub.model_upload(handle, local_model_dir)
+
+# You can also specify some version notes (optional)
+kagglehub.model_upload(handle, local_model_dir, version_notes='improved accuracy')
+
+# You can also specify a license (optional)
+kagglehub.model_upload(handle, local_model_dir, license_name='Apache 2.0')
 ```
 
 ## Development
