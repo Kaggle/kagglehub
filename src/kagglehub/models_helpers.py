@@ -16,7 +16,7 @@ def _create_model(owner_slug: str, model_slug: str):
     logger.info(f"Model '{model_slug}' Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, license_name: str, files: List[str]):
+def _create_model_instance(model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None):
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
@@ -39,7 +39,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, license_name: str, files: List[str], version_notes: Optional[str] = None
+    model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None, version_notes: Optional[str] = None
 ):
     try:
         api_client = KaggleApiV1Client()
@@ -48,7 +48,7 @@ def create_model_instance_or_version(
         _create_model_instance_version(model_handle, files, version_notes)
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
-            _create_model_instance(model_handle, license_name, files)
+            _create_model_instance(model_handle, files, license_name)
         else:
             raise (e)
 
