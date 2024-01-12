@@ -4,7 +4,7 @@ steps:
 # Note: the reason to use bash is to be able to return an exit code 0 even if
 # the docker image doesn't exist yet.
 - name: 'gcr.io/cloud-builders/docker'
-  id: 'pull-builder'
+  id: 'check_substitutions'
   entrypoint: 'bash'
   args:
   - '-c'
@@ -15,7 +15,7 @@ steps:
 # Use the previous built image as cache.
 - name: 'gcr.io/cloud-builders/docker'
   id: 'build-hatch-image'
-  waitFor: ['pull-builder']
+  waitFor: ['check_substitutions']
   dir: 'tools/cicd'
   args:
   - build
