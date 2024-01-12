@@ -58,14 +58,14 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"status": "success", "message": "Model created successfully"}).encode("utf-8"))
-        elif instance_or_version in ("instance", "version"):            
+        elif instance_or_version in ("instance", "version"):
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            if data.get('licenseName') not in ALLOWED_LICENSE_VALUES:
+            if data.get("licenseName") not in ALLOWED_LICENSE_VALUES:
                 error_message = json.dumps({"error": f"bad: {self.path}"})
                 self.wfile.write(bytes(error_message, "utf-8"))
-            else: 
+            else:
                 response = {"status": "success", "message": "Model Instance/Version created successfully"}
                 self.wfile.write(json.dumps(response).encode("utf-8"))
         elif self.path == "/api/v1/blobs/upload":
@@ -185,7 +185,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_with_None_license(self):
+    def test_model_upload_with_none_license(self):
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
