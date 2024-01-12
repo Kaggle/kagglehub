@@ -9,6 +9,7 @@ steps:
   - '-c'
   - |
     docker pull gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION} || exit 0
+  id: 'setup-build'
 
 # Build a modified version of the python image that includes hatch.
 # Use the previous built image as cache.
@@ -25,18 +26,21 @@ steps:
   - --build-arg
   - PYTHON_VERSION=${_PYTHON_VERSION}
   - .
+  waitFor: ['setup-build']
 
 - name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   id: tests
   args:
   - run
   - test
+  waitFor: ['setup-build']
 
 - name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
   id: lint
   args:
   - run
   - lint:all
+  waitFor: ['setup-build']
 
 images: ['gcr.io/$PROJECT_ID/hatch']
 
