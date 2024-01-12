@@ -67,6 +67,17 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', path=
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', force_download=True)
 ```
 
+### Upload Model
+To upload a model to Kaggle, use the `model_upload` function. This function allows you to upload model files to a specified handle on Kaggle.
+
+```python
+import kagglehub
+
+kagglehub.model_upload(handle='your/model/handle',
+                       local_model_dir='path/to/local/model/directory',
+                       version_notes='Initial version')
+```
+
 ## Development
 
 ### Prequisites
