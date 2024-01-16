@@ -1,0 +1,38 @@
+# integration-tests.yaml
+steps:
+  # Check if the Docker image for Python 3.11 exists
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'check_python_image'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      docker pull gcr.io/$PROJECT_ID/hatch:3.11 || exit 0
+
+  # Build a Docker image for Python 3.11 that includes hatch
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-python-image'
+    waitFor: ['check_python_image']
+    dir: 'tools/cicd'
+    args:
+    - build
+    - -f
+    - Dockerfile
+    - -t
+    - gcr.io/$PROJECT_ID/hatch:3.11
+    - --cache-from
+    - gcr.io/$PROJECT_ID/hatch:3.11
+    - --build-arg
+    - PYTHON_VERSION=3.11
+    - .
+
+  # Run integration tests using the built Python 3.11 image
+  - name: gcr.io/$PROJECT_ID/hatch:3.11
+    id: integration-tests
+    args:
+    - run
+    - integration-test
+    waitFor: ['build-python-image']
+
+# Specify the Docker image to be created
+images: ['gcr.io/$PROJECT_ID/hatch:3.11']
