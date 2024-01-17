@@ -8,6 +8,9 @@ steps:
     - '-c'
     - |
       docker pull gcr.io/$PROJECT_ID/hatch:3.11 || exit 0
+    volumes:
+    - name: 'root'
+      path: /root
 
   # Build a Docker image for Python 3.11 that includes hatch
   - name: 'gcr.io/cloud-builders/docker'
@@ -25,6 +28,9 @@ steps:
     - --build-arg
     - PYTHON_VERSION=3.11
     - .
+    volumes:
+    - name: 'root'
+      path: /root
 
    # Access and store the secret in a file on a shared volume
   - name: 'gcr.io/cloud-builders/gcloud'
