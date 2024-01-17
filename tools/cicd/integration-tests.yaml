@@ -47,7 +47,7 @@ steps:
     - '-c'
     - |
       source /root/secrets.sh
-      run integration-test
+      hatch run integration-test
     volumes:
     - name: 'root'
       path: /root
