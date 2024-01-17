@@ -20,9 +20,11 @@ def _create_model_instance(model_handle: ModelHandle, files: List[str], license_
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
-        "licenseName": license_name,
         "files": [{"token": file_token} for file_token in files],
     }
+    if license_name is not None:
+        data["licenseName"] = license_name
+
     api_client = KaggleApiV1Client()
     api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
     logger.info(f"Model Instance for '{model_handle}' Created.")
