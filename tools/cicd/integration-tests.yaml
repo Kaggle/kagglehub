@@ -33,10 +33,10 @@ steps:
     args:
     - '-c'
     - |
-      gcloud secrets versions access latest --secret=integration-tests --project=464139560241 > /workspace/secrets.sh
+      gcloud secrets versions access latest --secret=integration-tests --project=464139560241 > /root/secrets.sh
     volumes:
-    - name: 'workspace'
-      path: '/workspace'
+    - name: 'root'
+      path: '/root'
 
 
   # Source the secrets and run integration tests using the built Python 3.11 image
@@ -46,11 +46,11 @@ steps:
     args:
     - '-c'
     - |
-      source /workspace/secrets.sh
+      source /root/secrets.sh
       run integration-test
     volumes:
-    - name: 'workspace'
-      path: '/workspace'
+    - name: 'root'
+      path: '/root'
     waitFor: ['build-python-image', 'download-secrets']
 
 # Specify the Docker image to be created
@@ -58,5 +58,5 @@ images: ['gcr.io/$PROJECT_ID/hatch:3.11']
 
 # Define volumes for sharing data across steps
 volumes:
-  - name: 'workspace'
-    path: '/workspace'
+  - name: 'root'
+    path: '/root'
