@@ -51,3 +51,8 @@ steps:
 
 # Specify the Docker image to be created
 images: ['gcr.io/$PROJECT_ID/hatch:3.11']
+
+# Define volumes for sharing data across steps
+volumes:
+  - name: 'workspace'
+    path: '/workspace'
