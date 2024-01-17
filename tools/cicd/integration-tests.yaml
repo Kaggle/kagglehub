@@ -24,32 +24,28 @@ steps:
     - PYTHON_VERSION=3.11
     - .
 
-   # Access and store the secret in a file on a shared volume
+   # Access and source the secret to set KAGGLE_USERNAME and KAGGLE_KEY environment variables
   - name: 'gcr.io/cloud-builders/gcloud'
-    id: 'download-secrets'
+    id: 'source-secrets'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
-      gcloud secrets versions access latest --secret=integration-tests --project=464139560241 > /workspace/secrets.sh
-    volumes:
-    - name: 'workspace'
-      path: '/workspace'
+      gcloud secrets versions access latest --secret=integration-tests --project=464139560241 > secrets.sh
+      source secrets.sh
 
 
-  # Source the secrets and run integration tests using the built Python 3.11 image
+  # Run integration tests using the built Python 3.11 image
   - name: gcr.io/$PROJECT_ID/hatch:3.11
     id: integration-tests
     entrypoint: 'bash'
     args:
-    - '-c'
-    - |
-      source /workspace/secrets.sh
-      run integration-test
-    volumes:
-    - name: 'workspace'
-      path: '/workspace'
-    waitFor: ['build-python-image', 'download-secrets']
+    - run
+    - integration-test
+    env:
+    - 'USERNAME_ENV_VAR_NAME=$KAGGLE_USERNAME'
+    - 'KEY_ENV_VAR_NAME=$KAGGLE_KEY'
+    waitFor: ['build-python-image', 'source-secrets']
 
 # Specify the Docker image to be created
 images: ['gcr.io/$PROJECT_ID/hatch:3.11']
