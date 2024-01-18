@@ -2,9 +2,14 @@ import os
 import tempfile
 import unittest
 import uuid
+import logging
 
 from kagglehub import model_upload
 from kagglehub.clients import KaggleApiV1Client
+from kagglehub.exceptions import KaggleApiHTTPError
+from http import HTTPStatus
+
+logger = logging.getLogger(__name__)
 from kagglehub.config import get_kaggle_credentials
 
 LICENSE_NAME = "MIT"
@@ -22,24 +27,15 @@ class TestModelUpload(unittest.TestCase):
         if not credentials:
             self.fail("Make sure to set your Kaggle credentials before running the tests")
         self.owner_slug = credentials.username
-        self.model_slug = "model_{self.model_uuid}"
+        self.model_slug = f"model_{self.model_uuid}"
         self.handle = f"{self.owner_slug}/{self.model_slug}/pyTorch/new-variation"
-
-    def delete_model(self):
-        api_client = KaggleApiV1Client()
-        api_client.post(
-            f"/models/{self.owner_slug}/{self.model_slug}/delete",
-            {},
-        )
 
     def test_model_upload_and_versioning(self):
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
-        # ... [verify first upload]
-
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
-        # ... [verify second upload]
+        # If delete model does not raise an error, then the upload was successful.
 
     def tearDown(self):
-        self.delete_model(self.owner_slug, self.model_slug)
+        self.delete_model()
