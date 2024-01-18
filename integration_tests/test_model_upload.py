@@ -5,8 +5,10 @@ import uuid
 
 from kagglehub import model_upload
 from kagglehub.clients import KaggleApiV1Client
+from kagglehub.config import get_kaggle_credentials
 
 LICENSE_NAME = "MIT"
+
 
 class TestModelUpload(unittest.TestCase):
     def setUp(self):
@@ -16,7 +18,10 @@ class TestModelUpload(unittest.TestCase):
             with open(os.path.join(self.temp_dir, file), "w") as f:
                 f.write("dummy content")
         self.model_uuid = str(uuid.uuid4())
-        self.owner_slug = "aminmohamedmohami"
+        credentials = get_kaggle_credentials()
+        if not credentials:
+            self.fail("Make sure to set your Kaggle credentials before running the tests")
+        self.owner_slug = credentials.username
         self.model_slug = "model_{self.model_uuid}"
         self.handle = f"{self.owner_slug}/{self.model_slug}/pyTorch/new-variation"
 
@@ -28,7 +33,6 @@ class TestModelUpload(unittest.TestCase):
         )
 
     def test_model_upload_and_versioning(self):
-
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # ... [verify first upload]
