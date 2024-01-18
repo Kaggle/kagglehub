@@ -6,6 +6,7 @@ import uuid
 from kagglehub import model_upload
 from kagglehub.clients import KaggleApiV1Client
 
+LICENSE_NAME = "MIT"
 
 class TestModelUpload(unittest.TestCase):
     def setUp(self):
@@ -27,16 +28,14 @@ class TestModelUpload(unittest.TestCase):
         )
 
     def test_model_upload_and_versioning(self):
-        license_name = "MIT"
 
-        model_upload(self.handle, self.temp_dir, license_name)
+        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # ... [verify first upload]
 
-        model_upload(self.handle, self.temp_dir, license_name)
+        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # ... [verify second upload]
 
     def tearDown(self):
-        # Delete the model using the same UUID
         self.delete_model(self.owner_slug, self.model_slug)
