@@ -31,8 +31,10 @@ class TestModelUpload(unittest.TestCase):
         self.handle = f"{self.owner_slug}/{self.model_slug}/pyTorch/new-variation"
 
     def test_model_upload_and_versioning(self):
+        # Create Instance
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
+        # Create Version
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # If delete model does not raise an error, then the upload was successful.
