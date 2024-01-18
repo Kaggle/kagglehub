@@ -3,7 +3,7 @@ import tempfile
 import unittest
 import uuid
 
-from kagglehub import model_upload
+from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
 
 LICENSE_NAME = "MIT"
@@ -34,4 +34,4 @@ class TestModelUpload(unittest.TestCase):
         # If delete model does not raise an error, then the upload was successful.
 
     def tearDown(self):
-        self.delete_model()
+        models_helpers.delete_model(self.owner_slug, self.model_slug)

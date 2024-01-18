@@ -65,15 +65,15 @@ def create_model_if_missing(owner_slug: str, model_slug: str):
             raise (e)
 
 
-def delete_model(self):
+def delete_model(owner_slug, model_slug):
     try:
         api_client = KaggleApiV1Client()
         api_client.post(
-            f"/models/{self.owner_slug}/{self.model_slug}/delete",
+            f"/models/{owner_slug}/{model_slug}/delete",
             {},
         )
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
-            logger.info(f"Could not delete Model '{self.model_slug}' for user '{self.owner_slug}'...")
+            logger.info(f"Could not delete Model '{model_slug}' for user '{owner_slug}'...")
         else:
             raise (e)
