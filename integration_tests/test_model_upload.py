@@ -2,14 +2,8 @@ import os
 import tempfile
 import unittest
 import uuid
-import logging
 
 from kagglehub import model_upload
-from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import KaggleApiHTTPError
-from http import HTTPStatus
-
-logger = logging.getLogger(__name__)
 from kagglehub.config import get_kaggle_credentials
 
 LICENSE_NAME = "MIT"
