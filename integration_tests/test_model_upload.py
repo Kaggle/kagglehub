@@ -18,6 +18,8 @@ class TestModelUpload(unittest.TestCase):
                 f.write("dummy content")
         self.model_uuid = str(uuid.uuid4())
         credentials = get_kaggle_credentials()
+        for key, value in os.environ.items():
+            print(f"{key}: {value}")
         if not credentials:
             self.fail("Make sure to set your Kaggle credentials before running the tests")
         self.owner_slug = credentials.username
