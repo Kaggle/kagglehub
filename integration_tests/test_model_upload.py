@@ -16,8 +16,8 @@ class TestModelUpload(unittest.TestCase):
             with open(os.path.join(self.temp_dir, file), "w") as f:
                 f.write("dummy content")
         self.model_uuid = str(uuid.uuid4())
-        self.model_slug = f"model_{self.model_uuid}"
-        self.handle = f"integrationtester/{self.model_slug}/pyTorch/new-variation"
+        # self.model_slug = f"model_{self.model_uuid}"
+        self.handle = "integrationtester/test-private-model/pyTorch/new-variation"
 
     def test_model_upload_and_versioning(self):
         # Create Instance
