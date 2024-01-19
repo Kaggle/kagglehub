@@ -109,6 +109,15 @@ hatch run test tests/test_<SOME_FILE>.py
 
 ### Integration Tests
 
+To run integration tests on your local machine, you need to set up your Kaggle API credentials. You can do this in one of these two ways described in the earlier sections of this document. Refer to the sections: 
+Option 2: Read Credentials from Environment Variables
+Set your Kaggle username and API key as environment variables. Refer to the section Option 2: Read credentials from environment variables for more details.
+
+Option 3: Read Credentials from kaggle.json
+Store your kaggle.json credentials file at ~/.kaggle/kaggle.json, or set the KAGGLE_CONFIG_DIR environment variable to a custom location. For Windows users, the default directory is %HOMEPATH%/kaggle.json.
+
+After setting up your credentials by any of these methods, you can run the integration tests as follows:
+
 ```sh
 # Run all tests
 hatch run integration-test
@@ -116,31 +125,6 @@ hatch run integration-test
 # Run a single test file
 hatch run integration-test integration-test/test_<SOME_FILE>.py
 ```
-
-To run integration tests on your local machine, you need to set up your Kaggle API credentials. There are two ways to do this:
-
-Using Environment Variables:
-
-Before running the tests, export your Kaggle username and API key as environment variables in your terminal. Replace YOUR_KAGGLE_USERNAME and YOUR_KAGGLE_KEY with your actual Kaggle username and API key.
-
-```sh
-export KAGGLE_USERNAME='YOUR_KAGGLE_USERNAME'
-export KAGGLE_KEY='YOUR_KAGGLE_KEY'
-```
-After setting these environment variables, you can run the tests.
-
-
-Using set_kaggle_credentials() Function in Test Files:
-
-Alternatively, you can set your Kaggle credentials directly in the test file. This method is useful if you prefer not to use environment variables or if you are running a specific test file. Add the following lines at the beginning of your test file, replacing YOUR_KAGGLE_USERNAME and YOUR_KAGGLE_KEY with your actual credentials:
-
-```python
-from kagglehub import set_kaggle_credentials
-
-set_kaggle_credentials('YOUR_KAGGLE_USERNAME', 'YOUR_KAGGLE_KEY')
-```
-Then, run a test file.
-
 
 
 ### Run `kagglehub` from source
