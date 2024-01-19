@@ -68,6 +68,15 @@ class TestModelDownload(unittest.TestCase):
         ]
         self.assert_files(actual_path, expected_files)
 
+    def test_download_private_model_succeeds(self):
+        actual_path = model_download("integrationtester/test-private-model/pyTorch/b0")
+
+        expected_files = [
+            "./efficientnet-b0.pth",
+        ]
+
+        self.assert_files(actual_path, expected_files)
+
     def test_download_multiple_files(self):
         file_paths = ["tokenizer.json", "config.json"]
         for p in file_paths:

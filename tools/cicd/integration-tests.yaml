@@ -26,13 +26,32 @@ steps:
     - PYTHON_VERSION=3.11
     - .
 
-  # Run integration tests using the built Python 3.11 image
+   # Access and store the secret in a file on a shared volume
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'download-secrets'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gcloud secrets versions access latest --secret=integration-tests --project=464139560241 > /root/secrets.sh
+    volumes:
+    - name: 'root'
+      path: /root
+
+
+  # Source the secrets and run integration tests using the built Python 3.11 image
   - name: gcr.io/$PROJECT_ID/hatch:3.11
     id: integration-tests
-    args:
-    - run
-    - integration-test
-    waitFor: ['build-python-image']
+    script: |
+      #!/usr/bin/env bash
+      export KAGGLE_USERNAME
+      export KAGGLE_KEY
+      source /root/secrets.sh
+      hatch run integration-test
+    volumes:
+    - name: 'root'
+      path: /root
+    waitFor: ['build-python-image', 'download-secrets']
 
 # Specify the Docker image to be created
 images: ['gcr.io/$PROJECT_ID/hatch:3.11']
