@@ -17,11 +17,11 @@ class TestModelUpload(unittest.TestCase):
             with open(os.path.join(self.temp_dir, file), "w") as f:
                 f.write("dummy content")
         self.model_uuid = str(uuid.uuid4())
-        set_kaggle_credentials('aminmohamedmohami', '03c3403c0ab97d88b6efd64aaaf8e58b')
+        set_kaggle_credentials("aminmohamedmohami", "03c3403c0ab97d88b6efd64aaaf8e58b")
         credentials = get_kaggle_credentials()
-        for key, value in os.environ.items():
-            print(f"{key}: {value}")
-            self.fail("Make sure to set your Kaggle credentials before running the tests")
+        # for key, value in os.environ.items():
+        #     print(f"{key}: {value}")
+        #     self.fail("Make sure to set your Kaggle credentials before running the tests")
         if not credentials:
             self.fail("Make sure to set your Kaggle credentials before running the tests")
         self.owner_slug = credentials.username
