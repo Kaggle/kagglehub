@@ -101,20 +101,20 @@ Follow these [instructions](https://hatch.pypa.io/latest/install/) to install it
 
 ```sh
 # Run all tests
-hatch run integration-test
+hatch run test
 
 # Run a single test file
-hatch run integration-test integration-test/test_<SOME_FILE>.py
+hatch run test tests/test_<SOME_FILE>.py
 ```
 
 ### Integration Tests
 
 ```sh
 # Run all tests
-hatch run test
+hatch run integration-test
 
 # Run a single test file
-hatch run test tests/test_<SOME_FILE>.py
+hatch run integration-test integration-test/test_<SOME_FILE>.py
 ```
 
 To run integration tests on your local machine, you need to set up your Kaggle API credentials. There are two ways to do this:
