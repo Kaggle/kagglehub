@@ -4,7 +4,6 @@ import unittest
 import uuid
 
 from kagglehub import model_upload, models_helpers
-from kagglehub.config import get_kaggle_credentials
 
 LICENSE_NAME = "MIT"
 

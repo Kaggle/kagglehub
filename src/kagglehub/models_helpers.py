@@ -66,6 +66,7 @@ def create_model_if_missing(owner_slug: str, model_slug: str):
         else:
             raise (e)
 
+
 def delete_model(owner_slug, model_slug):
     try:
         api_client = KaggleApiV1Client()
