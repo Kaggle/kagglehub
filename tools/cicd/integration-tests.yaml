@@ -3,10 +3,8 @@ steps:
   # Check if the Docker image for Python 3.11 exists
   - name: 'gcr.io/cloud-builders/docker'
     id: 'check_python_image'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
+    script: |
+      #!/usr/bin/env bash
       docker pull gcr.io/$PROJECT_ID/hatch:3.11 || exit 0
 
   # Build a Docker image for Python 3.11 that includes hatch
@@ -29,10 +27,8 @@ steps:
    # Access and store the secret in a file on a shared volume
   - name: 'gcr.io/cloud-builders/gcloud'
     id: 'download-secrets'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
+    script: |
+      #!/usr/bin/env bash
       gcloud secrets versions access latest --secret=integration-tests --project=464139560241 > /root/secrets.sh
     volumes:
     - name: 'root'
