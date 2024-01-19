@@ -1,3 +1,4 @@
+import logging
 import os
 import tarfile
 from typing import Optional
@@ -14,6 +15,8 @@ from kagglehub.handle import ModelHandle
 from kagglehub.resolver import Resolver
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
+
+logger = logging.getLogger(__name__)
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
@@ -57,6 +60,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 raise ValueError(msg)
 
             # Extract all files to this directory.
+            logger.info("Extracting model files...")
             with tarfile.open(archive_path) as f:
                 # Model archives are created by Kaggle via the Databundle Worker.
                 f.extractall(out_path)
