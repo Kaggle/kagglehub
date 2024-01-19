@@ -25,7 +25,9 @@ def model_download(handle: str, path: Optional[str] = None, *, force_download: O
     return registry.model_resolver(h, path, force_download=force_download)
 
 
-def model_upload(handle: str, local_model_dir: str, license_name: str, version_notes: Optional[str] = ""):
+def model_upload(
+    handle: str, local_model_dir: str, license_name: Optional[str] = None, version_notes: Optional[str] = ""
+):
     """Upload model files.
 
     Args:
@@ -48,4 +50,4 @@ def model_upload(handle: str, local_model_dir: str, license_name: str, version_n
     tokens = upload_files(local_model_dir, "model")
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
-    create_model_instance_or_version(h, license_name, tokens, version_notes)
+    create_model_instance_or_version(h, tokens, license_name, version_notes)
