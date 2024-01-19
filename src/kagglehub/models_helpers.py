@@ -49,7 +49,7 @@ def create_model_instance_or_version(
         # the instance exist, create a new version.
         _create_model_instance_version(model_handle, files, version_notes)
     except KaggleApiHTTPError as e:
-        if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
+        if e.response is not None and (e.response.status_code == HTTPStatus.NOT_FOUND or e.response.status_code == HTTPStatus.FORBIDDEN):
             _create_model_instance(model_handle, files, license_name)
         else:
             raise (e)
@@ -60,8 +60,8 @@ def create_model_if_missing(owner_slug: str, model_slug: str):
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{owner_slug}/{model_slug}/get")
     except KaggleApiHTTPError as e:
-        if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
-            logger.info(f"Model '{model_slug}' does not exist for user '{owner_slug}'. Creating Model...")
+        if e.response is not None and (e.response.status_code == HTTPStatus.NOT_FOUND or e.response.status_code == HTTPStatus.FORBIDDEN):
+            logger.info(f"Model '{model_slug}' does not exist or access is forbidden for user '{owner_slug}'. Creating or handling Model...")
             _create_model(owner_slug, model_slug)
         else:
             raise (e)
