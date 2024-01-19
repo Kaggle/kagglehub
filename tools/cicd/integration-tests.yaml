@@ -47,6 +47,7 @@ steps:
     - '-c'
     - |
       source /root/secrets.sh
+      echo $KAGGLE_USERNAME
       hatch run integration-test
     volumes:
     - name: 'root'
