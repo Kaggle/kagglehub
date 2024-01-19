@@ -40,7 +40,7 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
-integration-test = "KAGGLE_USERNAME='aminmohamedmohami' KAGGLE_KEY='03c3403c0ab97d88b6efd64aaaf8e58b' pytest {args:integration_tests}"
+integration-test = "KAGGLE_USERNAME=$KAGGLE_USERNAME KAGGLE_KEY=$KAGGLE_KEY pytest {args:integration_tests}"
 test-cov = "coverage run -m pytest {args:tests integration_tests}"
 cov-report = [
   "- coverage combine",
