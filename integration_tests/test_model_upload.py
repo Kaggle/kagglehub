@@ -16,7 +16,7 @@ class TestModelUpload(unittest.TestCase):
         for file in self.dummy_files:
             with open(os.path.join(self.temp_dir, file), "w") as f:
                 f.write("dummy content")
-        self.handle = f"OWNER_SLUG/MODEL_SLUG/pyTorch/new-variation"
+        self.handle = f"{OWNER_SLUG}/{MODEL_SLUG}/pyTorch/new-variation"
 
     def test_model_upload_and_versioning(self):
         # Create Instance
