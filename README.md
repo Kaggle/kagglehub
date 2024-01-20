@@ -111,10 +111,8 @@ hatch run test tests/test_<SOME_FILE>.py
 
 To run integration tests on your local machine, you need to set up your Kaggle API credentials. You can do this in one of these two ways described in the earlier sections of this document. Refer to the sections: 
 Option 2: Read Credentials from Environment Variables
-Set your Kaggle username and API key as environment variables. Refer to the section Option 2: Read credentials from environment variables for more details.
 
 Option 3: Read Credentials from kaggle.json
-Store your kaggle.json credentials file at ~/.kaggle/kaggle.json, or set the KAGGLE_CONFIG_DIR environment variable to a custom location. For Windows users, the default directory is %HOMEPATH%/kaggle.json.
 
 After setting up your credentials by any of these methods, you can run the integration tests as follows:
 
