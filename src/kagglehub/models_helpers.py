@@ -27,9 +27,7 @@ def _create_model_instance(model_handle: ModelHandle, files: List[str], license_
 
     api_client = KaggleApiV1Client()
     api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
-    logger.info(
-        f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}"
-    )
+    logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}")
 
 
 def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes=""):
@@ -40,7 +38,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
         data,
     )
     logger.info(
-        f"Your model instance version has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}"  # noqa: E501
+        f"Your model instance version has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}"
     )
 
 
