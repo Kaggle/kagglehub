@@ -4,6 +4,13 @@
 
 *
 
+## v0.1.6 (January 22nd, 2023)
+
+* Fix permission issue in `model_upload` and add integration tests ([#69](https://github.com/Kaggle/kagglehub/pull/69))
+* Make specifying a license optional in `model_upload` ([#62](https://github.com/Kaggle/kagglehub/pull/62))
+* Improve logging ([#68](https://github.com/Kaggle/kagglehub/pull/68), [#71](https://github.com/Kaggle/kagglehub/pull/71))
+* Add resumable upload ([#55](https://github.com/Kaggle/kagglehub/pull/55))
+
 ## v0.1.5 (January 8th, 2023)
 
 * Prevent log message from being printed twice in some environment ([#57](https://github.com/Kaggle/kagglehub/pull/57))
