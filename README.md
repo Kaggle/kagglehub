@@ -107,6 +107,23 @@ hatch run test
 hatch run test tests/test_<SOME_FILE>.py
 ```
 
+### Integration Tests
+
+To run integration tests on your local machine, you need to set up your Kaggle API credentials. You can do this in one of these two ways described in the earlier sections of this document. Refer to the sections: 
+- [Using environment variables](#option-2-read-credentials-from-environment-variables)
+- [Using credentials file](#option-3-read-credentials-from-kagglejson)
+
+After setting up your credentials by any of these methods, you can run the integration tests as follows:
+
+```sh
+# Run all tests
+hatch run integration-test
+
+# Run a single test file
+hatch run integration-test integration-test/test_<SOME_FILE>.py
+```
+
+
 ### Run `kagglehub` from source
 
 ```sh
