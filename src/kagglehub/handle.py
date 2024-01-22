@@ -25,6 +25,12 @@ class ModelHandle:
             return f"{handle_str}/{self.version}"
         return handle_str
 
+    def to_url(self) -> str:
+        if self.is_versioned():
+            return f'https://admin.kaggle.com/models/{self.owner}/{self.model}/frameworks/{self.framework}/variations/{self.variation}/versions/{self.version}'
+        else:
+            return f'https://admin.kaggle.com/models/{self.owner}/{self.model}/frameworks/{self.framework}/variations/{self.variation}'
+
 
 def parse_model_handle(handle: str) -> ModelHandle:
     parts = handle.split("/")
