@@ -40,7 +40,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
         data,
     )
     logger.info(
-        f"Your model instance version has been created.\nFiles are being processed...\nSee at: '{model_handle.to_url()}'" # noqa: E501
+        f"Your model instance version has been created.\nFiles are being processed...\nSee at: '{model_handle.to_url()}'"  # noqa: E501
     )
 
 
