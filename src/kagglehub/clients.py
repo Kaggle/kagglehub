@@ -55,6 +55,12 @@ class KaggleApiV1Client:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
 
+    def _check_for_version_update(self, response):
+        latest_version = response.headers.get('X-Kaggle-HubVersion')
+        if latest_version and latest_version > kagglehub.__version__:
+            logger.info(f"New version of KaggleHub available: {latest_version}. "
+                        "We recommend upgrading to the latest version.")
+
     def get(self, path: str) -> dict:
         url = self._build_url(path)
         with requests.get(
@@ -64,6 +70,7 @@ class KaggleApiV1Client:
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response)
+            self._check_for_version_update(response)
             return response.json()
 
     def post(self, path: str, data: dict):
@@ -77,6 +84,7 @@ class KaggleApiV1Client:
         ) as response:
             response_dict = response.json()
             process_post_response(response_dict)
+            self._check_for_version_update(response)
             return response_dict
 
     def download_file(self, path: str, out_file: str):
