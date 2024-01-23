@@ -4,9 +4,9 @@ import logging
 import os
 from typing import Tuple
 from urllib.parse import urljoin
-from packaging.version import parse
 
 import requests
+from packaging.version import parse
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
