@@ -4,6 +4,7 @@ import logging
 import os
 from typing import Tuple
 from urllib.parse import urljoin
+from packaging.version import parse
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -56,12 +57,15 @@ class KaggleApiV1Client:
         self.endpoint = get_kaggle_api_endpoint()
 
     def _check_for_version_update(self, response):
-        latest_version = response.headers.get("X-Kaggle-HubVersion")
-        if latest_version and latest_version > kagglehub.__version__:
-            logger.info(
-                f"New version of KaggleHub available: {latest_version}. "
-                "We recommend upgrading to the latest version."
-            )
+        latest_version_str = response.headers.get("X-Kaggle-HubVersion")
+        if latest_version_str:
+            current_version = parse(kagglehub.__version__)
+            latest_version = parse(latest_version_str)
+            if latest_version > current_version:
+                logger.info(
+                    f"New version of KaggleHub available: {latest_version}. "
+                    "We recommend upgrading to the latest version."
+                )
 
     def get(self, path: str) -> dict:
         url = self._build_url(path)
