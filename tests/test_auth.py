@@ -55,8 +55,8 @@ class TestAuth(BaseTestCase):
 
             # Verify that the global variable contains the updated credentials
             credentials = get_kaggle_credentials()
-            self.assertIsNotNone(credentials.username, "Credentials should not be None")
-            self.assertIsNotNone(credentials.key, "Credentials should not be None")
+            if credentials is None:
+                self.fail("Credentials should not be None")
             self.assertEqual("lastplacelarry", credentials.username)
             self.assertEqual("some-key", credentials.key)
 
@@ -68,8 +68,8 @@ class TestAuth(BaseTestCase):
 
         # Verify that the global variable contains the updated credentials
         credentials = get_kaggle_credentials()
-        self.assertIsNotNone(credentials.username, "Credentials should not be None")
-        self.assertIsNotNone(credentials.key, "Credentials should not be None")
+        if credentials is None:
+            self.fail("Credentials should not be None")
         self.assertEqual("lastplacelarry", credentials.username)
         self.assertEqual("some-key", credentials.key)
 

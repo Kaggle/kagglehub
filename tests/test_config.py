@@ -54,10 +54,12 @@ class TestConfig(BaseTestCase):
 
     @mock.patch.dict(os.environ, {USERNAME_ENV_VAR_NAME: "lastplacelarry", KEY_ENV_VAR_NAME: "some-key"})
     def test_get_kaggle_credentials_missing_username_succeeds(self) -> None:
-        creds = get_kaggle_credentials()
+        credentials = get_kaggle_credentials()
+        if credentials is None:
+            self.fail("Credentials should not be None")
 
-        self.assertEqual("lastplacelarry", creds.username)
-        self.assertEqual("some-key", creds.key)
+        self.assertEqual("lastplacelarry", credentials.username)
+        self.assertEqual("some-key", credentials.key)
 
     def test_get_kaggle_credentials_file_succeeds(self) -> None:
         with TemporaryDirectory() as d:
@@ -155,7 +157,8 @@ class TestConfig(BaseTestCase):
 
         # Get and assert credentials
         credentials = get_kaggle_credentials()
-        self.assertIsNotNone(credentials, "Credentials should not be None")
+        if credentials is None:
+            self.fail("Credentials should not be None")
         self.assertEqual("lastplacelarry", credentials.username)
         self.assertEqual("some-key", credentials.key)
 
