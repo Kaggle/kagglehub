@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import Any, Optional
+from typing import Optional
 
 from kagglehub.clients import DEFAULT_CONNECT_TIMEOUT, KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME, KaggleJwtClient
 from kagglehub.config import is_kaggle_cache_disabled
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelKaggleCacheResolver(Resolver[ModelHandle]):
-    def is_supported(self, *_: Any, **__: Any) -> bool:  # noqa: ANN401
+    def is_supported(self, *_, **__) -> bool: #noqa: ANN002, ANN003
         if is_kaggle_cache_disabled():
             return False
 
