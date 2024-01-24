@@ -246,7 +246,7 @@ class ColabClient:
         self.credentials = get_kaggle_credentials()
         self.headers = {"Content-type": "application/json"}
 
-    def post(self, data: dict, handle_path: str) -> Optional[dict]:
+    def post(self, data: dict, handle_path: str):  # noqa: ANN201
         url = f"http://{self.endpoint}{handle_path}"
         with requests.post(
             url,
