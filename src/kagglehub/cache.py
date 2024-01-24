@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from kagglehub.config import get_cache_folder
 from kagglehub.handle import ModelHandle
@@ -10,7 +10,7 @@ MODELS_CACHE_SUBFOLDER = "models"
 MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
 
-def load_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> Optional[str]:
+def load_from_cache(handle: ModelHandle, path: Optional[str] = None) -> Optional[str]:
     """Return path for the requested resource from the cache.
 
     Args:
@@ -25,7 +25,7 @@ def load_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> O
     return full_path if os.path.exists(marker_path) and os.path.exists(full_path) else None
 
 
-def get_cached_path(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
+def get_cached_path(handle: ModelHandle, path: Optional[str] = None) -> str:
     # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_model_path(handle, path)
@@ -34,7 +34,7 @@ def get_cached_path(handle: Union[ModelHandle], path: Optional[str] = None) -> s
         raise ValueError(msg)
 
 
-def get_cached_archive_path(handle: Union[ModelHandle]) -> str:
+def get_cached_archive_path(handle: ModelHandle) -> str:
     if isinstance(handle, ModelHandle):
         return _get_model_archive_path(handle)
     else:
@@ -42,7 +42,7 @@ def get_cached_archive_path(handle: Union[ModelHandle]) -> str:
         raise ValueError(msg)
 
 
-def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None) -> None:
+def mark_as_complete(handle: ModelHandle, path: Optional[str] = None) -> None:
     marker_path = _get_completion_marker_filepath(handle, path)
     os.makedirs(os.path.dirname(marker_path), exist_ok=True)
     Path(marker_path).touch()
@@ -67,12 +67,12 @@ def _delete_from_cache_folder(path: str) -> Optional[str]:
     return None
 
 
-def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None) -> None:
+def mark_as_incomplete(handle: ModelHandle, path: Optional[str] = None) -> None:
     marker_path = _get_completion_marker_filepath(handle, path)
     _delete_from_cache_folder(marker_path)
 
 
-def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> Optional[str]:
+def delete_from_cache(handle: ModelHandle, path: Optional[str] = None) -> Optional[str]:
     """Delete resource from the cache, even if incomplete.
 
     Args:
@@ -87,7 +87,7 @@ def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) ->
     return _delete_from_cache_folder(model_full_path)
 
 
-def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
+def _get_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None) -> str:
     # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_models_completion_marker_filepath(handle, path)
