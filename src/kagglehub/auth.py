@@ -123,7 +123,7 @@ def _validate_credentials_helper() -> None:
         logger.warning("Unable to validate Kaggle credentials at this time.")
 
 
-def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
+def login(validate_credentials: bool = True):  # noqa: FBT002, FBT001, ANN201
     """Prompt the user for their Kaggle username and API key and save them globally."""
 
     if _is_in_notebook():
