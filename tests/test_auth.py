@@ -54,9 +54,11 @@ class TestAuth(BaseTestCase):
                 kagglehub.login()
 
             # Verify that the global variable contains the updated credentials
-            self.assertIsNotNone(get_kaggle_credentials(), "Credentials should not be None")
-            self.assertEqual("lastplacelarry", get_kaggle_credentials().username)
-            self.assertEqual("some-key", get_kaggle_credentials().key)
+            credentials = get_kaggle_credentials()
+            self.assertIsNotNone(credentials.username, "Credentials should not be None")
+            self.assertIsNotNone(credentials.key, "Credentials should not be None")
+            self.assertEqual("lastplacelarry", credentials.username)
+            self.assertEqual("some-key", credentials.key)
 
     def test_login_updates_global_credentials_no_validation(self) -> None:
         # Simulate user input for credentials
@@ -65,9 +67,11 @@ class TestAuth(BaseTestCase):
             kagglehub.login(validate_credentials=False)
 
         # Verify that the global variable contains the updated credentials
-        self.assertIsNotNone(get_kaggle_credentials(), "Credentials should not be None")
-        self.assertEqual("lastplacelarry", get_kaggle_credentials().username)
-        self.assertEqual("some-key", get_kaggle_credentials().key)
+        credentials = get_kaggle_credentials()
+        self.assertIsNotNone(credentials.username, "Credentials should not be None")
+        self.assertIsNotNone(credentials.key, "Credentials should not be None")
+        self.assertEqual("lastplacelarry", credentials.username)
+        self.assertEqual("some-key", credentials.key)
 
     def test_set_kaggle_credentials_raises_error_with_empty_username(self) -> None:
         with self.assertRaises(ValueError):
