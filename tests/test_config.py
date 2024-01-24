@@ -65,10 +65,11 @@ class TestConfig(BaseTestCase):
                 with open(os.path.join(d, CREDENTIALS_FILENAME), "x") as creds_file:
                     json.dump({"username": "kerneler", "key": "another-key"}, creds_file)
 
-                creds = get_kaggle_credentials()
+                credentials = get_kaggle_credentials()
+                self.assertIsNotNone(credentials, "Credentials should not be None")
 
-                self.assertEqual("kerneler", creds.username)
-                self.assertEqual("another-key", creds.key)
+                self.assertEqual("kerneler", credentials.username)
+                self.assertEqual("another-key", credentials.key)
 
     def test_get_kaggle_credentials_invalid_json_file_raises(self) -> None:
         with TemporaryDirectory() as d:
@@ -153,6 +154,7 @@ class TestConfig(BaseTestCase):
 
         # Get and assert credentials
         credentials = get_kaggle_credentials()
+        self.assertIsNotNone(credentials, "Credentials should not be None")
         self.assertEqual("lastplacelarry", credentials.username)
         self.assertEqual("some-key", credentials.key)
 
