@@ -36,7 +36,6 @@ class File(object):  # noqa: UP004
     def __init__(self, init_dict: dict) -> None:
         parsed_dict = {k: parse_datetime_string(v) for k, v in init_dict.items()}
         self.__dict__.update(parsed_dict)
-        self.size = File.get_size(self.totalBytes)
 
     def __repr__(self) -> str:
         return self.ref
