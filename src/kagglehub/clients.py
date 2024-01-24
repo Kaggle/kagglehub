@@ -261,7 +261,7 @@ class ColabClient:
             if response.text:
                 return response.json()
 
-    def _get_http_basic_auth(self) -> Tuple[str, str]:
+    def _get_http_basic_auth(self):  # noqa: ANN202
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         return None
