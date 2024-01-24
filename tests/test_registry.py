@@ -7,7 +7,7 @@ SOME_VALUE = 1
 
 
 def fail_fn(_) -> None:  # noqa: ANN001
-    msg = "fail_fn should not be called"
+    msg = "fail_fn should not be callted"
     raise AssertionError(msg)
 
 

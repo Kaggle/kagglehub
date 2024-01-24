@@ -2,7 +2,6 @@ import hashlib
 import json
 import os
 from http.server import BaseHTTPRequestHandler
-from typing import Any, Dict
 
 import requests
 
@@ -87,7 +86,7 @@ EXPECTED_MODEL_SUBPATH = os.path.join(
 # Test cases for the ModelHttpResolver.
 class TestHttpModelDownload(BaseTestCase):
     def _download_model_and_assert_downloaded(
-        self, d: str, model_handle: str, expected_subdir_or_subpath: str, **kwargs: Dict[str, Any]
+        self, d: str, model_handle: str, expected_subdir_or_subpath: str, **kwargs  # noqa: ANN003
     ) -> None:
         # Download the full model and ensure all files are there.
         model_path = kagglehub.model_download(model_handle, **kwargs)
@@ -98,7 +97,7 @@ class TestHttpModelDownload(BaseTestCase):
         archive_path = get_cached_archive_path(parse_model_handle(model_handle))
         self.assertFalse(os.path.exists(archive_path))
 
-    def _download_test_file_and_assert_downloaded(self, d: str, model_handle: str, **kwargs: Dict[str, Any]) -> None:
+    def _download_test_file_and_assert_downloaded(self, d: str, model_handle: str, **kwargs) -> None:  # noqa: ANN003
         model_path = kagglehub.model_download(model_handle, path=TEST_FILEPATH, **kwargs)
         self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
         with open(model_path) as model_file:
