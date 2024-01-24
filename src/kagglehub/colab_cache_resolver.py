@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Optional
+from typing import Optional
 
 from kagglehub.clients import ColabClient
 from kagglehub.config import is_colab_cache_disabled
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelColabCacheResolver(Resolver[ModelHandle]):
-    def is_supported(self, handle: ModelHandle, *_: Any, **__: Any) -> bool:  # noqa: ANN401
+    def is_supported(self, handle: ModelHandle, *_, **__) -> bool:  # noqa: ANN002, ANN003
         if ColabClient.TBE_RUNTIME_ADDR_ENV_VAR_NAME not in os.environ or is_colab_cache_disabled():
             return False
 
