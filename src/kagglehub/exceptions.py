@@ -29,11 +29,11 @@ class DataCorruptionError(Exception):
 
 
 class KaggleApiHTTPError(requests.HTTPError):
-    def __init__(self, message: str, response: Optional[requests.Response] = None):
+    def __init__(self, message: str, response: Optional[requests.Response] = None) -> None:
         super().__init__(message, response=response)
 
 
-def kaggle_api_raise_for_status(response: requests.Response):
+def kaggle_api_raise_for_status(response: requests.Response) -> None:
     """
     Wrapper around `response.raise_for_status()` that provides nicer error messages
     See: https://requests.readthedocs.io/en/latest/api/#requests.Response.raise_for_status
@@ -63,7 +63,7 @@ def kaggle_api_raise_for_status(response: requests.Response):
         raise KaggleApiHTTPError(message, response=response) from e
 
 
-def process_post_response(response: Dict[str, Any]):
+def process_post_response(response: Dict[str, Any]) -> None:
     """
     Postprocesses the API response to check for errors.
     """

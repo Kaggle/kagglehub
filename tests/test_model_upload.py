@@ -24,10 +24,10 @@ ALLOWED_LICENSE_VALUES = (APACHE_LICENSE, None)
 class KaggleAPIHandler(BaseHTTPRequestHandler):
     UPLOAD_BLOB_FILE_NAMES: ClassVar[List[str]] = []
 
-    def do_HEAD(self):  # noqa: N802
+    def do_HEAD(self) -> None:  # noqa: N802
         self.send_response(200)
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self) -> None:  # noqa: N802
         if self.path == f"/api/v1{GET_MODEL}":
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -45,7 +45,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             response_data = {"message": "Some response data"}
             self.wfile.write(bytes(json.dumps(response_data), "utf-8"))
 
-    def do_POST(self):  # noqa: N802
+    def do_POST(self) -> None:  # noqa: N802
         instance_or_version = self.path.split("/")[-1]
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
@@ -95,7 +95,7 @@ class GcsAPIHandler(BaseHTTPRequestHandler):
     simulate_308 = False
     put_requests_count = 0
 
-    def do_PUT(self):  # noqa: N802
+    def do_PUT(self) -> None:  # noqa: N802
         GcsAPIHandler.put_requests_count += 1
         if GcsAPIHandler.simulate_308:
             # Simulate "308 Resume Incomplete" response
@@ -113,7 +113,7 @@ class GcsAPIHandler(BaseHTTPRequestHandler):
 
 
 class TestModelUpload(BaseTestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         # Resetting shared variables in GcsAPIHandler
         GcsAPIHandler.simulate_308 = False
         GcsAPIHandler.put_requests_count = 0
@@ -121,7 +121,7 @@ class TestModelUpload(BaseTestCase):
         # Resetting any other necessary setup for KaggleAPIHandler
         KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES = []
 
-    def test_model_upload_with_invalid_handle(self):
+    def test_model_upload_with_invalid_handle(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with self.assertRaises(ValueError):
                 with TemporaryDirectory() as temp_dir:
@@ -131,7 +131,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_instance_with_valid_handle(self):
+    def test_model_upload_instance_with_valid_handle(self) -> None:
         # execution path: get_model -> create_model -> get_instance -> create_version
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
@@ -142,7 +142,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_version_with_valid_handle(self):
+    def test_model_upload_version_with_valid_handle(self) -> None:
         # execution path: get_model -> get_instance -> create_instance
 
         with create_test_http_server(KaggleAPIHandler):
@@ -154,7 +154,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_with_too_many_files(self):
+    def test_model_upload_with_too_many_files(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
@@ -167,7 +167,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_resumable(self):
+    def test_model_upload_resumable(self) -> None:
         GcsAPIHandler.simulate_308 = True  # Enable simulation of 308 response for this test
 
         with create_test_http_server(KaggleAPIHandler):
@@ -185,7 +185,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_with_none_license(self):
+    def test_model_upload_with_none_license(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
@@ -195,7 +195,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_without_license(self):
+    def test_model_upload_without_license(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
@@ -205,7 +205,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_with_invalid_license_fails(self):
+    def test_model_upload_with_invalid_license_fails(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:

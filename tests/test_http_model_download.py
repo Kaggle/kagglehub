@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 from http.server import BaseHTTPRequestHandler
+from typing import Any, Dict
 
 import requests
 
@@ -22,10 +23,10 @@ TEST_CONTENTS = "{}"
 
 
 class KaggleAPIHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
+    def do_HEAD(self) -> None:  # noqa: N802
         self.send_response(200)
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self) -> None:  # noqa: N802
         if self.path.endswith(VERSIONED_MODEL_HANDLE + "/download/" + TEST_FILEPATH):
             test_file_path = get_test_file_path(TEST_FILEPATH)
             with open(test_file_path, "rb") as f:
@@ -85,7 +86,9 @@ EXPECTED_MODEL_SUBPATH = os.path.join(
 
 # Test cases for the ModelHttpResolver.
 class TestHttpModelDownload(BaseTestCase):
-    def _download_model_and_assert_downloaded(self, d, model_handle, expected_subdir_or_subpath, **kwargs):
+    def _download_model_and_assert_downloaded(
+        self, d: str, model_handle: str, expected_subdir_or_subpath: str, **kwargs: Dict[str, Any]
+    ) -> None:
         # Download the full model and ensure all files are there.
         model_path = kagglehub.model_download(model_handle, **kwargs)
         self.assertEqual(os.path.join(d, expected_subdir_or_subpath), model_path)
@@ -95,51 +98,51 @@ class TestHttpModelDownload(BaseTestCase):
         archive_path = get_cached_archive_path(parse_model_handle(model_handle))
         self.assertFalse(os.path.exists(archive_path))
 
-    def _download_test_file_and_assert_downloaded(self, d, model_handle, **kwargs):
+    def _download_test_file_and_assert_downloaded(self, d: str, model_handle: str, **kwargs: Dict[str, Any]) -> None:
         model_path = kagglehub.model_download(model_handle, path=TEST_FILEPATH, **kwargs)
         self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
         with open(model_path) as model_file:
             self.assertEqual(TEST_CONTENTS, model_file.readline())
 
-    def test_unversioned_model_download(self):
+    def test_unversioned_model_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_model_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR)
 
-    def test_versioned_model_download(self):
+    def test_versioned_model_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_model_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR)
 
-    def test_versioned_model_full_download_with_file_already_cached(self):
+    def test_versioned_model_full_download_with_file_already_cached(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 # Download a single file first
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
                 self._download_model_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR)
 
-    def test_unversioned_model_full_download_with_file_already_cached(self):
+    def test_unversioned_model_full_download_with_file_already_cached(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 # Download a single file first
                 kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
                 self._download_model_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR)
 
-    def test_unversioned_model_download_with_force_download(self):
+    def test_unversioned_model_download_with_force_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_model_and_assert_downloaded(
                     d, UNVERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR, force_download=True
                 )
 
-    def test_versioned_model_download_with_force_download(self):
+    def test_versioned_model_download_with_force_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_model_and_assert_downloaded(
                     d, VERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR, force_download=True
                 )
 
-    def test_versioned_model_full_download_with_file_already_cached_and_force_download(self):
+    def test_versioned_model_full_download_with_file_already_cached_and_force_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 # Download a single file first
@@ -148,7 +151,7 @@ class TestHttpModelDownload(BaseTestCase):
                     d, VERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR, force_download=True
                 )
 
-    def test_unversioned_model_full_download_with_file_already_cached_and_force_download(self):
+    def test_unversioned_model_full_download_with_file_already_cached_and_force_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 # Download a single file first
@@ -157,33 +160,33 @@ class TestHttpModelDownload(BaseTestCase):
                     d, UNVERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR, force_download=True
                 )
 
-    def test_versioned_model_download_bad_archive(self):
+    def test_versioned_model_download_bad_archive(self) -> None:
         with create_test_cache():
             with create_test_http_server(KaggleAPIHandler):
                 with self.assertRaises(ValueError):
                     kagglehub.model_download(INVALID_ARCHIVE_MODEL_HANDLE)
 
-    def test_versioned_model_download_with_path(self):
+    def test_versioned_model_download_with_path(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_test_file_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE)
 
-    def test_unversioned_model_download_with_path(self):
+    def test_unversioned_model_download_with_path(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_test_file_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE)
 
-    def test_versioned_model_download_with_path_with_force_download(self):
+    def test_versioned_model_download_with_path_with_force_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_test_file_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE, force_download=True)
 
-    def test_unversioned_model_download_with_path_with_force_download(self):
+    def test_unversioned_model_download_with_path_with_force_download(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 self._download_test_file_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE, force_download=True)
 
-    def test_versioned_model_download_already_cached(self):
+    def test_versioned_model_download_already_cached(self) -> None:
         with create_test_cache() as d:
             # Download from server.
             with create_test_http_server(KaggleAPIHandler):
@@ -194,7 +197,7 @@ class TestHttpModelDownload(BaseTestCase):
 
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), model_path)
 
-    def test_versioned_model_download_with_path_already_cached(self):
+    def test_versioned_model_download_with_path_already_cached(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
@@ -204,7 +207,7 @@ class TestHttpModelDownload(BaseTestCase):
 
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
 
-    def test_versioned_model_download_already_cached_with_force_download(self):
+    def test_versioned_model_download_already_cached_with_force_download(self) -> None:
         with create_test_cache():
             with create_test_http_server(KaggleAPIHandler):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE)
@@ -213,7 +216,7 @@ class TestHttpModelDownload(BaseTestCase):
             with self.assertRaises(requests.exceptions.ConnectionError):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=True)
 
-    def test_versioned_model_download_with_path_already_cached_with_force_download(self):
+    def test_versioned_model_download_with_path_already_cached_with_force_download(self) -> None:
         with create_test_cache():
             with create_test_http_server(KaggleAPIHandler):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
@@ -222,7 +225,7 @@ class TestHttpModelDownload(BaseTestCase):
             with self.assertRaises(requests.exceptions.ConnectionError):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH, force_download=True)
 
-    def test_versioned_model_download_already_cached_with_force_download_explicit_false(self):
+    def test_versioned_model_download_already_cached_with_force_download_explicit_false(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE)
@@ -232,7 +235,7 @@ class TestHttpModelDownload(BaseTestCase):
 
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), model_path)
 
-    def test_versioned_model_download_with_path_already_cached_with_force_download_explicit_false(self):
+    def test_versioned_model_download_with_path_already_cached_with_force_download_explicit_false(self) -> None:
         with create_test_cache() as d:
             with create_test_http_server(KaggleAPIHandler):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)

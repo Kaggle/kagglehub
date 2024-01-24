@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Any, Callable, List
 
 
 class MultiImplRegistry:
@@ -9,14 +9,14 @@ class MultiImplRegistry:
     to return true is then invoked via __call__ and the result returned.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self._name = name
         self._impls: List[Callable] = []
 
-    def add_implementation(self, impl: Callable):
+    def add_implementation(self, impl: Callable) -> None:
         self._impls += [impl]
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
         fails = []
         for impl in reversed(self._impls):
             if impl.is_supported(*args, **kwargs):

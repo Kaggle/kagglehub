@@ -21,10 +21,10 @@ TEST_FILEPATH = "config.json"
 
 
 class KaggleJwtHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
+    def do_HEAD(self) -> None:  # noqa: N802
         self.send_response(200)
 
-    def do_POST(self):  # noqa: N802
+    def do_POST(self) -> None:  # noqa: N802
         if self.path.endswith(ATTACH_DATASOURCE_REQUEST_NAME):
             content_length = int(self.headers["Content-Length"])
             request = json.loads(self.rfile.read(content_length))
@@ -73,52 +73,52 @@ class KaggleJwtHandler(BaseHTTPRequestHandler):
 
 # Test cases for the ModelKaggleCacheResolver.
 class TestKaggleCacheModelDownload(BaseTestCase):
-    def test_unversioned_model_download(self):
+    def test_unversioned_model_download(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             model_path = kagglehub.model_download(UNVERSIONED_MODEL_HANDLE)
             self.assertTrue(model_path.endswith("/2"))
             self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
 
-    def test_versioned_model_download(self):
+    def test_versioned_model_download(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
             self.assertTrue(model_path.endswith("/1"))
             self.assertEqual(["config.json"], sorted(os.listdir(model_path)))
 
-    def test_versioned_model_download_with_path(self):
+    def test_versioned_model_download_with_path(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             model_file_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, "config.json")
             self.assertTrue(model_file_path.endswith("config.json"))
             self.assertTrue(os.path.isfile(model_file_path))
 
-    def test_unversioned_model_download_with_path(self):
+    def test_unversioned_model_download_with_path(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             model_file_path = kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, "config.json")
             self.assertTrue(model_file_path.endswith("config.json"))
             self.assertTrue(os.path.isfile(model_file_path))
 
-    def test_versioned_model_download_with_missing_file_raises(self):
+    def test_versioned_model_download_with_missing_file_raises(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             with self.assertRaises(ValueError):
                 kagglehub.model_download(VERSIONED_MODEL_HANDLE, "missing.txt")
 
-    def test_unversioned_model_download_with_missing_file_raises(self):
+    def test_unversioned_model_download_with_missing_file_raises(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             with self.assertRaises(ValueError):
                 kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, "missing.txt")
 
-    def test_kaggle_resolver_skipped(self):
+    def test_kaggle_resolver_skipped(self) -> None:
         with mock.patch.dict(os.environ, {DISABLE_KAGGLE_CACHE_ENV_VAR_NAME: "true"}):
             with create_test_jwt_http_server(KaggleJwtHandler):
                 # Assert that a ConnectionError is set (uses HTTP server which is not set)
                 with self.assertRaises(requests.exceptions.ConnectionError):
                     kagglehub.model_download(VERSIONED_MODEL_HANDLE)
 
-    def test_versioned_model_download_bad_handle_raises(self):
+    def test_versioned_model_download_bad_handle_raises(self) -> None:
         with self.assertRaises(ValueError):
             kagglehub.model_download("bad handle")
 
-    def test_versioned_model_download_with_force_download(self):
+    def test_versioned_model_download_with_force_download(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
             model_path_forced = kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=True)
@@ -128,7 +128,7 @@ class TestKaggleCacheModelDownload(BaseTestCase):
             self.assertEqual(["config.json"], sorted(os.listdir(model_path_forced)))
             self.assertEqual(model_path, model_path_forced)
 
-    def test_versioned_model_download_with_force_download_explicitly_false(self):
+    def test_versioned_model_download_with_force_download_explicitly_false(self) -> None:
         with create_test_jwt_http_server(KaggleJwtHandler):
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=False)
             self.assertTrue(model_path.endswith("/1"))

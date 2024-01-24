@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import logging
 from typing import Optional
 
@@ -27,7 +28,7 @@ def get_md5_checksum_from_response(response: requests.Response) -> Optional[str]
     return None
 
 
-def update_hash_from_file(hash_object, out_file: str):
+def update_hash_from_file(hash_object: hashlib.hashlib, out_file: str) -> None:
     if hash_object is None:
         return
 
@@ -38,5 +39,5 @@ def update_hash_from_file(hash_object, out_file: str):
             chunk = f.read(COMPUTE_HASH_CHUNK_SIZE)
 
 
-def to_b64_digest(hash_object):
+def to_b64_digest(hash_object: hashlib.hashlib) -> str:
     return base64.b64encode(hash_object.digest()).decode("utf-8")
