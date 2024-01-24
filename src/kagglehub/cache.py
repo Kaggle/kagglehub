@@ -10,7 +10,7 @@ MODELS_CACHE_SUBFOLDER = "models"
 MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
 
-def load_from_cache(handle: ModelHandle, path: Optional[str] = None) -> Optional[str]:
+def load_from_cache(handle, path: Optional[str] = None) -> Optional[str]:  # noqa: ANN001
     """Return path for the requested resource from the cache.
 
     Args:
