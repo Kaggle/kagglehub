@@ -112,7 +112,13 @@ select = [
   "W",
   "YTT",
 ]
-
+# Add type checking codes
+extend-select = [
+  "ANN001", "ANN002", "ANN003", 
+  "ANN102", "ANN201", "ANN202", 
+  "ANN204", "ANN205", "ANN206", 
+  "ANN401",
+]
 ignore = [
   # Allow non-abstract empty methods in abstract base classes
   "B027",
