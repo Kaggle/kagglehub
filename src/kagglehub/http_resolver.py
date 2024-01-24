@@ -72,7 +72,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return out_path
 
 
-def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle) -> str:
+def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle):  # noqa: ANN202
     json_response = api_client.get(_build_get_instance_url_path(h))
     if MODEL_INSTANCE_VERSION_FIELD not in json_response:
         msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"
