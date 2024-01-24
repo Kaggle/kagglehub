@@ -6,6 +6,7 @@ from typing import Tuple
 from urllib.parse import urljoin
 
 import requests
+from packaging.version import parse
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
@@ -55,6 +56,17 @@ class KaggleApiV1Client:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
 
+    def _check_for_version_update(self, response):
+        latest_version_str = response.headers.get("X-Kaggle-HubVersion")
+        if latest_version_str:
+            current_version = parse(kagglehub.__version__)
+            latest_version = parse(latest_version_str)
+            if latest_version > current_version:
+                logger.info(
+                    "Warning: Looks like you\'re using an outdated KaggleHub "
+                    "Version, please consider updating (latest version: {latest_version})"
+                )
+
     def get(self, path: str) -> dict:
         url = self._build_url(path)
         with requests.get(
@@ -64,6 +76,7 @@ class KaggleApiV1Client:
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response)
+            self._check_for_version_update(response)
             return response.json()
 
     def post(self, path: str, data: dict):
@@ -77,6 +90,7 @@ class KaggleApiV1Client:
         ) as response:
             response_dict = response.json()
             process_post_response(response_dict)
+            self._check_for_version_update(response)
             return response_dict
 
     def download_file(self, path: str, out_file: str):
