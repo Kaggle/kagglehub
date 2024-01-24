@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelKaggleCacheResolver(Resolver[ModelHandle]):
-    def is_supported(self, *_, **__) -> bool: #noqa: ANN002, ANN003
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
         if is_kaggle_cache_disabled():
             return False
 
