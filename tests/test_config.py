@@ -66,7 +66,8 @@ class TestConfig(BaseTestCase):
                     json.dump({"username": "kerneler", "key": "another-key"}, creds_file)
 
                 credentials = get_kaggle_credentials()
-                self.assertIsNotNone(credentials, "Credentials should not be None")
+                if credentials is None:
+                    self.fail("Credentials should not be None")
 
                 self.assertEqual("kerneler", credentials.username)
                 self.assertEqual("another-key", credentials.key)
