@@ -10,7 +10,7 @@ class Resolver(Generic[T]):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __call__(self, handle: T, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def __call__(self, handle: T, path: Optional[str], *, force_download: Optional[bool] = False) -> str:
         """Resolves a handle into a path with the requested model files.
 
         Args:
@@ -25,6 +25,6 @@ class Resolver(Generic[T]):
         pass
 
     @abc.abstractmethod
-    def is_supported(self, handle: T, path: Optional[str] = None) -> None:
+    def is_supported(self, handle: T, path: Optional[str]) -> None:
         """Returns whether the current environment supports this handle/path."""
         pass
