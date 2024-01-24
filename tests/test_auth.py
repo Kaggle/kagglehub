@@ -54,6 +54,7 @@ class TestAuth(BaseTestCase):
                 kagglehub.login()
 
             # Verify that the global variable contains the updated credentials
+            self.assertIsNotNone(get_kaggle_credentials(), "Credentials should not be None")
             self.assertEqual("lastplacelarry", get_kaggle_credentials().username)
             self.assertEqual("some-key", get_kaggle_credentials().key)
 
@@ -64,6 +65,7 @@ class TestAuth(BaseTestCase):
             kagglehub.login(validate_credentials=False)
 
         # Verify that the global variable contains the updated credentials
+        self.assertIsNotNone(get_kaggle_credentials(), "Credentials should not be None")
         self.assertEqual("lastplacelarry", get_kaggle_credentials().username)
         self.assertEqual("some-key", get_kaggle_credentials().key)
 
