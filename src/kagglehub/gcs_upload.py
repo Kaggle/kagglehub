@@ -37,9 +37,6 @@ class File(object):  # noqa: UP004
         parsed_dict = {k: parse_datetime_string(v) for k, v in init_dict.items()}
         self.__dict__.update(parsed_dict)
 
-    def __repr__(self) -> str:
-        return self.ref
-
     @staticmethod
     def get_size(size: int, precision: int = 0) -> str:
         suffixes = ["B", "KB", "MB", "GB", "TB"]
