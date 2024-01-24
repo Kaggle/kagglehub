@@ -1,3 +1,4 @@
+# flake8: noqa
 import io
 import logging
 from contextlib import contextmanager
