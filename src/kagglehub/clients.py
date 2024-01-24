@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Tuple
+from typing import Optional, Tuple
 from urllib.parse import urljoin
 
 import requests
@@ -52,11 +52,11 @@ logger = logging.getLogger(__name__)
 class KaggleApiV1Client:
     BASE_PATH = "api/v1"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
 
-    def _check_for_version_update(self, response):
+    def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
         if latest_version_str:
             current_version = parse(kagglehub.__version__)
@@ -79,7 +79,7 @@ class KaggleApiV1Client:
             self._check_for_version_update(response)
             return response.json()
 
-    def post(self, path: str, data: dict):
+    def post(self, path: str, data: dict) -> dict:
         url = self._build_url(path)
         with requests.post(
             url,
@@ -93,7 +93,7 @@ class KaggleApiV1Client:
             self._check_for_version_update(response)
             return response_dict
 
-    def download_file(self, path: str, out_file: str):
+    def download_file(self, path: str, out_file: str) -> None:
         url = self._build_url(path)
         logger.info(f"Downloading from {url}...")
         with requests.get(
@@ -140,20 +140,22 @@ class KaggleApiV1Client:
                         _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(expected_md5_hash, actual_md5_hash)
                     )
 
-    def _get_http_basic_auth(self):
+    def _get_http_basic_auth(self) -> Optional[HTTPBasicAuth]:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         return None
 
-    def _build_url(self, path: str):
+    def _build_url(self, path: str) -> str:
         return urljoin(self.endpoint, f"{KaggleApiV1Client.BASE_PATH}/{path}")
 
 
-def _is_resumable(response: requests.Response):
+def _is_resumable(response: requests.Response) -> bool:
     return ACCEPT_RANGE_HTTP_HEADER in response.headers and response.headers[ACCEPT_RANGE_HTTP_HEADER] == "bytes"
 
 
-def _download_file(response: requests.Response, out_file: str, size_read: int, total_size: int, hash_object):
+def _download_file(
+    response: requests.Response, out_file: str, size_read: int, total_size: int, hash_object: hashlib.hashlib
+) -> None:
     open_mode = "ab" if size_read > 0 else "wb"
     with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
         with open(out_file, open_mode) as f:
@@ -174,7 +176,7 @@ KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_TOKEN"
 class KaggleJwtClient:
     BASE_PATH = "/kaggle-jwt-handler/"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.endpoint = os.getenv(KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME)
         if self.endpoint is None:
             msg = f"The {KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME} should be set."
@@ -235,7 +237,7 @@ class ColabClient:
     # of ModelColabCacheResolver.
     TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.endpoint = os.getenv(self.TBE_RUNTIME_ADDR_ENV_VAR_NAME)
         if self.endpoint is None:
             msg = f"The {self.TBE_RUNTIME_ADDR_ENV_VAR_NAME} should be set."
@@ -244,7 +246,7 @@ class ColabClient:
         self.credentials = get_kaggle_credentials()
         self.headers = {"Content-type": "application/json"}
 
-    def post(self, data: dict, handle_path):
+    def post(self, data: dict, handle_path: str) -> Optional[dict]:
         url = f"http://{self.endpoint}{handle_path}"
         with requests.post(
             url,
@@ -259,7 +261,7 @@ class ColabClient:
             if response.text:
                 return response.json()
 
-    def _get_http_basic_auth(self):
+    def _get_http_basic_auth(self) -> None:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         return None

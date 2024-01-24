@@ -1,5 +1,6 @@
 import os
 import unittest
+from typing import List
 
 from requests import HTTPError
 
@@ -9,7 +10,7 @@ HANDLE = "keras/bert/keras/bert_tiny_en_uncased/2"
 
 
 class TestModelDownload(unittest.TestCase):
-    def list_files_recursively(self, path):
+    def list_files_recursively(self, path: str) -> List[str]:
         """List all files recursively in the given path.
         If the path is a file, return a list containing only that file.
         If the path is a directory, list all files recursively in that directory."""
@@ -28,7 +29,7 @@ class TestModelDownload(unittest.TestCase):
                     files.append(rel_file)
         return sorted(files)
 
-    def assert_files(self, path, expected_files):
+    def assert_files(self, path: str, expected_files: List[str]) -> None:
         """Assert that all expected files exist and are non-empty."""
         files = self.list_files_recursively(path)
         expected_files_sorted = sorted(expected_files)
@@ -43,7 +44,7 @@ class TestModelDownload(unittest.TestCase):
 
             self.assertGreater(os.path.getsize(file_path), 0, f"File {file} is empty")
 
-    def test_model_versioned_succeeds(self):
+    def test_model_versioned_succeeds(self) -> None:
         actual_path = model_download(HANDLE)
 
         expected_files = [
@@ -55,7 +56,7 @@ class TestModelDownload(unittest.TestCase):
         ]
         self.assert_files(actual_path, expected_files)
 
-    def test_model_unversioned_succeeds(self):
+    def test_model_unversioned_succeeds(self) -> None:
         unversioned_handle = "keras/bert/keras/bert_tiny_en_uncased"
         actual_path = model_download(unversioned_handle)
 
@@ -68,7 +69,7 @@ class TestModelDownload(unittest.TestCase):
         ]
         self.assert_files(actual_path, expected_files)
 
-    def test_download_private_model_succeeds(self):
+    def test_download_private_model_succeeds(self) -> None:
         actual_path = model_download("integrationtester/test-private-model/pyTorch/b0")
 
         expected_files = [
@@ -77,13 +78,13 @@ class TestModelDownload(unittest.TestCase):
 
         self.assert_files(actual_path, expected_files)
 
-    def test_download_multiple_files(self):
+    def test_download_multiple_files(self) -> None:
         file_paths = ["tokenizer.json", "config.json"]
         for p in file_paths:
             actual_path = model_download(HANDLE, path=p)
             self.assert_files(actual_path, [p])
 
-    def test_download_with_incorrect_file_path(self):
+    def test_download_with_incorrect_file_path(self) -> None:
         incorrect_path = "nonexistent/file/path"
         with self.assertRaises(HTTPError):
             model_download(HANDLE, path=incorrect_path)

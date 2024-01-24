@@ -13,10 +13,10 @@ from .utils import create_test_http_server, get_test_file_path
 
 
 class KaggleAPIHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
+    def do_HEAD(self) -> None:  # noqa: N802
         self.send_response(200)
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self) -> None:  # noqa: N802
         test_file_path = get_test_file_path("foo.txt")
         with open(test_file_path, "rb") as f:
             if self.path.endswith("no-integrity"):
@@ -68,7 +68,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
 
 
 class TestKaggleApiV1Client(BaseTestCase):
-    def test_download_with_integrity_check(self):
+    def test_download_with_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")
@@ -79,7 +79,7 @@ class TestKaggleApiV1Client(BaseTestCase):
                 with open(out_file) as f:
                     self.assertEqual("foo", f.read())
 
-    def test_resumable_download_with_integrity_check(self):
+    def test_resumable_download_with_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")
@@ -96,7 +96,7 @@ class TestKaggleApiV1Client(BaseTestCase):
                 with open(out_file) as f:
                     self.assertEqual("foo", f.read())
 
-    def test_download_no_integrity_check(self):
+    def test_download_no_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")
@@ -107,7 +107,7 @@ class TestKaggleApiV1Client(BaseTestCase):
                 with open(out_file) as f:
                     self.assertEqual("foo", f.read())
 
-    def test_download_corrupted_file_fail_integrity_check(self):
+    def test_download_corrupted_file_fail_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")

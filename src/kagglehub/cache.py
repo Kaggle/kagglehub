@@ -42,13 +42,13 @@ def get_cached_archive_path(handle: Union[ModelHandle]) -> str:
         raise ValueError(msg)
 
 
-def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None):
+def mark_as_complete(handle: Union[ModelHandle], path: Optional[str] = None) -> None:
     marker_path = _get_completion_marker_filepath(handle, path)
     os.makedirs(os.path.dirname(marker_path), exist_ok=True)
     Path(marker_path).touch()
 
 
-def _delete_from_cache_folder(path):
+def _delete_from_cache_folder(path: str) -> Optional[str]:
     # Delete resource(s) at the given path, whether file or directory, from the cache folder.
     if os.path.exists(path):
         if os.path.isdir(path):
@@ -67,7 +67,7 @@ def _delete_from_cache_folder(path):
     return None
 
 
-def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None):
+def mark_as_incomplete(handle: Union[ModelHandle], path: Optional[str] = None) -> None:
     marker_path = _get_completion_marker_filepath(handle, path)
     _delete_from_cache_folder(marker_path)
 

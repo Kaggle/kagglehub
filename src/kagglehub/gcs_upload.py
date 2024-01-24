@@ -4,6 +4,7 @@ import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
+from typing import List, Optional, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -21,7 +22,7 @@ MAX_RETRIES = 5
 REQUEST_TIMEOUT = 600
 
 
-def parse_datetime_string(string: str):
+def parse_datetime_string(string: str) -> Union[datetime, str]:
     time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
         try:
@@ -32,16 +33,16 @@ def parse_datetime_string(string: str):
 
 
 class File(object):  # noqa: UP004
-    def __init__(self, init_dict):
+    def __init__(self, init_dict: dict) -> None:
         parsed_dict = {k: parse_datetime_string(v) for k, v in init_dict.items()}
         self.__dict__.update(parsed_dict)
         self.size = File.get_size(self.totalBytes)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.ref
 
     @staticmethod
-    def get_size(size, precision=0):
+    def get_size(size: int, precision: int = 0) -> str:
         suffixes = ["B", "KB", "MB", "GB", "TB"]
         suffix_index = 0
         while size >= 1024 and suffix_index < 4:  # noqa: PLR2004
@@ -50,7 +51,7 @@ class File(object):  # noqa: UP004
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
 
-def _check_uploaded_size(session_uri, file_size, backoff_factor=1):
+def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int = 1) -> int:
     """Check the status of the resumable upload."""
     headers = {"Content-Length": "0", "Content-Range": f"bytes */{file_size}"}
     retry_count = 0
@@ -75,7 +76,7 @@ def _check_uploaded_size(session_uri, file_size, backoff_factor=1):
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str):
+def _upload_blob(file_path: str, model_type: str) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Parameters
@@ -138,7 +139,7 @@ def _upload_blob(file_path: str, model_type: str):
     return response["token"]
 
 
-def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FBT002, FBT001
+def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]:  # noqa: FBT002, FBT001
     """upload files in a folder. Zips the files if there are more than 50.
     Parameters
     ==========
@@ -176,7 +177,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False):  # noqa: FB
 
 def _upload_file_or_folder(
     parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
-):
+) -> Optional[str]:
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
 
@@ -205,7 +206,7 @@ def _upload_file_or_folder(
     return None
 
 
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str):  # noqa: FBT001
+def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========
