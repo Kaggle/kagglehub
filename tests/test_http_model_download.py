@@ -32,7 +32,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                 # Serve a single file
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
-                self.send_header("Content-Length", os.path.getsize(test_file_path))
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path)))
 
                 content = f.read()
                 file_hash = hashlib.md5()
@@ -46,7 +46,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                 # Serve archive file
                 self.send_response(200)
                 self.send_header("Content-type", "application/x-gzip")
-                self.send_header("Content-Length", os.path.getsize(test_file_path))
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path)))
                 content = f.read()
                 file_hash = hashlib.md5()
                 file_hash.update(content)
@@ -58,7 +58,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             content = b"bad archive"
             self.send_response(200)
             self.send_header("Content-type", "application/x-gzip")
-            self.send_header("Content-Length", len(content))
+            self.send_header("Content-Length", str(len(content)))
             self.end_headers()
             self.wfile.write(content)  # bad archive
         elif self.path.endswith(UNVERSIONED_MODEL_HANDLE + "/get"):

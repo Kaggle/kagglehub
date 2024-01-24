@@ -23,13 +23,13 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                 # Do not set the "x-goog-hash" header which skips integrity check.
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
-                self.send_header("Content-Length", os.path.getsize(test_file_path))
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path)))
                 self.end_headers()
                 self.wfile.write(f.read())
             if self.path.endswith("corrupted"):
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
-                self.send_header("Content-Length", os.path.getsize(test_file_path))
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path)))
                 self.send_header("x-goog-hash", "md5=badhash")
                 self.end_headers()
                 self.wfile.write(f.read())
@@ -51,7 +51,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                 f.seek(start)
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
-                self.send_header("Content-Length", os.path.getsize(test_file_path) - start)
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path) - start))
                 self.send_header("Accept-Ranges", "bytes")  # support resumable download
 
                 content = f.read()
