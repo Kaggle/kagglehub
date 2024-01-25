@@ -56,20 +56,24 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
 
         response = api_client.post(data, ColabClient.MOUNT_PATH)
 
-        if "slug" not in response:
-            msg = "'slug' field missing from response"
-            raise BackendError(msg)
+        if response is not None:
+            if "slug" not in response:
+                msg = "'slug' field missing from response"
+                raise BackendError(msg)
 
-        base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
-        cached_path = f"{base_mount_path}/{response['slug']}"
-        logger.info(f"Model '{h}' is attached.")
-        if path:
-            cached_filepath = f"{cached_path}/{path}"
-            if not os.path.exists(cached_filepath):
-                msg = (
-                    f"'{path}' is not present in the model files. "
-                    f"You can access the other files of the attached model at '{cached_path}'"
-                )
-                raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
+            cached_path = f"{base_mount_path}/{response['slug']}"
+            logger.info(f"Model '{h}' is attached.")
+            if path:
+                cached_filepath = f"{cached_path}/{path}"
+                if not os.path.exists(cached_filepath):
+                    msg = (
+                        f"'{path}' is not present in the model files. "
+                        f"You can access the other files of the attached model at '{cached_path}'"
+                    )
+                    raise ValueError(msg)
+                return cached_filepath
+            return cached_path
+        else:
+            no_response = "No response received or response was empty."
+            raise BackendError(no_response)
