@@ -259,7 +259,8 @@ class ColabClient:
                 raise NotFoundError()
             response.raise_for_status()
             if response.text:
-                return response.json() if response.text else None
+                return response.json()
+        return None
 
     def _get_http_basic_auth(self) -> Optional[HTTPBasicAuth]:
         if self.credentials:
