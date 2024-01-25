@@ -43,7 +43,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: Optional[str] = None
+    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: str = ""
 ) -> None:
     try:
         api_client = KaggleApiV1Client()
