@@ -10,7 +10,7 @@ MODELS_CACHE_SUBFOLDER = "models"
 MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
 
-def load_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) -> Optional[str]:
+def load_from_cache(handle: Union[ModelHandle, str], path: Optional[str] = None) -> Optional[str]:
     """Return path for the requested resource from the cache.
 
     Args:
@@ -96,7 +96,7 @@ def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[s
         raise ValueError(msg)
 
 
-def _get_model_path(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
+def _get_model_path(handle: ModelHandle, path: Optional[str] = None) -> str:
     base_path = os.path.join(
         get_cache_folder(),
         MODELS_CACHE_SUBFOLDER,
@@ -110,7 +110,7 @@ def _get_model_path(handle: Union[ModelHandle], path: Optional[str] = None) -> s
     return os.path.join(base_path, path) if path else base_path
 
 
-def _get_model_archive_path(handle: Union[ModelHandle]) -> str:
+def _get_model_archive_path(handle: ModelHandle) -> str:
     return os.path.join(
         get_cache_folder(),
         MODELS_CACHE_SUBFOLDER,
@@ -122,7 +122,7 @@ def _get_model_archive_path(handle: Union[ModelHandle]) -> str:
     )
 
 
-def _get_models_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
+def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None) -> str:
     if path:
         return os.path.join(
             get_cache_folder(),
