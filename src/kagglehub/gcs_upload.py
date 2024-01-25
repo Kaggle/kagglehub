@@ -4,7 +4,7 @@ import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Union
+from typing import List, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -38,7 +38,7 @@ class File(object):  # noqa: UP004
         self.__dict__.update(parsed_dict)
 
     @staticmethod
-    def get_size(size: int, precision: int = 0) -> str:
+    def get_size(size: float, precision: int = 0) -> str:
         suffixes = ["B", "KB", "MB", "GB", "TB"]
         suffix_index = 0
         while size >= 1024 and suffix_index < 4:  # noqa: PLR2004
@@ -171,9 +171,9 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
     return tokens
 
 
-def _upload_file_or_folder(
+def _upload_file_or_folder(  # noqa: ANN202
     parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
-) -> Optional[str]:
+):
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
 
@@ -202,7 +202,7 @@ def _upload_file_or_folder(
     return None
 
 
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str):  # noqa: FBT001, ANN202
     """Helper function to upload a single file
     Parameters
     ==========
