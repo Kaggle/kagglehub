@@ -112,7 +112,7 @@ class TestCache(BaseTestCase):
 
     def test_load_from_cache_invalid_handle(self) -> None:
         with self.assertRaises(ValueError):
-            load_from_cache(ModelHandle("invalid-handle", "invalid-handle", "invalid-handle", "invalid-handle", -1))
+            load_from_cache("invalid-handle")
 
     def test_model_archive_path(self) -> None:
         with create_test_cache() as d:

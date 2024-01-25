@@ -76,4 +76,4 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             return cached_path
         else:
             no_response = "No response received or response was empty."
-            raise BackendError(no_response)
+            raise ValueError(no_response)
