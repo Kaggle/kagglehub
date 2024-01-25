@@ -1,5 +1,4 @@
 import base64
-import hashlib
 import logging
 from typing import Optional
 
@@ -39,5 +38,5 @@ def update_hash_from_file(hash_object, out_file: str) -> None:  # noqa: ANN001
             chunk = f.read(COMPUTE_HASH_CHUNK_SIZE)
 
 
-def to_b64_digest(hash_object: hashlib._hashlib.HASH) -> str:
+def to_b64_digest(hash_object) -> str:  # noqa: ANN001
     return base64.b64encode(hash_object.digest()).decode("utf-8")
