@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Generator, Type
+from typing import Generator, Optional, Type
 from unittest import mock
 from urllib.parse import urlparse
 
@@ -31,9 +31,11 @@ def create_test_cache() -> Generator[str, None, None]:
 
 @contextmanager
 def create_test_http_server(
-    handler_class: Type[BaseHTTPRequestHandler],
-    endpoint=os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME),  # noqa: ANN001, B008
+    handler_class: Type[BaseHTTPRequestHandler], endpoint: Optional[str] = None
 ) -> Generator[HTTPServer, None, None]:
+    if endpoint is None:
+        endpoint = os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME)
+
     test_server_address = urlparse(endpoint)
     if not test_server_address.hostname or not test_server_address.port:
         msg = f"Invalid test server address: {endpoint}. You must specify a hostname & port"
