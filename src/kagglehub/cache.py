@@ -25,7 +25,7 @@ def load_from_cache(handle: Union[ModelHandle, str], path: Optional[str] = None)
     return full_path if os.path.exists(marker_path) and os.path.exists(full_path) else None
 
 
-def get_cached_path(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
+def get_cached_path(handle: Union[ModelHandle, str], path: Optional[str] = None) -> str:
     # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_model_path(handle, path)
@@ -87,7 +87,7 @@ def delete_from_cache(handle: Union[ModelHandle], path: Optional[str] = None) ->
     return _delete_from_cache_folder(model_full_path)
 
 
-def _get_completion_marker_filepath(handle: Union[ModelHandle], path: Optional[str] = None) -> str:
+def _get_completion_marker_filepath(handle: Union[ModelHandle, str], path: Optional[str] = None) -> str:
     # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_models_completion_marker_filepath(handle, path)
