@@ -9,14 +9,14 @@ from kagglehub.handle import ModelHandle
 logger = logging.getLogger(__name__)
 
 
-def _create_model(owner_slug: str, model_slug: str):
+def _create_model(owner_slug: str, model_slug: str) -> None:
     data = {"ownerSlug": owner_slug, "slug": model_slug, "title": model_slug, "isPrivate": True}
     api_client = KaggleApiV1Client()
     api_client.post("/models/create/new", data)
     logger.info(f"Model '{model_slug}' Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None):
+def _create_model_instance(model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None) -> None:
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
@@ -30,7 +30,7 @@ def _create_model_instance(model_handle: ModelHandle, files: List[str], license_
     logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}")
 
 
-def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes=""):
+def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes: str = "") -> None:
     data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files]}
     api_client = KaggleApiV1Client()
     api_client.post(
@@ -43,8 +43,8 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None, version_notes: Optional[str] = None
-):
+    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: str = ""
+) -> None:
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{model_handle}/get")
@@ -60,7 +60,7 @@ def create_model_instance_or_version(
             raise (e)
 
 
-def create_model_if_missing(owner_slug: str, model_slug: str):
+def create_model_if_missing(owner_slug: str, model_slug: str) -> None:
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{owner_slug}/{model_slug}/get")
@@ -77,7 +77,7 @@ def create_model_if_missing(owner_slug: str, model_slug: str):
             raise (e)
 
 
-def delete_model(owner_slug, model_slug):
+def delete_model(owner_slug: str, model_slug: str) -> None:
     try:
         api_client = KaggleApiV1Client()
         api_client.post(

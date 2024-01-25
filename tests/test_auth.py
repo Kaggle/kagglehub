@@ -17,10 +17,10 @@ GOOD_CREDENTIALS_API_KEY = "some-key"
 
 
 class KaggleAPIHandler(http.server.BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
+    def do_HEAD(self) -> None:  # noqa: N802
         self.send_response(200)
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self) -> None:  # noqa: N802
         if self.path == "/api/v1/hello":
             # Get the basic auth credentials attached to the request
             credentials = self.headers.get("Authorization", "").split(" ")[1]
@@ -45,7 +45,7 @@ class KaggleAPIHandler(http.server.BaseHTTPRequestHandler):
 
 
 class TestAuth(BaseTestCase):
-    def test_login_updates_global_credentials(self):
+    def test_login_updates_global_credentials(self) -> None:
         # Simulate user input for credentials
 
         with create_test_http_server(KaggleAPIHandler):
@@ -54,38 +54,44 @@ class TestAuth(BaseTestCase):
                 kagglehub.login()
 
             # Verify that the global variable contains the updated credentials
-            self.assertEqual("lastplacelarry", get_kaggle_credentials().username)
-            self.assertEqual("some-key", get_kaggle_credentials().key)
+            credentials = get_kaggle_credentials()
+            if credentials is None:
+                self.fail("Credentials should not be None")
+            self.assertEqual("lastplacelarry", credentials.username)
+            self.assertEqual("some-key", credentials.key)
 
-    def test_login_updates_global_credentials_no_validation(self):
+    def test_login_updates_global_credentials_no_validation(self) -> None:
         # Simulate user input for credentials
         with mock.patch("builtins.input") as mock_input:
             mock_input.side_effect = ["lastplacelarry", "some-key"]
             kagglehub.login(validate_credentials=False)
 
         # Verify that the global variable contains the updated credentials
-        self.assertEqual("lastplacelarry", get_kaggle_credentials().username)
-        self.assertEqual("some-key", get_kaggle_credentials().key)
+        credentials = get_kaggle_credentials()
+        if credentials is None:
+            self.fail("Credentials should not be None")
+        self.assertEqual("lastplacelarry", credentials.username)
+        self.assertEqual("some-key", credentials.key)
 
-    def test_set_kaggle_credentials_raises_error_with_empty_username(self):
+    def test_set_kaggle_credentials_raises_error_with_empty_username(self) -> None:
         with self.assertRaises(ValueError):
             with mock.patch("builtins.input") as mock_input:
                 mock_input.side_effect = ["", "some-key"]
                 kagglehub.login()
 
-    def test_set_kaggle_credentials_raises_error_with_empty_api_key(self):
+    def test_set_kaggle_credentials_raises_error_with_empty_api_key(self) -> None:
         with self.assertRaises(ValueError):
             with mock.patch("builtins.input") as mock_input:
                 mock_input.side_effect = ["lastplacelarry", ""]
                 kagglehub.login()
 
-    def test_set_kaggle_credentials_raises_error_with_empty_username_api_key(self):
+    def test_set_kaggle_credentials_raises_error_with_empty_username_api_key(self) -> None:
         with self.assertRaises(ValueError):
             with mock.patch("builtins.input") as mock_input:
                 mock_input.side_effect = ["", ""]
                 kagglehub.login()
 
-    def test_login_returns_403_for_bad_credentials(self):
+    def test_login_returns_403_for_bad_credentials(self) -> None:
         output_stream = io.StringIO()
         handler = logging.StreamHandler(output_stream)
         logger.addHandler(handler)
@@ -100,7 +106,7 @@ class TestAuth(BaseTestCase):
                 "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account).\n",
             )
 
-    def test_capture_logger_output(self):
+    def test_capture_logger_output(self) -> None:
         with _capture_logger_output() as output:
             logger.info("This is an info message")
             logger.error("This is an error message")

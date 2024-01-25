@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
-    def is_supported(self, *_, **__) -> bool:
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 
@@ -72,7 +72,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return out_path
 
 
-def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle):
+def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle) -> int:
     json_response = api_client.get(_build_get_instance_url_path(h))
     if MODEL_INSTANCE_VERSION_FIELD not in json_response:
         msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"

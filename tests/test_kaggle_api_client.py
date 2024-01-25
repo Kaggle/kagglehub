@@ -13,23 +13,23 @@ from .utils import create_test_http_server, get_test_file_path
 
 
 class KaggleAPIHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
+    def do_HEAD(self) -> None:  # noqa: N802
         self.send_response(200)
 
-    def do_GET(self):  # noqa: N802
+    def do_GET(self) -> None:  # noqa: N802
         test_file_path = get_test_file_path("foo.txt")
         with open(test_file_path, "rb") as f:
             if self.path.endswith("no-integrity"):
                 # Do not set the "x-goog-hash" header which skips integrity check.
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
-                self.send_header("Content-Length", os.path.getsize(test_file_path))
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path)))
                 self.end_headers()
                 self.wfile.write(f.read())
             if self.path.endswith("corrupted"):
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
-                self.send_header("Content-Length", os.path.getsize(test_file_path))
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path)))
                 self.send_header("x-goog-hash", "md5=badhash")
                 self.end_headers()
                 self.wfile.write(f.read())
@@ -51,7 +51,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                 f.seek(start)
                 self.send_response(200)
                 self.send_header("Content-type", "application/octet-stream")
-                self.send_header("Content-Length", os.path.getsize(test_file_path) - start)
+                self.send_header("Content-Length", str(os.path.getsize(test_file_path) - start))
                 self.send_header("Accept-Ranges", "bytes")  # support resumable download
 
                 content = f.read()
@@ -68,7 +68,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
 
 
 class TestKaggleApiV1Client(BaseTestCase):
-    def test_download_with_integrity_check(self):
+    def test_download_with_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")
@@ -79,7 +79,7 @@ class TestKaggleApiV1Client(BaseTestCase):
                 with open(out_file) as f:
                     self.assertEqual("foo", f.read())
 
-    def test_resumable_download_with_integrity_check(self):
+    def test_resumable_download_with_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")
@@ -96,7 +96,7 @@ class TestKaggleApiV1Client(BaseTestCase):
                 with open(out_file) as f:
                     self.assertEqual("foo", f.read())
 
-    def test_download_no_integrity_check(self):
+    def test_download_no_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")
@@ -107,7 +107,7 @@ class TestKaggleApiV1Client(BaseTestCase):
                 with open(out_file) as f:
                     self.assertEqual("foo", f.read())
 
-    def test_download_corrupted_file_fail_integrity_check(self):
+    def test_download_corrupted_file_fail_integrity_check(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with TemporaryDirectory() as d:
                 out_file = os.path.join(d, "out")

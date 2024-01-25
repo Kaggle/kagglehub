@@ -3,7 +3,7 @@ from tests.fixtures import BaseTestCase
 
 
 class TestHandle(BaseTestCase):
-    def test_versioned_model_handle(self):
+    def test_versioned_model_handle(self) -> None:
         handle = "google/bert/tensorFlow2/answer-equivalence-bem/3"
         h = parse_model_handle(handle)
 
@@ -15,7 +15,7 @@ class TestHandle(BaseTestCase):
         self.assertTrue(h.is_versioned())
         self.assertEqual(handle, str(h))
 
-    def test_unversioned_model_handle(self):
+    def test_unversioned_model_handle(self) -> None:
         handle = "google/bert/tensorFlow2/answer-equivalence-bem"
         h = parse_model_handle(handle)
         self.assertEqual("google", h.owner)
@@ -26,10 +26,10 @@ class TestHandle(BaseTestCase):
         self.assertFalse(h.is_versioned())
         self.assertEqual(handle, str(h))
 
-    def test_invalid_model_handle(self):
+    def test_invalid_model_handle(self) -> None:
         with self.assertRaises(ValueError):
             parse_model_handle("invalid")
 
-    def test_invalid_version_model_handle(self):
+    def test_invalid_version_model_handle(self) -> None:
         with self.assertRaises(ValueError):
             parse_model_handle("google/bert/tensorFlow2/answer-equivalence-bem/invalid-version-number")

@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Type
+from typing import Generator, Optional, Type
 from unittest import mock
 from urllib.parse import urlparse
 
@@ -18,12 +18,12 @@ from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KAGGLE_API_ENDPOINT_ENV_
 from kagglehub.kaggle_cache_resolver import KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, KAGGLE_NOTEBOOK_ENV_VAR_NAME
 
 
-def get_test_file_path(relative_path):
+def get_test_file_path(relative_path: str) -> str:
     return os.path.join(Path(__file__).parent, "data", relative_path)
 
 
 @contextmanager
-def create_test_cache():
+def create_test_cache() -> Generator[str, None, None]:
     with TemporaryDirectory() as d:
         with mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: d}):
             yield d
@@ -31,8 +31,11 @@ def create_test_cache():
 
 @contextmanager
 def create_test_http_server(
-    handler_class: Type[BaseHTTPRequestHandler], endpoint=os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME)  # noqa: B008
-):
+    handler_class: Type[BaseHTTPRequestHandler], endpoint: Optional[str] = None
+) -> Generator[HTTPServer, None, None]:
+    if endpoint is None:
+        endpoint = os.getenv(KAGGLE_API_ENDPOINT_ENV_VAR_NAME)
+
     test_server_address = urlparse(endpoint)
     if not test_server_address.hostname or not test_server_address.port:
         msg = f"Invalid test server address: {endpoint}. You must specify a hostname & port"
@@ -47,7 +50,7 @@ def create_test_http_server(
 
 
 @contextmanager
-def create_test_jwt_http_server(handler_class: Type[BaseHTTPRequestHandler]):
+def create_test_jwt_http_server(handler_class: Type[BaseHTTPRequestHandler]) -> Generator[HTTPServer, None, None]:
     with TemporaryDirectory() as cache_mount_folder:
         with mock.patch.dict(
             os.environ,
@@ -73,7 +76,7 @@ def create_test_jwt_http_server(handler_class: Type[BaseHTTPRequestHandler]):
 
 
 @contextmanager
-def create_test_server_colab(handler_class: Type[BaseHTTPRequestHandler]):
+def create_test_server_colab(handler_class: Type[BaseHTTPRequestHandler]) -> Generator[HTTPServer, None, None]:
     with TemporaryDirectory() as cache_mount_folder:
         with mock.patch.dict(
             os.environ,

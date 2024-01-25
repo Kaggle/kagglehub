@@ -1,6 +1,7 @@
 import io
 import logging
 from contextlib import contextmanager
+from typing import Generator
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
@@ -20,7 +21,7 @@ NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 
 
 @contextmanager
-def _capture_logger_output():
+def _capture_logger_output() -> Generator[io.StringIO, None, None]:
     """Capture output that is logged using the logger.
 
     Example:
@@ -58,7 +59,7 @@ def _is_in_notebook() -> bool:
         return False  # Probably standard Python interpreter
 
 
-def _notebook_login(validate_credentials) -> None:
+def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     """Prompt the user for their Kaggle token and save it in a widget (Jupyter or Colab)."""
     library_error = "You need the `ipywidgets` module: `pip install ipywidgets`."
     try:
@@ -85,7 +86,7 @@ def _notebook_login(validate_credentials) -> None:
     )
     display(login_token_widget)
 
-    def on_click_login_button(t):  # noqa: ARG001
+    def on_click_login_button(_: str) -> None:
         username = username_widget.value
         token = token_widget.value
         # Erase token and clear value to make sure it's not saved in the notebook.
@@ -110,7 +111,7 @@ def _notebook_login(validate_credentials) -> None:
     login_button.on_click(on_click_login_button)
 
 
-def _validate_credentials_helper():
+def _validate_credentials_helper() -> None:
     api_client = KaggleApiV1Client()
     response = api_client.get("/hello")
     if "code" not in response:
@@ -123,7 +124,7 @@ def _validate_credentials_helper():
         logger.warning("Unable to validate Kaggle credentials at this time.")
 
 
-def login(validate_credentials=True):  # noqa: FBT002
+def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
     """Prompt the user for their Kaggle username and API key and save them globally."""
 
     if _is_in_notebook():

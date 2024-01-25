@@ -43,13 +43,13 @@ TEST_MODEL_VARIABLES_FILE_NAME = "variables.txt"
 
 
 class TestCache(BaseTestCase):
-    def test_load_from_cache_miss(self):
+    def test_load_from_cache_miss(self) -> None:
         self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
-    def test_load_from_cache_with_path_miss(self):
+    def test_load_from_cache_with_path_miss(self) -> None:
         self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, TEST_FILEPATH))
 
-    def test_load_from_cache_not_complete_miss(self):
+    def test_load_from_cache_not_complete_miss(self) -> None:
         with create_test_cache():
             cache_path = get_cached_path(TEST_MODEL_HANDLE)
 
@@ -58,7 +58,7 @@ class TestCache(BaseTestCase):
 
             self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
-    def test_load_from_cache_with_path_not_complete_miss(self):
+    def test_load_from_cache_with_path_not_complete_miss(self) -> None:
         with create_test_cache():
             cache_path = get_cached_path(TEST_MODEL_HANDLE)
 
@@ -68,21 +68,21 @@ class TestCache(BaseTestCase):
 
             self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH))
 
-    def test_load_from_cache_with_complete_marker_no_files_miss(self):
+    def test_load_from_cache_with_complete_marker_no_files_miss(self) -> None:
         with create_test_cache():
             # Should be a cache `miss` if completion marker file exists but not the files themselves.
             mark_as_complete(TEST_MODEL_HANDLE)
 
             self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE))
 
-    def test_load_from_cache_with_path_complete_marker_no_files_miss(self):
+    def test_load_from_cache_with_path_complete_marker_no_files_miss(self) -> None:
         with create_test_cache():
             # Should be a cache `miss` if completion marker file exists but not the file itself.
             mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
             self.assertEqual(None, load_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH))
 
-    def test_cache_hit(self):
+    def test_cache_hit(self) -> None:
         with create_test_cache() as d:
             cache_path = get_cached_path(TEST_MODEL_HANDLE)
             os.makedirs(cache_path)
@@ -95,7 +95,7 @@ class TestCache(BaseTestCase):
                 path,
             )
 
-    def test_cache_hit_with_path(self):
+    def test_cache_hit_with_path(self) -> None:
         with create_test_cache() as d:
             cache_path = get_cached_path(TEST_MODEL_HANDLE)
 
@@ -110,11 +110,11 @@ class TestCache(BaseTestCase):
                 path,
             )
 
-    def test_load_from_cache_invalid_handle(self):
+    def test_load_from_cache_invalid_handle(self) -> None:
         with self.assertRaises(ValueError):
-            load_from_cache("invalid_handle")
+            load_from_cache("invalid-handle")
 
-    def test_model_archive_path(self):
+    def test_model_archive_path(self) -> None:
         with create_test_cache() as d:
             archive_path = get_cached_archive_path(TEST_MODEL_HANDLE)
 
@@ -131,7 +131,7 @@ class TestCache(BaseTestCase):
                 archive_path,
             )
 
-    def _download_test_model_to_cache(self):
+    def _download_test_model_to_cache(self) -> None:
         cache_path = get_cached_path(TEST_MODEL_HANDLE)
         model_variable_dir = os.path.join(cache_path, TEST_MODEL_VARIABLES_DIR_NAME)
 
@@ -141,7 +141,7 @@ class TestCache(BaseTestCase):
 
         mark_as_complete(TEST_MODEL_HANDLE)
 
-    def _download_test_file_to_cache(self):
+    def _download_test_file_to_cache(self) -> None:
         cache_path = get_cached_path(TEST_MODEL_HANDLE)
 
         os.makedirs(cache_path)
@@ -149,7 +149,7 @@ class TestCache(BaseTestCase):
 
         mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
-    def test_delete_from_cache(self):
+    def test_delete_from_cache(self) -> None:
         with create_test_cache() as d:
             self._download_test_model_to_cache()
 
@@ -158,7 +158,7 @@ class TestCache(BaseTestCase):
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), deleted_path)
             self.assertFalse(os.path.exists(get_cached_path(TEST_MODEL_HANDLE)))
 
-    def test_delete_from_cache_with_path(self):
+    def test_delete_from_cache_with_path(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_to_cache()
 
@@ -167,17 +167,17 @@ class TestCache(BaseTestCase):
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), deleted_path)
             self.assertFalse(os.path.exists(os.path.join(get_cached_path(TEST_MODEL_HANDLE), TEST_FILEPATH)))
 
-    def test_delete_from_cache_without_files_without_complete_marker(self):
+    def test_delete_from_cache_without_files_without_complete_marker(self) -> None:
         with create_test_cache():
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE)
             self.assertEqual(None, deleted_path)
 
-    def test_delete_from_cache_without_files_without_complete_marker_with_path(self):
+    def test_delete_from_cache_without_files_without_complete_marker_with_path(self) -> None:
         with create_test_cache():
             deleted_path = delete_from_cache(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
             self.assertEqual(None, deleted_path)
 
-    def test_delete_from_cache_without_files_with_complete_marker(self):
+    def test_delete_from_cache_without_files_with_complete_marker(self) -> None:
         with create_test_cache():
             mark_as_complete(TEST_MODEL_HANDLE)
 
@@ -186,7 +186,7 @@ class TestCache(BaseTestCase):
             # Should not delete anything if only the marker file existed.
             self.assertEqual(None, deleted_path)
 
-    def test_delete_from_cache_without_files_with_complete_marker_with_path(self):
+    def test_delete_from_cache_without_files_with_complete_marker_with_path(self) -> None:
         with create_test_cache():
             mark_as_complete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)
 
@@ -195,7 +195,7 @@ class TestCache(BaseTestCase):
             # Should not delete anything if only the marker file existed.
             self.assertEqual(None, deleted_path)
 
-    def test_delete_from_cache_with_files_without_complete_marker(self):
+    def test_delete_from_cache_with_files_without_complete_marker(self) -> None:
         with create_test_cache() as d:
             self._download_test_model_to_cache()
             mark_as_incomplete(TEST_MODEL_HANDLE)
@@ -205,7 +205,7 @@ class TestCache(BaseTestCase):
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), deleted_path)
             self.assertFalse(os.path.exists(get_cached_path(TEST_MODEL_HANDLE)))
 
-    def test_delete_from_cache_with_files_without_complete_marker_with_path(self):
+    def test_delete_from_cache_with_files_without_complete_marker_with_path(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_to_cache()
             mark_as_incomplete(TEST_MODEL_HANDLE, path=TEST_FILEPATH)

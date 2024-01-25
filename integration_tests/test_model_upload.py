@@ -10,7 +10,7 @@ LICENSE_NAME = "MIT"
 
 
 class TestModelUpload(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
         self.dummy_files = ["dummy_model.h5", "config.json", "metadata.json"]
         for file in self.dummy_files:
@@ -24,7 +24,7 @@ class TestModelUpload(unittest.TestCase):
         self.model_slug = f"model_{self.model_uuid}"
         self.handle = f"{self.owner_slug}/{self.model_slug}/pyTorch/new-variation"
 
-    def test_model_upload_and_versioning(self):
+    def test_model_upload_and_versioning(self) -> None:
         # Create Instance
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
@@ -33,5 +33,5 @@ class TestModelUpload(unittest.TestCase):
 
         # If delete model does not raise an error, then the upload was successful.
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         models_helpers.delete_model(self.owner_slug, self.model_slug)

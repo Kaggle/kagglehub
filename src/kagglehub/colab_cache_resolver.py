@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelColabCacheResolver(Resolver[ModelHandle]):
-    def is_supported(self, handle: ModelHandle, *_, **__) -> bool:
+    def is_supported(self, handle: ModelHandle, *_, **__) -> bool:  # noqa: ANN002, ANN003
         if ColabClient.TBE_RUNTIME_ADDR_ENV_VAR_NAME not in os.environ or is_colab_cache_disabled():
             return False
 
@@ -56,20 +56,24 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
 
         response = api_client.post(data, ColabClient.MOUNT_PATH)
 
-        if "slug" not in response:
-            msg = "'slug' field missing from response"
-            raise BackendError(msg)
+        if response is not None:
+            if "slug" not in response:
+                msg = "'slug' field missing from response"
+                raise BackendError(msg)
 
-        base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
-        cached_path = f"{base_mount_path}/{response['slug']}"
-        logger.info(f"Model '{h}' is attached.")
-        if path:
-            cached_filepath = f"{cached_path}/{path}"
-            if not os.path.exists(cached_filepath):
-                msg = (
-                    f"'{path}' is not present in the model files. "
-                    f"You can access the other files of the attached model at '{cached_path}'"
-                )
-                raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
+            cached_path = f"{base_mount_path}/{response['slug']}"
+            logger.info(f"Model '{h}' is attached.")
+            if path:
+                cached_filepath = f"{cached_path}/{path}"
+                if not os.path.exists(cached_filepath):
+                    msg = (
+                        f"'{path}' is not present in the model files. "
+                        f"You can access the other files of the attached model at '{cached_path}'"
+                    )
+                    raise ValueError(msg)
+                return cached_filepath
+            return cached_path
+        else:
+            no_response = "No response received or response was empty."
+            raise ValueError(no_response)

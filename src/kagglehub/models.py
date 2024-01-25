@@ -9,7 +9,7 @@ from kagglehub.models_helpers import create_model_if_missing, create_model_insta
 logger = logging.getLogger(__name__)
 
 
-def model_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False):
+def model_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
     """Download model files.
 
     Args:
@@ -26,8 +26,8 @@ def model_download(handle: str, path: Optional[str] = None, *, force_download: O
 
 
 def model_upload(
-    handle: str, local_model_dir: str, license_name: Optional[str] = None, version_notes: Optional[str] = ""
-):
+    handle: str, local_model_dir: str, license_name: Optional[str] = None, version_notes: str = ""
+) -> None:
     """Upload model files.
 
     Args:
