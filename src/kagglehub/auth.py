@@ -1,6 +1,7 @@
 import io
 import logging
 from contextlib import contextmanager
+from typing import Generator
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
@@ -20,7 +21,7 @@ NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 
 
 @contextmanager
-def _capture_logger_output():  # noqa: ANN202
+def _capture_logger_output() -> Generator[io.StringIO, None, None]:
     """Capture output that is logged using the logger.
 
     Example:
