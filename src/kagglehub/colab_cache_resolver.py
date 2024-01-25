@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelColabCacheResolver(Resolver[ModelHandle]):
-    def is_supported(self, handle: ModelHandle, *_, **__) -> bool:  # noqa: ANN002, ANN003
+    def is_supported(self, handle: ModelHandle, *_, **__):  # noqa: ANN002, ANN003, ANN201
         if ColabClient.TBE_RUNTIME_ADDR_ENV_VAR_NAME not in os.environ or is_colab_cache_disabled():
             return False
 

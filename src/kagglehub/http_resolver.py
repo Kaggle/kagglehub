@@ -1,7 +1,7 @@
 import logging
 import os
 import tarfile
-from typing import Any, Optional
+from typing import Optional
 
 from kagglehub.cache import (
     delete_from_cache,
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
-    def is_supported(self, *_: Any, **__: Any) -> bool:  # noqa: ANN401
+    def is_supported(self, *_, **__):  # noqa: ANN201, ANN002, ANN003
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 
