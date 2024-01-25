@@ -154,7 +154,7 @@ def _is_resumable(response: requests.Response) -> bool:
 
 
 def _download_file(
-    response: requests.Response, out_file: str, size_read: int, total_size: int, hash_object  # noqa: ANN001
+    response: requests.Response, out_file: str, size_read: int, total_size: int, hash_object: hashlib._Hash
 ) -> None:
     open_mode = "ab" if size_read > 0 else "wb"
     with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
@@ -246,7 +246,7 @@ class ColabClient:
         self.credentials = get_kaggle_credentials()
         self.headers = {"Content-type": "application/json"}
 
-    def post(self, data: dict, handle_path: str):  # noqa: ANN201
+    def post(self, data: dict, handle_path: str) -> Optional[dict]:
         url = f"http://{self.endpoint}{handle_path}"
         with requests.post(
             url,
@@ -261,7 +261,7 @@ class ColabClient:
             if response.text:
                 return response.json()
 
-    def _get_http_basic_auth(self):  # noqa: ANN202
+    def _get_http_basic_auth(self) -> Optional[HTTPBasicAuth]:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         return None
