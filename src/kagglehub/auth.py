@@ -85,7 +85,7 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     )
     display(login_token_widget)
 
-    def on_click_login_button(t: str) -> None:  # noqa: ARG001
+    def on_click_login_button(_: str) -> None:
         username = username_widget.value
         token = token_widget.value
         # Erase token and clear value to make sure it's not saved in the notebook.
@@ -123,7 +123,7 @@ def _validate_credentials_helper() -> None:
         logger.warning("Unable to validate Kaggle credentials at this time.")
 
 
-def login(validate_credentials: bool = True):  # noqa: FBT002, FBT001, ANN201
+def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
     """Prompt the user for their Kaggle username and API key and save them globally."""
 
     if _is_in_notebook():
