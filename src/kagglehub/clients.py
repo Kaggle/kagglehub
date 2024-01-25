@@ -154,7 +154,7 @@ def _is_resumable(response: requests.Response) -> bool:
 
 
 def _download_file(
-    response: requests.Response, out_file: str, size_read: int, total_size: int, hash_object: hashlib.HASH
+    response: requests.Response, out_file: str, size_read: int, total_size: int, hash_object: hashlib
 ) -> None:
     open_mode = "ab" if size_read > 0 else "wb"
     with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
