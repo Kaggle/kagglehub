@@ -162,11 +162,17 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
             # Upload the zip file
-            return [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+            return [
+                token
+                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+                if token is not None
+            ]
 
     tokens = []
     for file_name in os.listdir(folder):
-        tokens.append(_upload_file_or_folder(folder, file_name, model_type, quiet))
+        token = _upload_file_or_folder(folder, file_name, model_type, quiet)
+        if token is not None:
+            tokens.append(token)
 
     return tokens
 
