@@ -20,7 +20,7 @@ NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 
 
 @contextmanager
-def _capture_logger_output(): # noqa: ANN202
+def _capture_logger_output():  # noqa: ANN202
     """Capture output that is logged using the logger.
 
     Example:
