@@ -2,7 +2,10 @@
 
 ## Next (Unreleased)
 
-*
+## v0.1.7 (January 29th, 2023)
+
+* Fix `model_upload` with nested directory ([#75](https://github.com/Kaggle/kagglehub/pull/75))
+* Detect if a newer version of `kagglehub` is available and suggest to upgrade ([#73](https://github.com/Kaggle/kagglehub/pull/73))
 
 ## v0.1.6 (January 22nd, 2023)
 
