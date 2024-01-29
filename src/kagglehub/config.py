@@ -3,6 +3,7 @@
 For config values specific to a resolver's environment (a user is not expected to override),
 add it to the resolver's module.
 """
+
 import json
 import logging
 import os
