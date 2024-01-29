@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import tempfile
 import unittest
 import uuid
@@ -32,6 +33,20 @@ class TestModelUpload(unittest.TestCase):
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # If delete model does not raise an error, then the upload was successful.
+
+    def test_model_upload_nested_dir(self) -> None:
+        # Create a nested directory within self.temp_dir
+        nested_dir = Path(self.temp_dir) / "nested"
+        nested_dir.mkdir()
+
+        # Create dummy files in the nested directory
+        nested_dummy_files = ["nested_model.h5", "nested_config.json", "nested_metadata.json"]
+        for file in nested_dummy_files:
+            with open(nested_dir / file, "w") as f:
+                f.write("dummy content in nested file")
+
+        # Call the model upload function with the base directory
+        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
     def tearDown(self) -> None:
         models_helpers.delete_model(self.owner_slug, self.model_slug)

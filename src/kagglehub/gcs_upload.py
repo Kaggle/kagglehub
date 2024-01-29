@@ -169,10 +169,11 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
             ]
 
     tokens = []
-    for file_name in os.listdir(folder):
-        token = _upload_file_or_folder(folder, file_name, model_type, quiet)
-        if token is not None:
-            tokens.append(token)
+    for root, _, files in os.walk(folder):
+        for file in files:
+            token = _upload_file_or_folder(root, file, model_type, quiet)
+            if token is not None:
+                tokens.append(token)
 
     return tokens
 
@@ -195,14 +196,6 @@ def _upload_file_or_folder(
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
         return _upload_file(file_or_folder_name, full_path, quiet, model_type)
-
-    elif os.path.isdir(full_path):
-        for filename in os.listdir(full_path):
-            file_path = os.path.join(full_path, filename)
-            if os.path.isfile(file_path):
-                _upload_file(filename, file_path, quiet, model_type)
-            elif not quiet:
-                logger.info(f"Skipping non-file item in directory: {filename}")
     elif not quiet:
         logger.info("Skipping: " + file_or_folder_name)
     return None
