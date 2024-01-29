@@ -41,7 +41,10 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
         if force_download:
             logger.warning("Ignoring invalid input: force_download flag cannot be used in a Colab notebook")
 
-        logger.info(f"Attaching model '{h}' to your Colab notebook...")
+        if path:
+            logger.info(f"Attaching '{path}' from model '{h}' to your Colab notebook...")
+        else:
+            logger.info(f"Attaching model '{h}' to your Colab notebook...")
 
         api_client = ColabClient()
         data = {
@@ -63,7 +66,7 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
 
             base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
             cached_path = f"{base_mount_path}/{response['slug']}"
-            logger.info(f"Model '{h}' is attached.")
+
             if path:
                 cached_filepath = f"{cached_path}/{path}"
                 if not os.path.exists(cached_filepath):
