@@ -118,9 +118,6 @@ After setting up your credentials by any of these methods, you can run the integ
 ```sh
 # Run all tests
 hatch run integration-test
-
-# Run a single test file
-hatch run integration-test integration-test/test_<SOME_FILE>.py
 ```
 
 

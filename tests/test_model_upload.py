@@ -142,6 +142,22 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
+    def test_model_upload_instance_with_nested_directories(self) -> None:
+        # execution path: get_model -> create_model -> get_instance -> create_version
+        with create_test_http_server(KaggleAPIHandler):
+            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
+                with TemporaryDirectory() as temp_dir:
+                    # Create a nested directory structure
+                    nested_dir = Path(temp_dir) / "nested"
+                    nested_dir.mkdir()
+
+                    # Create a temporary file in the nested directory
+                    test_filepath = nested_dir / TEMP_TEST_FILE
+                    test_filepath.touch()
+                    model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
+                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+
     def test_model_upload_version_with_valid_handle(self) -> None:
         # execution path: get_model -> get_instance -> create_instance
 
