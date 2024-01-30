@@ -49,7 +49,7 @@ _cached_user_agent = None
 
 class KaggleHubUserAgent:
     def __init__(self) -> None:
-        self._cached_user_agent = None
+        self._cached_user_agent: Optional[str] = None
 
     def _is_in_kaggle_notebook(self) -> bool:
         return os.getenv("KAGGLE_NOTEBOOK_ENV_VAR_NAME") is not None
