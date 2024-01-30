@@ -15,7 +15,6 @@ from kagglehub.handle import ModelHandle
 from kagglehub.resolver import Resolver
 
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
-KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
 ATTACH_DATASOURCE_REQUEST_NAME = "AttachDatasourceUsingJwtRequest"
 # b/312965617: Using a longer timeout for this RPC.
 ATTACH_DATASOURCE_READ_TIMEOUT = 30  # seconds

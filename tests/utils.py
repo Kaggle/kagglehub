@@ -15,7 +15,8 @@ from kagglehub.clients import (
 )
 from kagglehub.colab_cache_resolver import COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KAGGLE_API_ENDPOINT_ENV_VAR_NAME, TBE_RUNTIME_ADDR_ENV_VAR_NAME
-from kagglehub.kaggle_cache_resolver import KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, KAGGLE_NOTEBOOK_ENV_VAR_NAME
+from kagglehub.env import KAGGLE_NOTEBOOK_ENV_VAR_NAME
+from kagglehub.kaggle_cache_resolver import KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 
 
 def get_test_file_path(relative_path: str) -> str:
