@@ -3,13 +3,16 @@ import os
 import time
 from typing import Optional
 
-from kagglehub.clients import DEFAULT_CONNECT_TIMEOUT, KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME, KaggleJwtClient
+from kagglehub.clients import (
+    DEFAULT_CONNECT_TIMEOUT,
+    KaggleJwtClient,
+)
 from kagglehub.config import is_kaggle_cache_disabled
+from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import ModelHandle
 from kagglehub.resolver import Resolver
 
-KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
 ATTACH_DATASOURCE_REQUEST_NAME = "AttachDatasourceUsingJwtRequest"
 # b/312965617: Using a longer timeout for this RPC.
@@ -26,15 +29,7 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         if is_kaggle_cache_disabled():
             return False
 
-        if KAGGLE_NOTEBOOK_ENV_VAR_NAME in os.environ:
-            # Inside a Kaggle notebook.
-            if KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME not in os.environ:
-                # Missing endpoint for the Jwt client.
-                logger.warning(
-                    "Can't use the Kaggle Cache. "
-                    f"The '{KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME}' environment variable is not set."
-                )
-                return False
+        if is_in_kaggle_notebook():
             return True
 
         return False

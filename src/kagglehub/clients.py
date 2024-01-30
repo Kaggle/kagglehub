@@ -12,6 +12,12 @@ from tqdm import tqdm
 
 import kagglehub
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.env import (
+    KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
+    is_in_colab_notebook,
+    is_in_kaggle_notebook,
+    read_kaggle_build_date,
+)
 from kagglehub.exceptions import (
     BackendError,
     ColabEnvironmentError,
@@ -43,7 +49,28 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
-KAGGLEHUB_USER_AGENT = {"User-Agent": f"kagglehub/{kagglehub.__version__}"}
+_cached_user_agent = None
+
+
+def get_user_agent() -> str:
+    global _cached_user_agent  # noqa: PLW0603
+    if _cached_user_agent:
+        return _cached_user_agent
+
+    base_user_agent = f"kagglehub/{kagglehub.__version__}"
+
+    if is_in_kaggle_notebook():
+        build_date = read_kaggle_build_date()
+        _cached_user_agent = f"{base_user_agent} kkb/{build_date}"
+    elif is_in_colab_notebook():
+        colab_tag = os.getenv("COLAB_RELEASE_TAG")
+        runtime_suffix = "-managed" if os.getenv("TBE_RUNTIME_ADDR") else "-unmanaged"
+        _cached_user_agent = f"{base_user_agent} colab/{colab_tag}{runtime_suffix}"
+    else:
+        _cached_user_agent = base_user_agent
+
+    return _cached_user_agent
+
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +98,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers=KAGGLEHUB_USER_AGENT,
+            headers={"User-Agent": get_user_agent()},
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -83,7 +110,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
-            headers=KAGGLEHUB_USER_AGENT,
+            headers={"User-Agent": get_user_agent()},
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -98,7 +125,7 @@ class KaggleApiV1Client:
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
-            headers=KAGGLEHUB_USER_AGENT,
+            headers={"User-Agent": get_user_agent()},
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -172,7 +199,6 @@ def _download_file(
 
 
 # These environment variables are set by the Kaggle notebook environment.
-KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_URL"
 KAGGLE_JWT_TOKEN_ENV_VAR_NAME = "KAGGLE_USER_SECRETS_TOKEN"
 KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_TOKEN"
 
