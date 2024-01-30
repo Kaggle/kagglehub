@@ -94,8 +94,7 @@ class KaggleApiV1Client:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
 
-        user_agent_manager = KaggleHubUserAgent()
-        self.user_agent = user_agent_manager.get_user_agent()
+        self.user_agent_manager = KaggleHubUserAgent()
 
     def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
@@ -112,7 +111,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers={"User-Agent": self.user_agent},
+            headers={"User-Agent": self.user_agent_manager.get_user_agent()},
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -124,7 +123,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
-            headers={"User-Agent": self.user_agent},
+            headers={"User-Agent": self.user_agent_manager.get_user_agent()},
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -139,7 +138,7 @@ class KaggleApiV1Client:
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
-            headers={"User-Agent": self.user_agent},
+            headers={"User-Agent": self.user_agent_manager.get_user_agent()},
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
