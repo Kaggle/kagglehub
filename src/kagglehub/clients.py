@@ -95,7 +95,6 @@ class KaggleApiV1Client:
                 )
 
     def get(self, path: str) -> dict:
-        print(get_user_agent())
         url = self._build_url(path)
         with requests.get(
             url,
@@ -108,7 +107,6 @@ class KaggleApiV1Client:
             return response.json()
 
     def post(self, path: str, data: dict) -> dict:
-        print(get_user_agent())
         url = self._build_url(path)
         with requests.post(
             url,
