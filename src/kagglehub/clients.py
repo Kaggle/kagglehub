@@ -97,6 +97,9 @@ class KaggleApiV1Client:
         user_agent_manager = KaggleHubUserAgent()
         self.user_agent = user_agent_manager.get_user_agent()
 
+        user_agent_manager = KaggleHubUserAgent()
+        self.user_agent = user_agent_manager.get_user_agent()
+
     def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
         if latest_version_str:
