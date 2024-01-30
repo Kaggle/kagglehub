@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 import kagglehub
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.env import is_in_colab_notebook, is_in_kaggle_notebook, read_kaggle_build_date
 from kagglehub.exceptions import (
     BackendError,
     ColabEnvironmentError,
@@ -43,44 +44,27 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
-KAGGLEHUB_USER_AGENT = {"User-Agent": f"kagglehub/{kagglehub.__version__}"}
 _cached_user_agent = None
 
 
-class KaggleHubUserAgent:
-    def __init__(self) -> None:
-        self._cached_user_agent: Optional[str] = None
+def get_user_agent() -> str:
+    global _cached_user_agent  # noqa: PLW0603
+    if _cached_user_agent:
+        return _cached_user_agent
 
-    def _is_in_kaggle_notebook(self) -> bool:
-        return os.getenv("KAGGLE_NOTEBOOK_ENV_VAR_NAME") is not None
+    base_user_agent = f"kagglehub/{kagglehub.__version__}"
 
-    def _is_in_colab_notebook(self) -> bool:
-        return os.getenv("TBE_RUNTIME_ADDR") is not None and os.getenv("COLAB_RELEASE_TAG") is not None
+    if is_in_kaggle_notebook():
+        build_date = read_kaggle_build_date()
+        _cached_user_agent = f"{base_user_agent} kkb/{build_date}"
+    elif is_in_colab_notebook():
+        colab_tag = os.getenv("COLAB_RELEASE_TAG")
+        runtime_suffix = "-managed" if os.getenv("TBE_RUNTIME_ADDR") else "-unmanaged"
+        _cached_user_agent = f"{base_user_agent} colab/{colab_tag}{runtime_suffix}"
+    else:
+        _cached_user_agent = base_user_agent
 
-    def _read_kaggle_build_date(self) -> str:
-        build_date_file = "/etc/build_date"
-        try:
-            with open(build_date_file) as file:
-                return file.read().strip()
-        except FileNotFoundError:
-            logging.warning(f"Build date file {build_date_file} not found in Kaggle Notebook environment.")
-            return "unknown"
-
-    def get_user_agent(self) -> str:
-        if self._cached_user_agent:
-            return self._cached_user_agent
-
-        base_user_agent = f"kagglehub/{kagglehub.__version__}"
-        if self._is_in_kaggle_notebook():
-            build_date = self._read_kaggle_build_date()
-            self._cached_user_agent = f"{base_user_agent} kkb/{build_date}"
-        elif self._is_in_colab_notebook():
-            colab_tag = os.getenv("COLAB_RELEASE_TAG")
-            self._cached_user_agent = f"{base_user_agent} colab/{colab_tag}"
-        else:
-            self._cached_user_agent = base_user_agent
-
-        return self._cached_user_agent
+    return _cached_user_agent
 
 
 logger = logging.getLogger(__name__)
@@ -94,7 +78,7 @@ class KaggleApiV1Client:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
 
-        self.user_agent_manager = KaggleHubUserAgent()
+        self.user_agent = get_user_agent()
 
     def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
@@ -111,7 +95,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers={"User-Agent": self.user_agent_manager.get_user_agent()},
+            headers={"User-Agent": self.user_agent},
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -123,7 +107,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
-            headers={"User-Agent": self.user_agent_manager.get_user_agent()},
+            headers={"User-Agent": self.user_agent},
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -138,7 +122,7 @@ class KaggleApiV1Client:
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
-            headers={"User-Agent": self.user_agent_manager.get_user_agent()},
+            headers={"User-Agent": self.user_agent},
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
