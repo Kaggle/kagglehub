@@ -12,7 +12,12 @@ from tqdm import tqdm
 
 import kagglehub
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
-from kagglehub.env import is_in_colab_notebook, is_in_kaggle_notebook, read_kaggle_build_date
+from kagglehub.env import (
+    KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
+    is_in_colab_notebook,
+    is_in_kaggle_notebook,
+    read_kaggle_build_date,
+)
 from kagglehub.exceptions import (
     BackendError,
     ColabEnvironmentError,
@@ -78,8 +83,6 @@ class KaggleApiV1Client:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
 
-        self.user_agent = get_user_agent()
-
     def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
         if latest_version_str:
@@ -95,7 +98,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers={"User-Agent": self.user_agent},
+            headers={"User-Agent": get_user_agent()},
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -107,7 +110,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
-            headers={"User-Agent": self.user_agent},
+            headers={"User-Agent": get_user_agent()},
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -122,7 +125,7 @@ class KaggleApiV1Client:
         logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
-            headers={"User-Agent": self.user_agent},
+            headers={"User-Agent": get_user_agent()},
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -196,7 +199,6 @@ def _download_file(
 
 
 # These environment variables are set by the Kaggle notebook environment.
-KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_URL"
 KAGGLE_JWT_TOKEN_ENV_VAR_NAME = "KAGGLE_USER_SECRETS_TOKEN"
 KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_TOKEN"
 

@@ -5,7 +5,6 @@ from typing import Optional
 
 from kagglehub.clients import (
     DEFAULT_CONNECT_TIMEOUT,
-    KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KaggleJwtClient,
 )
 from kagglehub.config import is_kaggle_cache_disabled
@@ -31,13 +30,6 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
             return False
 
         if is_in_kaggle_notebook():
-            if KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME not in os.environ:
-                # Missing endpoint for the Jwt client.
-                logger.warning(
-                    "Can't use the Kaggle Cache. "
-                    f"The '{KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME}' environment variable is not set."
-                )
-                return False
             return True
 
         return False
