@@ -7,9 +7,9 @@ from kagglehub.clients import (
     DEFAULT_CONNECT_TIMEOUT,
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KaggleJwtClient,
-    is_in_kaggle_notebook,
 )
 from kagglehub.config import is_kaggle_cache_disabled
+from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import ModelHandle
 from kagglehub.resolver import Resolver
