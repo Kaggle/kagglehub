@@ -10,10 +10,10 @@ from kagglehub.cache import (
     mark_as_complete,
     mark_as_incomplete,
 )
-from kagglehub.handle import ModelHandle, ResourceHandle
+from kagglehub.handle import ModelHandle
 from tests.fixtures import BaseTestCase
 
-from .utils import create_test_cache
+from .utils import InvalidResourceHandle, create_test_cache
 
 EXPECTED_MODEL_SUBDIR = os.path.join(
     MODELS_CACHE_SUBFOLDER, "google", "bert", "tensorFlow2", "answer-equivalence-bem", "2"
@@ -112,7 +112,7 @@ class TestCache(BaseTestCase):
 
     def test_load_from_cache_invalid_handle(self) -> None:
         with self.assertRaises(ValueError):
-            load_from_cache(ResourceHandle(owner="invalid-handle-type"))
+            load_from_cache(InvalidResourceHandle())
 
     def test_model_archive_path(self) -> None:
         with create_test_cache() as d:

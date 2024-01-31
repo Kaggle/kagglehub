@@ -16,6 +16,7 @@ from kagglehub.clients import (
 from kagglehub.colab_cache_resolver import COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KAGGLE_API_ENDPOINT_ENV_VAR_NAME, TBE_RUNTIME_ADDR_ENV_VAR_NAME
 from kagglehub.env import KAGGLE_NOTEBOOK_ENV_VAR_NAME
+from kagglehub.handle import ResourceHandle
 from kagglehub.kaggle_cache_resolver import KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 
 
@@ -97,3 +98,11 @@ def create_test_server_colab(handler_class: Type[BaseHTTPRequestHandler]) -> Gen
                     yield httpd
                 finally:
                     httpd.shutdown()
+
+
+class InvalidResourceHandle(ResourceHandle):
+    def __init__(self):
+        self.owner = "invalid"
+
+    def to_url(self) -> str:
+        return "invalid"
