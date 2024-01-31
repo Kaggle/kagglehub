@@ -1,4 +1,5 @@
 """Functions to parse resource handles."""
+
 import abc
 from dataclasses import dataclass
 from typing import Optional
