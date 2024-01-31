@@ -28,6 +28,7 @@ from kagglehub.exceptions import (
     kaggle_api_raise_for_status,
     process_post_response,
 )
+from kagglehub.handle import ResourceHandle
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
 
 CHUNK_SIZE = 1048576
@@ -94,7 +95,7 @@ class KaggleApiV1Client:
                     "Version, please consider updating (latest version: {latest_version})"
                 )
 
-    def get(self, path: str) -> dict:
+    def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
         url = self._build_url(path)
         with requests.get(
             url,
@@ -102,7 +103,7 @@ class KaggleApiV1Client:
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
-            kaggle_api_raise_for_status(response)
+            kaggle_api_raise_for_status(response, resource_handle)
             self._check_for_version_update(response)
             return response.json()
 
@@ -120,7 +121,7 @@ class KaggleApiV1Client:
             self._check_for_version_update(response)
             return response_dict
 
-    def download_file(self, path: str, out_file: str) -> None:
+    def download_file(self, path: str, out_file: str, resource_handle: Optional[ResourceHandle] = None) -> None:
         url = self._build_url(path)
         logger.info(f"Downloading from {url}...")
         with requests.get(
@@ -130,7 +131,7 @@ class KaggleApiV1Client:
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
-            kaggle_api_raise_for_status(response)
+            kaggle_api_raise_for_status(response, resource_handle)
             total_size = int(response.headers["Content-Length"])
             size_read = 0
 

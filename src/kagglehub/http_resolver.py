@@ -43,14 +43,14 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         if path:
             # Downloading a single file.
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "/" + path, out_path)
+            api_client.download_file(url_path + "/" + path, out_path, h)
         else:
             # Downloading the full archived bundle.
             archive_path = get_cached_archive_path(h)
             os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
             # First, we download the archive.
-            api_client.download_file(url_path, archive_path)
+            api_client.download_file(url_path, archive_path, h)
 
             # Create the directory to extract the archive to.
             os.makedirs(out_path, exist_ok=True)
@@ -73,7 +73,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
 
 def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle) -> int:
-    json_response = api_client.get(_build_get_instance_url_path(h))
+    json_response = api_client.get(_build_get_instance_url_path(h), h)
     if MODEL_INSTANCE_VERSION_FIELD not in json_response:
         msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"
         raise ValueError(msg)
