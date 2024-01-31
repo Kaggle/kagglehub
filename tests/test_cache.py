@@ -10,7 +10,7 @@ from kagglehub.cache import (
     mark_as_complete,
     mark_as_incomplete,
 )
-from kagglehub.handle import ModelHandle
+from kagglehub.handle import ModelHandle, ResourceHandle
 from tests.fixtures import BaseTestCase
 
 from .utils import create_test_cache
@@ -112,7 +112,7 @@ class TestCache(BaseTestCase):
 
     def test_load_from_cache_invalid_handle(self) -> None:
         with self.assertRaises(ValueError):
-            load_from_cache("invalid-handle")
+            load_from_cache(ResourceHandle(owner="invalid-handle-type"))
 
     def test_model_archive_path(self) -> None:
         with create_test_cache() as d:

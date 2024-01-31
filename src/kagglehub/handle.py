@@ -10,8 +10,12 @@ NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
 
 @dataclass
-class ModelHandle:
+class ResourceHandle:
     owner: str
+
+
+@dataclass
+class ModelHandle(ResourceHandle):
     model: str
     framework: str
     variation: str
