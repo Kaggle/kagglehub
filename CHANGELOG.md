@@ -2,6 +2,12 @@
 
 ## Next (Unreleased)
 
+## v0.1.8 (January 31st, 2023)
+
+* Include URL to model detail page in error message ([#80](https://github.com/Kaggle/kagglehub/pull/80))
+* Add Kaggle/Colab to user-agent if running on these environment ([#78](https://github.com/Kaggle/kagglehub/pull/78))
+* Improve logging for Colab resolver ([#77](https://github.com/Kaggle/kagglehub/pull/77))
+
 ## v0.1.7 (January 29th, 2023)
 
 * Fix `model_upload` with nested directory ([#75](https://github.com/Kaggle/kagglehub/pull/75))
