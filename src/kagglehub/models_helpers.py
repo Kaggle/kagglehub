@@ -47,7 +47,7 @@ def create_model_instance_or_version(
 ) -> None:
     try:
         api_client = KaggleApiV1Client()
-        api_client.get(f"/models/{model_handle}/get")
+        api_client.get(f"/models/{model_handle}/get", model_handle)
         # the instance exist, create a new version.
         _create_model_instance_version(model_handle, files, version_notes)
     except KaggleApiHTTPError as e:

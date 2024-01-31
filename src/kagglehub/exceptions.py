@@ -3,6 +3,8 @@ from typing import Any, Dict, Optional
 
 import requests
 
+from kagglehub.handle import ResourceHandle
+
 
 class CredentialError(Exception):
     pass
@@ -33,7 +35,7 @@ class KaggleApiHTTPError(requests.HTTPError):
         super().__init__(message, response=response)
 
 
-def kaggle_api_raise_for_status(response: requests.Response) -> None:
+def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Optional[ResourceHandle] = None) -> None:
     """
     Wrapper around `response.raise_for_status()` that provides nicer error messages
     See: https://requests.readthedocs.io/en/latest/api/#requests.Response.raise_for_status
@@ -42,12 +44,13 @@ def kaggle_api_raise_for_status(response: requests.Response) -> None:
         response.raise_for_status()
     except requests.HTTPError as e:
         message = str(e)
+        resource_url = resource_handle.to_url() if resource_handle else response.url
 
         if response.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
             message = (
                 f"{response.status_code} Client Error."
                 "\n\n"
-                f"You don't have permission to access resource at URL: {response.url}"
+                f"You don't have permission to access resource at URL: {resource_url}"
                 "\nPlease make sure you are authenticated if you are trying to access a private resource or a resource"
                 " requiring consent."
             )
@@ -55,7 +58,7 @@ def kaggle_api_raise_for_status(response: requests.Response) -> None:
             message = (
                 f"{response.status_code} Client Error."
                 "\n\n"
-                f"Resource not found at URL: {response.url}"
+                f"Resource not found at URL: {resource_url}"
                 "\nPlease make sure you specified the correct resource identifiers."
             )
 
