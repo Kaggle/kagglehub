@@ -1,5 +1,6 @@
 """Functions to parse resource handles."""
 
+import abc
 from dataclasses import dataclass
 from typing import Optional
 
@@ -10,8 +11,17 @@ NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
 
 @dataclass
-class ModelHandle:
+class ResourceHandle:
     owner: str
+
+    @abc.abstractmethod
+    def to_url(self) -> str:
+        """Returns URL to the resource detail page."""
+        pass
+
+
+@dataclass
+class ModelHandle(ResourceHandle):
     model: str
     framework: str
     variation: str
