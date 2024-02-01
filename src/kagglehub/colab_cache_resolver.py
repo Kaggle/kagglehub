@@ -32,7 +32,7 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             data["version"] = handle.version  # type: ignore
 
         try:
-            api_client.post(data, ColabClient.IS_SUPPORTED_PATH)
+            api_client.post(data, ColabClient.IS_SUPPORTED_PATH, handle)
         except NotFoundError:
             return False
         return True
@@ -57,7 +57,7 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             # Colab treats version as int in the request
             data["version"] = h.version  # type: ignore
 
-        response = api_client.post(data, ColabClient.MOUNT_PATH)
+        response = api_client.post(data, ColabClient.MOUNT_PATH, h)
 
         if response is not None:
             if "slug" not in response:
