@@ -25,6 +25,7 @@ from kagglehub.exceptions import (
     DataCorruptionError,
     KaggleEnvironmentError,
     NotFoundError,
+    colab_raise_for_status,
     kaggle_api_raise_for_status,
     process_post_response,
 )
@@ -277,7 +278,7 @@ class ColabClient:
         self.credentials = get_kaggle_credentials()
         self.headers = {"Content-type": "application/json"}
 
-    def post(self, data: dict, handle_path: str) -> Optional[dict]:
+    def post(self, data: dict, handle_path: str, resource_handle: Optional[ResourceHandle] = None) -> Optional[dict]:
         url = f"http://{self.endpoint}{handle_path}"
         with requests.post(
             url,
@@ -288,7 +289,7 @@ class ColabClient:
         ) as response:
             if response.status_code == HTTP_STATUS_404:
                 raise NotFoundError()
-            response.raise_for_status()
+            colab_raise_for_status(response, resource_handle)
             if response.text:
                 return response.json()
         return None
