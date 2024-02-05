@@ -2,6 +2,11 @@
 
 ## Next (Unreleased)
 
+## v0.1.9 (February 5th, 2023)
+
+* Fix message when detecting newer version ([#82](https://github.com/Kaggle/kagglehub/pull/82))
+* Link to model detail page in errors(Colab resolver) ([#83](https://github.com/Kaggle/kagglehub/pull/83))
+
 ## v0.1.8 (January 31st, 2023)
 
 * Include URL to model detail page in error message ([#80](https://github.com/Kaggle/kagglehub/pull/80))
