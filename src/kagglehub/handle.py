@@ -6,6 +6,8 @@ from typing import Optional
 
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
+NUM_VERSIONED_DATASET_PARTS = 3  # e.g.: <owner>/<dataset>/<version>
+NUM_UNVERSIONED_DATASET_PARTS = 2  # e.g.: <owner>/<dataset>
 
 # TODO(b/313706281): Implement a DatasetHandle class & parse_dataset_handle method.
 
@@ -96,4 +98,19 @@ def parse_model_handle(handle: str) -> ModelHandle:
         )
 
     msg = f"Invalid model handle: {handle}"
+    raise ValueError(msg)
+
+
+def parse_dataset_handle(handle: str) -> DatasetHandle:
+    parts = handle.split("/")
+    if len(parts) == NUM_VERSIONED_DATASET_PARTS:
+        try:
+            version = int(parts[2])
+        except ValueError as err:
+            raise ValueError(f"Invalid version number: {parts[2]}") from err
+        return DatasetHandle(owner=parts[0], dataset_name=parts[1], version=version)
+    elif len(parts) == NUM_UNVERSIONED_DATASET_PARTS:
+        print("hey")
+        return DatasetHandle(owner=parts[0], dataset_name=parts[1])
+    msg = f"Invalid dataset handle: {handle}"
     raise ValueError(msg)
