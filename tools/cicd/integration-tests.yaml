@@ -53,4 +53,4 @@ steps:
 images: ['us-docker.pkg.dev/$PROJECT_ID/tools/hatch:$_PYTHON_VERSION']
 
 substitutions:
-  _PYTHON_VERSION: 3.11
+  _PYTHON_VERSION: '3.11'
