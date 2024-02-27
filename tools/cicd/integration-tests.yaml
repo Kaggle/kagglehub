@@ -1,13 +1,13 @@
 # integration-tests.yaml
 steps:
-  # Check if the Docker image for Python 3.11 exists
+  # Check if the Docker image for Python exists
   - name: 'gcr.io/cloud-builders/docker'
     id: 'check_python_image'
     script: |
       #!/usr/bin/env bash
-      docker pull gcr.io/$PROJECT_ID/hatch:3.11 || exit 0
+      docker pull us-docker.pkg.dev/$PROJECT_ID/tools/hatch:$_PYTHON_VERSION || exit 0
 
-  # Build a Docker image for Python 3.11 that includes hatch
+  # Build a Docker image for Python that includes hatch
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-python-image'
     waitFor: ['check_python_image']
@@ -17,11 +17,11 @@ steps:
     - -f
     - Dockerfile
     - -t
-    - gcr.io/$PROJECT_ID/hatch:3.11
+    - us-docker.pkg.dev/$PROJECT_ID/tools/hatch:$_PYTHON_VERSION
     - --cache-from
-    - gcr.io/$PROJECT_ID/hatch:3.11
+    - us-docker.pkg.dev/$PROJECT_ID/tools/hatch:$_PYTHON_VERSION
     - --build-arg
-    - PYTHON_VERSION=3.11
+    - PYTHON_VERSION=$_PYTHON_VERSION
     - .
 
    # Access and store the secret in a file on a shared volume
@@ -35,8 +35,8 @@ steps:
       path: /root
 
 
-  # Source the secrets and run integration tests using the built Python 3.11 image
-  - name: gcr.io/$PROJECT_ID/hatch:3.11
+  # Source the secrets and run integration tests using the built Python image
+  - name: us-docker.pkg.dev/$PROJECT_ID/tools/hatch:$_PYTHON_VERSION
     id: integration-tests
     script: |
       #!/usr/bin/env bash
@@ -50,4 +50,7 @@ steps:
     waitFor: ['build-python-image', 'download-secrets']
 
 # Specify the Docker image to be created
-images: ['gcr.io/$PROJECT_ID/hatch:3.11']
+images: ['us-docker.pkg.dev/$PROJECT_ID/tools/hatch:$_PYTHON_VERSION']
+
+substitutions:
+  _PYTHON_VERSION: '3.11'
