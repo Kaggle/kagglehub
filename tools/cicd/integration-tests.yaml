@@ -23,5 +23,4 @@ steps:
     volumes:
     - name: 'root'
       path: /root
-    waitFor: ['build-python-image', 'download-secrets']
 
