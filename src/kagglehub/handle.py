@@ -6,6 +6,8 @@ from typing import Optional
 
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
+NUM_VERSIONED_DATASET_PARTS = 3  # e.g.: <owner>/<dataset>/<version>
+NUM_UNVERSIONED_DATASET_PARTS = 2  # e.g.: <owner>/<dataset>
 
 # TODO(b/313706281): Implement a DatasetHandle class & parse_dataset_handle method.
 
@@ -99,24 +101,16 @@ def parse_model_handle(handle: str) -> ModelHandle:
     raise ValueError(msg)
 
 
-@dataclass
-class DatasetHandle:
-    owner: str
-    dataset_name: str
-    version: Optional[int] = None
-
-    def is_versioned(self) -> bool:
-        return self.version is not None
-
-    def __str__(self) -> str:
-        handle_str = f"{self.owner}/{self.dataset_name}"
-        if self.is_versioned():
-            return f"{handle_str}/{self.version}"
-        return handle_str
-
-    def to_url(self) -> str:
-        if self.is_versioned():
-            return f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}/versions/{self.version}"
-        else:
-            return f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}"
-
+def parse_dataset_handle(handle: str) -> DatasetHandle:
+    parts = handle.split("/")
+    if len(parts) == NUM_VERSIONED_DATASET_PARTS:
+        try:
+            version = int(parts[2])
+        except ValueError as err:
+            version_num_error = f"Invalid version number: {parts[2]}"
+            raise ValueError(version_num_error) from err
+        return DatasetHandle(owner=parts[0], dataset_name=parts[1], version=version)
+    elif len(parts) == NUM_UNVERSIONED_DATASET_PARTS:
+        return DatasetHandle(owner=parts[0], dataset_name=parts[1])
+    msg = f"Invalid dataset handle: {handle}"
+    raise ValueError(msg)
