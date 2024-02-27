@@ -75,3 +75,26 @@ def parse_model_handle(handle: str) -> ModelHandle:
 
     msg = f"Invalid model handle: {handle}"
     raise ValueError(msg)
+
+
+@dataclass
+class DatasetHandle:
+    owner: str
+    dataset_name: str
+    version: Optional[int] = None
+
+    def is_versioned(self) -> bool:
+        return self.version is not None
+
+    def __str__(self) -> str:
+        handle_str = f"{self.owner}/{self.dataset_name}"
+        if self.is_versioned():
+            return f"{handle_str}/{self.version}"
+        return handle_str
+
+    def to_url(self) -> str:
+        if self.is_versioned():
+            return f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}/versions/{self.version}"
+        else:
+            return f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}"
+
