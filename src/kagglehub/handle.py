@@ -59,10 +59,10 @@ class DatasetHandle:
         return handle_str
 
     def to_url(self) -> str:
+        base_url = f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}"
         if self.is_versioned():
-            return f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}/versions/{self.version}"
-        else:
-            return f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}"
+            return f"{base_url}/versions/{self.version}"
+        return base_url
 
 
 def parse_model_handle(handle: str) -> ModelHandle:
