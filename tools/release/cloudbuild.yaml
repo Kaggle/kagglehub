@@ -64,21 +64,21 @@ steps:
   - https://github.com/kaggle/$_GITHUB_REPOSITORY.git
 
 # The hatch docker image is built with the tools/cicd/cloudbuild.yaml build.
-- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+- name: us-docker.pkg.dev/$PROJECT_ID/tools/hatch:${_PYTHON_VERSION}
   id: tests
   dir: $_GITHUB_REPOSITORY
   args:
   - run
   - test
 
-- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+- name: us-docker.pkg.dev/$PROJECT_ID/tools/hatch:${_PYTHON_VERSION}
   id: lint
   dir: $_GITHUB_REPOSITORY
   args:
   - run
   - lint:all
 
-- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+- name: us-docker.pkg.dev/$PROJECT_ID/tools/hatch:${_PYTHON_VERSION}
   id: build
   dir: $_GITHUB_REPOSITORY
   args:
@@ -89,7 +89,7 @@ steps:
 # $ git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git
 # $ cd cloud-builders-community/hub
 # $ gcloud builds submit
-- name: 'gcr.io/$PROJECT_ID/hub'
+- name: 'us-docker.pkg.dev/$PROJECT_ID/tools/hub'
   id: 'release'
   dir: $_GITHUB_REPOSITORY
   entrypoint: 'bash'
@@ -107,7 +107,7 @@ steps:
     path: /root
 
 # Release package to pypi.
-- name: gcr.io/$PROJECT_ID/hatch:${_PYTHON_VERSION}
+- name: us-docker.pkg.dev/$PROJECT_ID/tools/hatch:${_PYTHON_VERSION}
   id: release-pypi
   dir: $_GITHUB_REPOSITORY
   entrypoint: bash 
