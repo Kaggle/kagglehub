@@ -2,6 +2,11 @@
 
 ## Next (Unreleased)
 
+## v0.2.0 (February 28th, 2024)
+
+* Add raise_for_status() in post function ([#82](https://github.com/Kaggle/kagglehub/pull/89))
+* Use Artifact Registry for helper images ([#83](https://github.com/Kaggle/kagglehub/pull/87))
+
 ## v0.1.9 (February 5th, 2023)
 
 * Fix message when detecting newer version ([#82](https://github.com/Kaggle/kagglehub/pull/82))
