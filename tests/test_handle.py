@@ -1,5 +1,5 @@
+from kagglehub.handle import parse_dataset_handle, parse_model_handle
 from tests.fixtures import BaseTestCase
-from kagglehub.handle import parse_model_handle, parse_dataset_handle
 
 
 class TestHandle(BaseTestCase):
