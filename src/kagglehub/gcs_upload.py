@@ -170,6 +170,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
 
     tokens = []
     for root, _, files in os.walk(folder):
+        print("rrot", root)
         for file in files:
             token = _upload_file_or_folder(root, file, model_type, quiet)
             if token is not None:
