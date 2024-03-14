@@ -83,7 +83,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     file_size = os.path.getsize(file_path)
     data = {
         "type": model_type,
-        "name": os.path.basename(file_path),
+        "name": file_path,
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
@@ -164,7 +164,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
             # Upload the zip file
             return [
                 token
-                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+                for token in [_upload_file_or_folder('', temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
                 if token is not None
             ]
 
