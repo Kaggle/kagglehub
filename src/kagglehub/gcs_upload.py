@@ -194,6 +194,8 @@ def _upload_file_or_folder(
     :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
+    print("full", full_path)
+    print("parent", parent_path)
     relative_path = os.path.relpath(full_path, start=os.path.commonpath([parent_path, full_path]))
     print("hey ", relative_path)
     if os.path.isfile(full_path):
