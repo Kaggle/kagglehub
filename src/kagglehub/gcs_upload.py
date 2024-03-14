@@ -193,9 +193,11 @@ def _upload_file_or_folder(
     quiet: suppress verbose output (default is False)
     :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
     """
+    print("heyyyyyy")
     full_path = os.path.join(parent_path, file_or_folder_name)
+    relative_path = os.path.relpath(full_path, start=os.path.commonpath([parent_path, full_path]))
     if os.path.isfile(full_path):
-        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
+        return _upload_file(relative_path, full_path, quiet, model_type)
     elif not quiet:
         logger.info("Skipping: " + file_or_folder_name)
     return None
