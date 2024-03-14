@@ -48,6 +48,7 @@ def model_upload(
 
     # Upload the model files to GCS
     tokens = upload_files(local_model_dir, "model")
+    print(len(tokens))
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
     create_model_instance_or_version(h, tokens, license_name, version_notes)

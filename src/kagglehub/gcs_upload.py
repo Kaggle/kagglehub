@@ -83,7 +83,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     file_size = os.path.getsize(file_path)
     data = {
         "type": model_type,
-        "name": file_path,
+        "name": os.path.basename(file_path),
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
@@ -149,29 +149,32 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
     for _, _, files in os.walk(folder):
         file_count += len(files)
 
-    if file_count > MAX_FILES_TO_UPLOAD:
+    # if file_count > MAX_FILES_TO_UPLOAD:
+    if True or False:
         if not quiet:
             logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
 
         with TemporaryDirectory() as temp_dir:
             zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
-            with zipfile.ZipFile(zip_path, "w") as zipf:
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 for root, _, files in os.walk(folder):
                     for file in files:
+                        print(file)
                         file_path = os.path.join(root, file)
-                        zipf.write(file_path, os.path.relpath(file_path, folder))
+                        arcname = os.path.relpath(file_path, folder)  # Preserve relative path
+                        zipf.write(file_path, arcname)
 
             # Upload the zip file
             return [
                 token
-                for token in [_upload_file_or_folder('', temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+                for token in [_upload_blob(zip_path, model_type)]
                 if token is not None
             ]
 
     tokens = []
     for root, _, files in os.walk(folder):
         for file in files:
-            token = _upload_file_or_folder(folder, root, file, model_type, quiet)
+            token = _upload_file_or_folder(root, file, model_type, quiet)
             if token is not None:
                 tokens.append(token)
 
@@ -179,7 +182,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
 
 
 def _upload_file_or_folder(
-    root: str, parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
+    parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
 ) -> Optional[str]:
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
@@ -194,9 +197,8 @@ def _upload_file_or_folder(
     :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
-    relative_path = os.path.relpath(full_path, start=os.path.commonpath([root, full_path]))
     if os.path.isfile(full_path):
-        return _upload_file(relative_path, full_path, quiet, model_type)
+        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
     elif not quiet:
         logger.info("Skipping: " + file_or_folder_name)
     return None
