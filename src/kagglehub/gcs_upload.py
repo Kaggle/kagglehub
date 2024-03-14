@@ -169,11 +169,9 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
             ]
 
     tokens = []
-    print(folder)
     for root, _, files in os.walk(folder):
-        print("rrot", root)
         for file in files:
-            token = _upload_file_or_folder(root, file, model_type, quiet)
+            token = _upload_file_or_folder(folder, root, file, model_type, quiet)
             if token is not None:
                 tokens.append(token)
 
@@ -181,7 +179,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
 
 
 def _upload_file_or_folder(
-    parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
+    root: str, parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
 ) -> Optional[str]:
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
@@ -196,10 +194,7 @@ def _upload_file_or_folder(
     :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
-    print("full", full_path)
-    print("parent", parent_path)
-    relative_path = os.path.relpath(full_path, start=os.path.commonpath([parent_path, full_path]))
-    print("hey ", relative_path)
+    relative_path = os.path.relpath(full_path, start=os.path.commonpath([root, full_path]))
     if os.path.isfile(full_path):
         return _upload_file(relative_path, full_path, quiet, model_type)
     elif not quiet:
