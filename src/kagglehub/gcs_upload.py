@@ -4,7 +4,7 @@ import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Union
+from typing import List, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -135,12 +135,11 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]:  # noqa: FBT002, FBT001
+def upload_files(folder: str, model_type: str) -> List[str]:  # noqa: FBT002, FBT001
     """Zips the files and upload them in a folder.
     Parameters
     ==========
     folder: the folder to upload from
-    quiet: suppress verbose output (default is False)
     model_type: Type of the model that is being uploaded.
     """
 
@@ -149,7 +148,6 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for root, _, files in os.walk(folder):
                 for file in files:
-                    print(file)
                     file_path = os.path.join(root, file)
                     arcname = os.path.relpath(file_path, folder)  # Preserve relative path
                     zipf.write(file_path, arcname)
