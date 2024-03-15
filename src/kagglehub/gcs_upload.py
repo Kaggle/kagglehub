@@ -135,7 +135,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def upload_files(folder: str, model_type: str) -> List[str]:  # noqa: FBT002, FBT001
+def upload_files(folder: str, model_type: str) -> List[str]:
     """Zips the files and upload them in a folder.
     Parameters
     ==========
