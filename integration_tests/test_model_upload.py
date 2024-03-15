@@ -8,8 +8,37 @@ from tempfile import TemporaryDirectory
 
 from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
+from kagglehub.exceptions import BackendError
 
 LICENSE_NAME = "MIT"
+
+
+def upload_with_retries(handle, temp_dir, license_name, max_retries=5, retry_delay=5):
+    """
+    Tries to upload a model with retries on BackendError indicating the instance slug is already in use.
+
+    Args:
+        handle: The model handle.
+        temp_dir: Temporary directory where the model is stored.
+        license_name: License name for the model.
+        max_retries (int): Maximum number of retry attempts.
+        retry_delay (int): Delay in seconds between retries.
+
+    Raises:
+        TimeoutError: If the maximum number of retries is reached without success.
+    """
+    for attempt in range(max_retries):
+        try:
+            model_upload(handle, temp_dir, license_name)
+            break
+        except BackendError as e:
+            if "is already used by another model instance." in str(e):
+                print(f"Attempt {attempt + 1} failed: {str(e)}. Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                raise  # Reraise if it's a different error
+    else:
+        raise TimeoutError("Maximum retries reached without success.")
 
 
 class TestModelUpload(unittest.TestCase):
@@ -30,10 +59,9 @@ class TestModelUpload(unittest.TestCase):
     def test_model_upload_and_versioning(self) -> None:
         # Create Instance
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
-        time.sleep(5)  # It takes time for the instance to be created
 
         # Create Version
-        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
+        upload_with_retries(self.handle, self.temp_dir, LICENSE_NAME)
 
         # If delete model does not raise an error, then the upload was successful.
 
@@ -45,10 +73,9 @@ class TestModelUpload(unittest.TestCase):
 
             # Create Instance
             model_upload(self.handle, temp_dir, LICENSE_NAME)
-            time.sleep(5)  # It takes time for the instance to be created
 
             # Create Version
-            model_upload(self.handle, temp_dir, LICENSE_NAME)
+            upload_with_retries(self.handle, self.temp_dir, LICENSE_NAME)
 
     def test_model_upload_nested_dir(self) -> None:
         # Create a nested directory within self.temp_dir

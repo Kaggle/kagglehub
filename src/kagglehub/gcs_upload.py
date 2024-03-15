@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 import time
 import zipfile
 from datetime import datetime
@@ -144,13 +145,14 @@ def upload_files(folder: str, model_type: str) -> List[str]:
     """
 
     with TemporaryDirectory() as temp_dir:
-        zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
+        temp_dir_path = Path(temp_dir)
+        zip_path = temp_dir_path / TEMP_ARCHIVE_FILE
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(folder):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    arcname = os.path.relpath(file_path, folder)  # Preserve relative path
+            folder_path = Path(folder)
+            for file_path in folder_path.rglob('*'):
+                if file_path.is_file():
+                    arcname = file_path.relative_to(folder_path)
                     zipf.write(file_path, arcname)
 
         # Upload the zip file
-        return [token for token in [_upload_blob(zip_path, model_type)] if token is not None]
+        return [token for token in [_upload_blob(zip_path, model_type)] if token]
