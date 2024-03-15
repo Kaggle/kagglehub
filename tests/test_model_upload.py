@@ -140,7 +140,7 @@ class TestModelUpload(BaseTestCase):
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
-                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+                    self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_instance_with_nested_directories(self) -> None:
         # execution path: get_model -> create_model -> get_instance -> create_version
@@ -156,7 +156,7 @@ class TestModelUpload(BaseTestCase):
                     test_filepath.touch()
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
-                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+                    self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_version_with_valid_handle(self) -> None:
         # execution path: get_model -> get_instance -> create_instance
@@ -168,7 +168,7 @@ class TestModelUpload(BaseTestCase):
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, APACHE_LICENSE, "model_type")
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
-                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+                    self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_with_too_many_files(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
@@ -199,7 +199,7 @@ class TestModelUpload(BaseTestCase):
                     # Check that GcsAPIHandler received two PUT requests
                     self.assertEqual(GcsAPIHandler.put_requests_count, 2)
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
-                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+                    self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_with_none_license(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
@@ -209,7 +209,7 @@ class TestModelUpload(BaseTestCase):
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, None, "model_type")
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
-                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+                    self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_without_license(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
@@ -219,7 +219,7 @@ class TestModelUpload(BaseTestCase):
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, version_notes="model_type")
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
-                    self.assertIn(TEMP_TEST_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+                    self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
     def test_model_upload_with_invalid_license_fails(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
