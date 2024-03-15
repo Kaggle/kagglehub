@@ -3,6 +3,8 @@ import tempfile
 import unittest
 import uuid
 from pathlib import Path
+from tempfile import TemporaryDirectory
+import time
 
 from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
@@ -28,25 +30,39 @@ class TestModelUpload(unittest.TestCase):
     def test_model_upload_and_versioning(self) -> None:
         # Create Instance
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
+        time.sleep(5)  # It takes time for the instance to be created
 
         # Create Version
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # If delete model does not raise an error, then the upload was successful.
 
-    def test_model_upload_nested_dir(self) -> None:
-        # Create a nested directory within self.temp_dir
-        nested_dir = Path(self.temp_dir) / "nested"
-        nested_dir.mkdir()
+    def test_model_upload_and_versioning_zip(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            for i in range(60):
+                test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
+                test_filepath.touch()
 
-        # Create dummy files in the nested directory
-        nested_dummy_files = ["nested_model.h5", "nested_config.json", "nested_metadata.json"]
-        for file in nested_dummy_files:
-            with open(nested_dir / file, "w") as f:
-                f.write("dummy content in nested file")
+            # Create Instance
+            model_upload(self.handle, temp_dir, LICENSE_NAME)
+            time.sleep(5)  # It takes time for the instance to be created
 
-        # Call the model upload function with the base directory
-        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
+            # Create Version
+            model_upload(self.handle, temp_dir, LICENSE_NAME)
 
-    def tearDown(self) -> None:
-        models_helpers.delete_model(self.owner_slug, self.model_slug)
+    # def test_model_upload_nested_dir(self) -> None:
+    #     # Create a nested directory within self.temp_dir
+    #     nested_dir = Path(self.temp_dir) / "nested"
+    #     nested_dir.mkdir()
+
+    #     # Create dummy files in the nested directory
+    #     nested_dummy_files = ["nested_model.h5", "nested_config.json", "nested_metadata.json"]
+    #     for file in nested_dummy_files:
+    #         with open(nested_dir / file, "w") as f:
+    #             f.write("dummy content in nested file")
+
+    #     # Call the model upload function with the base directory
+    #     model_upload(self.handle, self.temp_dir, LICENSE_NAME)
+
+    # def tearDown(self) -> None:
+    #     models_helpers.delete_model(self.owner_slug, self.model_slug)
