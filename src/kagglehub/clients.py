@@ -98,15 +98,12 @@ class KaggleApiV1Client:
 
     def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
         url = self._build_url(path)
-        print(url)
         with requests.get(
             url,
             headers={"User-Agent": get_user_agent()},
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
-            print(response)
-            print(response.json())
             kaggle_api_raise_for_status(response, resource_handle)
             self._check_for_version_update(response)
             return response.json()
