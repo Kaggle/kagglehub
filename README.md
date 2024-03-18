@@ -49,7 +49,7 @@ Note for Windows users: The default directory is `%HOMEPATH%/kaggle.json`.
 
 ### Download Model
 
-The following examples download the `answer-equivalence-bem` variation of this Kaggle model: https://www.kaggle.com/models/google/bert/frameworks/tensorFlow2/variations/answer-equivalence-bem
+The following examples download the `answer-equivalence-bem` variation of this Kaggle model: https://www.kaggle.com/models/google/bert/tensorFlow2/answer-equivalence-bem
 
 ```python
 import kagglehub
@@ -74,7 +74,7 @@ Uploads a new variation (or a new variation's version if it already exists).
 import kagglehub
 
 # For example, to upload a new variation to this model:
-# - https://www.kaggle.com/models/google/bert/frameworks/tensorFlow2/variations/answer-equivalence-bem
+# - https://www.kaggle.com/models/google/bert/tensorFlow2/answer-equivalence-bem
 # 
 # You would use the following handle: `google/bert/tensorFlow2/answer-equivalence-bem`
 handle = '<KAGGLE_USERNAME>/<MODEL>/<FRAMEWORK>/<VARIATION>'
