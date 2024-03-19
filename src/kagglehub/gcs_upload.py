@@ -155,4 +155,4 @@ def upload_files(folder: str, model_type: str) -> List[str]:
                     zipf.write(file_path, arcname)
 
         # Upload the zip file
-        return [token for token in [_upload_blob(zip_path, model_type)] if token]
+        return [token for token in [_upload_blob(str(zip_path), model_type)] if token]
