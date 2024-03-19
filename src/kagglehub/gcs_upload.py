@@ -136,11 +136,11 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def upload_files(folder: str, model_type: str) -> List[str]:
-    """Zips the files and upload them in a folder.
+def upload_files(source_dir: str, model_type: str) -> List[str]:
+    """Zip and Upload directory.
     Parameters
     ==========
-    folder: the folder to upload from
+    source_dir: the source_dir to upload from
     model_type: Type of the model that is being uploaded.
     """
 
@@ -148,10 +148,10 @@ def upload_files(folder: str, model_type: str) -> List[str]:
         temp_dir_path = Path(temp_dir)
         zip_path = temp_dir_path / TEMP_ARCHIVE_FILE
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-            folder_path = Path(folder)
-            for file_path in folder_path.rglob("*"):
+            source_dir_path = Path(source_dir)
+            for file_path in source_dir_path.rglob("*"):
                 if file_path.is_file():
-                    arcname = file_path.relative_to(folder_path)
+                    arcname = file_path.relative_to(source_dir_path)
                     zipf.write(file_path, arcname)
 
         # Upload the zip file

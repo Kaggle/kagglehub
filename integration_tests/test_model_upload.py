@@ -6,6 +6,8 @@ import unittest
 import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from functools import wraps
+from typing import Callable
 
 from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
@@ -14,6 +16,36 @@ from kagglehub.exceptions import BackendError
 LICENSE_NAME = "MIT"
 
 logger = logging.getLogger(__name__)
+
+def retry(times=5, delay_seconds=5, exception_to_check=Exception):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            while attempts < times:
+                try:
+                    return func(*args, **kwargs)
+                except exception_to_check as e:
+                    attempts += 1
+                    if attempts == times:
+                        raise TimeoutError("Maximum retries reached without success.") from e
+                    print(f"Attempt {attempts} failed: {e}. Retrying in {delay_seconds} seconds...")
+                    time.sleep(delay_seconds)
+        return wrapper
+    return decorator
+
+
+@retry(times=5, delay_seconds=5, exception_to_check=BackendError)
+def upload_with_retries(handle: str, temp_dir: str, license_name: str):
+    """
+    Uploads a model with retries on BackendError indicating the instance slug is already in use.
+
+    Args:
+        handle: The model handle.
+        temp_dir: Temporary directory where the model is stored.
+        license_name: License name for the model.
+    """
+    model_upload(handle, temp_dir, license_name)
 
 
 def upload_with_retries(
@@ -37,14 +69,11 @@ def upload_with_retries(
             model_upload(handle, temp_dir, license_name)
             break
         except BackendError as e:
-            if "is already used by another model instance." in str(e):
-                logger.info(f"Attempt {attempt + 1!s} failed: {e!s}. Retrying in {retry_delay!s} seconds...")
-                time.sleep(retry_delay)
-            else:
-                raise  # Reraise if it's a different error
+            logger.info(f"Attempt {attempt + 1!s} failed: {e!s}. Retrying in {retry_delay!s} seconds...")
+            time.sleep(retry_delay)
     else:
         time_out_message = "Maximum retries reached without success."
-        raise TimeoutError(time_out_message)
+        raise TimeoutError(time_out_message) from e
 
 
 class TestModelUpload(unittest.TestCase):
