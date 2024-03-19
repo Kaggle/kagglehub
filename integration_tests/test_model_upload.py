@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import tempfile
 import time
 import unittest
@@ -16,7 +16,9 @@ LICENSE_NAME = "MIT"
 logger = logging.getLogger(__name__)
 
 
-def upload_with_retries(handle: str, temp_dir: str, license_name: str, max_retries: int = 5, retry_delay: int = 5) -> None:
+def upload_with_retries(
+    handle: str, temp_dir: str, license_name: str, max_retries: int = 5, retry_delay: int = 5
+) -> None:
     """
     Tries to upload a model with retries on BackendError indicating the instance slug is already in use.
 
@@ -36,7 +38,7 @@ def upload_with_retries(handle: str, temp_dir: str, license_name: str, max_retri
             break
         except BackendError as e:
             if "is already used by another model instance." in str(e):
-                logger.info(f"Attempt {attempt + 1} failed: {str(e)}. Retrying in {retry_delay} seconds...")
+                logger.info(f"Attempt {attempt + 1!s} failed: {e!s}. Retrying in {retry_delay!s} seconds...")
                 time.sleep(retry_delay)
             else:
                 raise  # Reraise if it's a different error
