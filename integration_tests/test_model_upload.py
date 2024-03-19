@@ -18,7 +18,7 @@ LICENSE_NAME = "MIT"
 logger = logging.getLogger(__name__)
 
 
-ReturnType = TypeVar('ReturnType')
+ReturnType = TypeVar("ReturnType")
 
 
 def retry(
