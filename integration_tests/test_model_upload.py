@@ -51,34 +51,6 @@ def upload_with_retries(handle: str, temp_dir: str, license_name: str):
     model_upload(handle, temp_dir, license_name)
 
 
-def upload_with_retries(
-    handle: str, temp_dir: str, license_name: str, max_retries: int = 5, retry_delay: int = 5
-) -> None:
-    """
-    Tries to upload a model with retries on BackendError indicating the instance slug is already in use.
-
-    Args:
-        handle: The model handle.
-        temp_dir: Temporary directory where the model is stored.
-        license_name: License name for the model.
-        max_retries (int): Maximum number of retry attempts.
-        retry_delay (int): Delay in seconds between retries.
-
-    Raises:
-        TimeoutError: If the maximum number of retries is reached without success.
-    """
-    for attempt in range(max_retries):
-        try:
-            model_upload(handle, temp_dir, license_name)
-            break
-        except BackendError as e:
-            logger.info(f"Attempt {attempt + 1!s} failed: {e!s}. Retrying in {retry_delay!s} seconds...")
-            time.sleep(retry_delay)
-    else:
-        time_out_message = "Maximum retries reached without success."
-        raise TimeoutError(time_out_message) from e
-
-
 class TestModelUpload(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
