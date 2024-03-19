@@ -17,6 +17,7 @@ LICENSE_NAME = "MIT"
 
 logger = logging.getLogger(__name__)
 
+
 def retry(times=5, delay_seconds=5, exception_to_check=Exception):
     def decorator(func):
         @wraps(func)
@@ -31,7 +32,9 @@ def retry(times=5, delay_seconds=5, exception_to_check=Exception):
                         raise TimeoutError("Maximum retries reached without success.") from e
                     print(f"Attempt {attempts} failed: {e}. Retrying in {delay_seconds} seconds...")
                     time.sleep(delay_seconds)
+
         return wrapper
+
     return decorator
 
 
