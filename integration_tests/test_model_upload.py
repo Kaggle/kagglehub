@@ -4,10 +4,10 @@ import tempfile
 import time
 import unittest
 import uuid
+from functools import wraps
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from functools import wraps
-from typing import Callable
+from typing import Callable, Type, TypeVar
 
 from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
@@ -18,10 +18,15 @@ LICENSE_NAME = "MIT"
 logger = logging.getLogger(__name__)
 
 
-def retry(times=5, delay_seconds=5, exception_to_check=Exception):
-    def decorator(func):
+ReturnType = TypeVar('ReturnType')
+
+
+def retry(
+    times: int = 5, delay_seconds: int = 5, exception_to_check: Type[Exception] = Exception
+) -> Callable[[Callable[..., ReturnType]], Callable[..., ReturnType]]:
+    def decorator(func: Callable[..., ReturnType]) -> Callable[..., ReturnType]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: object, **kwargs: object) -> ReturnType:
             attempts = 0
             while attempts < times:
                 try:
@@ -29,8 +34,9 @@ def retry(times=5, delay_seconds=5, exception_to_check=Exception):
                 except exception_to_check as e:
                     attempts += 1
                     if attempts == times:
-                        raise TimeoutError("Maximum retries reached without success.") from e
-                    print(f"Attempt {attempts} failed: {e}. Retrying in {delay_seconds} seconds...")
+                        time_out_message = "Maximum retries reached without success."
+                        raise TimeoutError(time_out_message) from e
+                    logger.info(f"Attempt {attempts} failed: {e}. Retrying in {delay_seconds} seconds...")
                     time.sleep(delay_seconds)
 
         return wrapper
@@ -39,7 +45,7 @@ def retry(times=5, delay_seconds=5, exception_to_check=Exception):
 
 
 @retry(times=5, delay_seconds=5, exception_to_check=BackendError)
-def upload_with_retries(handle: str, temp_dir: str, license_name: str):
+def upload_with_retries(handle: str, temp_dir: str, license_name: str) -> None:
     """
     Uploads a model with retries on BackendError indicating the instance slug is already in use.
 
