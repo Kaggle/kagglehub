@@ -94,17 +94,16 @@ class TestModelUpload(unittest.TestCase):
             upload_with_retries(self.handle, temp_dir, LICENSE_NAME)
 
     def test_model_upload_directory(self) -> None:
-
         with TemporaryDirectory() as temp_dir:
             # Create the new folder within temp_dir
             inner_folder_path = Path(temp_dir) / "inner_folder"
             inner_folder_path.mkdir()
-    
+
             for i in range(60):
                 # Create a file in the temp_dir
                 test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
                 test_filepath.touch()
-        
+
                 # Create the same file in the inner_folder
                 test_filepath_inner = inner_folder_path / f"temp_test_file_{i}"
                 test_filepath_inner.touch()
