@@ -22,7 +22,9 @@ ReturnType = TypeVar("ReturnType")
 
 
 def retry(
-    times: int = 5, delay_seconds: int = 5, exception_to_check: Type[Exception] = Exception
+    times: int = 5, 
+    delay_seconds: int = 5, 
+    exception_to_check: Type[Exception] = Exception
 ) -> Callable[[Callable[..., ReturnType]], Callable[..., ReturnType]]:
     def decorator(func: Callable[..., ReturnType]) -> Callable[..., ReturnType]:
         @wraps(func)
@@ -38,9 +40,9 @@ def retry(
                         raise TimeoutError(time_out_message) from e
                     logger.info(f"Attempt {attempts} failed: {e}. Retrying in {delay_seconds} seconds...")
                     time.sleep(delay_seconds)
-
+            runtime_error_message = "Unexpected exit from retry loop. This should not happen."
+            raise RuntimeError(runtime_error_message)
         return wrapper
-
     return decorator
 
 
