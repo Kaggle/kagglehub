@@ -12,7 +12,8 @@ class FunctionToTest:
         """A simple function that raises an exception until it reaches the successful attempt."""
         if self.attempt < success_on_attempt:
             self.attempt += 1
-            raise ValueError("Test error")
+            value_error_message = "Test error"
+            raise ValueError(value_error_message)
         return "Success"
 
 
