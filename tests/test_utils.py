@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from integration_tests.test_model_upload import retry
 
@@ -38,5 +38,5 @@ class TestRetryDecorator(unittest.TestCase):
         self.assertEqual(mock_logger_info.call_count, 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
