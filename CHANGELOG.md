@@ -2,6 +2,10 @@
 
 ## Next (Unreleased)
 
+## v0.2.1 (March 21th, 2024)
+
+* Add support for directory upload ([#82](https://github.com/Kaggle/kagglehub/pull/93))
+
 ## v0.2.0 (February 28th, 2024)
 
 * Add raise_for_status() in post function ([#82](https://github.com/Kaggle/kagglehub/pull/89))
