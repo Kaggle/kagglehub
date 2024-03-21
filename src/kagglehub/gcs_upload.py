@@ -3,8 +3,9 @@ import os
 import time
 import zipfile
 from datetime import datetime
+from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Union
+from typing import List, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -135,88 +136,23 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]:  # noqa: FBT002, FBT001
-    """upload files in a folder. Zips the files if there are more than 50.
+def upload_files(source_dir: str, model_type: str) -> List[str]:
+    """Zip and Upload directory.
     Parameters
     ==========
-    folder: the folder to upload from
-    quiet: suppress verbose output (default is False)
+    source_dir: the source_dir to upload from
     model_type: Type of the model that is being uploaded.
     """
 
-    # Count the total number of files
-    file_count = 0
-    for _, _, files in os.walk(folder):
-        file_count += len(files)
+    with TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        zip_path = temp_dir_path / TEMP_ARCHIVE_FILE
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+            source_dir_path = Path(source_dir)
+            for file_path in source_dir_path.rglob("*"):
+                if file_path.is_file():
+                    arcname = file_path.relative_to(source_dir_path)
+                    zipf.write(file_path, arcname)
 
-    if file_count > MAX_FILES_TO_UPLOAD:
-        if not quiet:
-            logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
-
-        with TemporaryDirectory() as temp_dir:
-            zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
-            with zipfile.ZipFile(zip_path, "w") as zipf:
-                for root, _, files in os.walk(folder):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        zipf.write(file_path, os.path.relpath(file_path, folder))
-
-            # Upload the zip file
-            return [
-                token
-                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
-                if token is not None
-            ]
-
-    tokens = []
-    for root, _, files in os.walk(folder):
-        for file in files:
-            token = _upload_file_or_folder(root, file, model_type, quiet)
-            if token is not None:
-                tokens.append(token)
-
-    return tokens
-
-
-def _upload_file_or_folder(
-    parent_path: str, file_or_folder_name: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
-) -> Optional[str]:
-    """
-    Uploads a file or each file inside a folder individually from a specified path to a remote service.
-
-    Parameters
-    ==========
-    parent_path: The parent directory path from where the file or folder is to be uploaded.
-    file_or_folder_name: The name of the file or folder to be uploaded.
-    dir_mode: The mode to handle directories. Accepts 'zip', 'tar', or other values for skipping.
-    model_type: Type of the model that is being uploaded.
-    quiet: suppress verbose output (default is False)
-    :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
-    """
-    full_path = os.path.join(parent_path, file_or_folder_name)
-    if os.path.isfile(full_path):
-        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
-    elif not quiet:
-        logger.info("Skipping: " + file_or_folder_name)
-    return None
-
-
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
-    """Helper function to upload a single file
-    Parameters
-    ==========
-    file_name: name of the file to upload
-    full_path: path to the file to upload
-    quiet: suppress verbose output
-    model_type: Type of the model that is being uploaded.
-    :return: None - upload unsuccessful; instance of UploadFile - upload successful
-    """
-
-    if not quiet:
-        logger.info("Starting upload for file " + file_name)
-
-    content_length = os.path.getsize(full_path)
-    token = _upload_blob(full_path, model_type)
-    if not quiet:
-        logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
-    return token
+        # Upload the zip file
+        return [token for token in [_upload_blob(str(zip_path), model_type)] if token]

@@ -1,13 +1,62 @@
+import logging
 import os
 import tempfile
+import time
 import unittest
 import uuid
+from functools import wraps
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Callable, Type, TypeVar
 
 from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
+from kagglehub.exceptions import BackendError
 
 LICENSE_NAME = "MIT"
+
+logger = logging.getLogger(__name__)
+
+
+ReturnType = TypeVar("ReturnType")
+
+
+def retry(
+    times: int = 5, delay_seconds: int = 5, exception_to_check: Type[Exception] = Exception
+) -> Callable[[Callable[..., ReturnType]], Callable[..., ReturnType]]:
+    def decorator(func: Callable[..., ReturnType]) -> Callable[..., ReturnType]:
+        @wraps(func)
+        def wrapper(*args: object, **kwargs: object) -> ReturnType:
+            attempts = 0
+            while attempts < times:
+                try:
+                    return func(*args, **kwargs)
+                except exception_to_check as e:
+                    attempts += 1
+                    if attempts == times:
+                        time_out_message = "Maximum retries reached without success."
+                        raise TimeoutError(time_out_message) from e
+                    logger.info(f"Attempt {attempts} failed: {e}. Retrying in {delay_seconds} seconds...")
+                    time.sleep(delay_seconds)
+            runtime_error_message = "Unexpected exit from retry loop. This should not happen."
+            raise RuntimeError(runtime_error_message)
+
+        return wrapper
+
+    return decorator
+
+
+@retry(times=5, delay_seconds=5, exception_to_check=BackendError)
+def upload_with_retries(handle: str, temp_dir: str, license_name: str) -> None:
+    """
+    Uploads a model with retries on BackendError indicating the instance slug is already in use.
+
+    Args:
+        handle: The model handle.
+        temp_dir: Temporary directory where the model is stored.
+        license_name: License name for the model.
+    """
+    model_upload(handle, temp_dir, license_name)
 
 
 class TestModelUpload(unittest.TestCase):
@@ -30,9 +79,42 @@ class TestModelUpload(unittest.TestCase):
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # Create Version
-        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
+        upload_with_retries(self.handle, self.temp_dir, LICENSE_NAME)
 
         # If delete model does not raise an error, then the upload was successful.
+
+    def test_model_upload_and_versioning_zip(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            for i in range(60):
+                test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
+                test_filepath.touch()
+
+            # Create Instance
+            model_upload(self.handle, temp_dir, LICENSE_NAME)
+
+            # Create Version
+            upload_with_retries(self.handle, temp_dir, LICENSE_NAME)
+
+    def test_model_upload_directory(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            # Create the new folder within temp_dir
+            inner_folder_path = Path(temp_dir) / "inner_folder"
+            inner_folder_path.mkdir()
+
+            for i in range(60):
+                # Create a file in the temp_dir
+                test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
+                test_filepath.touch()
+
+                # Create the same file in the inner_folder
+                test_filepath_inner = inner_folder_path / f"temp_test_file_{i}"
+                test_filepath_inner.touch()
+
+            # Create Instance
+            model_upload(self.handle, temp_dir, LICENSE_NAME)
+
+            # Create Version
+            upload_with_retries(self.handle, temp_dir, LICENSE_NAME)
 
     def test_model_upload_nested_dir(self) -> None:
         # Create a nested directory within self.temp_dir
