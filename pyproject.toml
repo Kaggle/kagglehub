@@ -22,7 +22,8 @@ keywords = ["Kaggle", "API"]
 requires-python = ">=3.7"
 dependencies = [
   "requests", 
-  "tqdm"
+  "tqdm",
+  "packaging"
 ]
 
 [project.urls]
