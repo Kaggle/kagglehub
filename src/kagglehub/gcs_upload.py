@@ -136,29 +136,29 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def upload_files(source_dir: str, model_type: str) -> List[str]:
+def upload_files(source_path: str, model_type: str) -> List[str]:
     """Zip and Upload directory or a single file.
     Parameters
     ==========
-    source_path_str: the source path to upload from (can be a directory or a file)
+    source_path: the source path to upload from (can be a directory or a file)
     model_type: Type of the model that is being uploaded.
     """
-    source_path = Path(source_dir)
+    source_path_obj = Path(source_path)
 
     with TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
 
-        if source_path.is_dir():
+        if source_path_obj.is_dir():
             zip_path = temp_dir_path / TEMP_ARCHIVE_FILE
             with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-                for file_path in source_path.rglob("*"):
+                for file_path in source_path_obj.rglob("*"):
                     if file_path.is_file():
-                        arcname = file_path.relative_to(source_path)
+                        arcname = file_path.relative_to(source_path_obj)
                         zipf.write(file_path, arcname)
             upload_path = str(zip_path)
-        elif source_path.is_file():
-            temp_file_path = temp_dir_path / source_path.name
-            temp_file_path.write_bytes(source_path.read_bytes())
+        elif source_path_obj.is_file():
+            temp_file_path = temp_dir_path / source_path_obj.name
+            temp_file_path.write_bytes(source_path_obj.read_bytes())
             upload_path = str(temp_file_path)
         else:
             path_error_message = "The source path does not point to a valid file or directory."
