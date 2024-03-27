@@ -130,5 +130,12 @@ class TestModelUpload(unittest.TestCase):
         # Call the model upload function with the base directory
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
+    def test_single_file_upload(self) -> None:
+        single_file_path = Path(self.temp_dir) / "dummy_file.txt"
+        with open(single_file_path, "wb") as f:
+            f.write(os.urandom(100))
+
+        model_upload(self.handle, str(single_file_path), LICENSE_NAME)
+
     def tearDown(self) -> None:
         models_helpers.delete_model(self.owner_slug, self.model_slug)
