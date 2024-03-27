@@ -23,6 +23,7 @@ requires-python = ">=3.7"
 dependencies = [
   "requests", 
   "tqdm"
+  "packaging"
 ]
 
 [project.urls]
