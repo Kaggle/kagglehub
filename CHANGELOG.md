@@ -2,6 +2,10 @@
 
 ## Next (Unreleased)
 
+## v0.2.2 (March 27th, 2024)
+
+* Add support for single file upload ([#82](https://github.com/Kaggle/kagglehub/pull/97))
+
 ## v0.2.1 (March 21th, 2024)
 
 * Add support for directory upload ([#82](https://github.com/Kaggle/kagglehub/pull/93))
