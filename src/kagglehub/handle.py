@@ -38,9 +38,9 @@ class ModelHandle(ResourceHandle):
 
     def to_url(self) -> str:
         if self.is_versioned():
-            return f"https://www.kaggle.com/models/{self.owner}/{self.model}/frameworks/{self.framework}/variations/{self.variation}/versions/{self.version}"
+            return f"https://www.kaggle.com/models/{self.owner}/{self.model}/{self.framework}/{self.variation}/{self.version}"
         else:
-            return f"https://www.kaggle.com/models/{self.owner}/{self.model}/frameworks/{self.framework}/variations/{self.variation}"
+            return f"https://www.kaggle.com/models/{self.owner}/{self.model}/{self.framework}/{self.variation}"
 
 
 @dataclass
