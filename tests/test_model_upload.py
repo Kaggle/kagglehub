@@ -229,3 +229,18 @@ class TestModelUpload(BaseTestCase):
                     test_filepath.touch()  # Create a temporary file in the temporary directory
                     with self.assertRaises(BackendError):
                         model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Invalid License")
+
+    def test_single_file_upload(self) -> None:
+        with create_test_http_server(KaggleAPIHandler):
+            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
+                with TemporaryDirectory() as temp_dir:
+                    test_filepath = Path(temp_dir) / "single_dummy_file.txt"
+                    with open(test_filepath, "wb") as f:
+                        f.write(os.urandom(100))
+
+                    model_upload(
+                        "metaresearch/new-model/pyTorch/new-variation", str(test_filepath), APACHE_LICENSE, "model_type"
+                    )
+
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
+                    self.assertIn("single_dummy_file.txt", KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
