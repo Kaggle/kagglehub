@@ -7,7 +7,7 @@ import time
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from queue import Queue
+from multiprocessing import Pool, Queue, Manager
 from tempfile import TemporaryDirectory
 from typing import List, Optional, Union
 
@@ -16,6 +16,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
+import shutil
 
 # Local application/library specific imports
 from kagglehub.clients import KaggleApiV1Client
@@ -142,17 +143,21 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue: Queue) -> None:
-    def zip_file(file_path: Path) -> None:
-        arcname = file_path.relative_to(source_path_obj)
-        size = file_path.stat().st_size
-        with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_STORED) as zipf:
-            zipf.write(file_path, arcname)
-        update_queue.put(size)
+def zip_file(args):
+    file_path, zip_path, update_queue, source_path_obj = args
+    arcname = file_path.relative_to(source_path_obj)
+    size = file_path.stat().st_size
+    with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_STORED, allowZip64=True) as zipf:
+        zipf.write(file_path, arcname)
+    update_queue.put(size)
 
+
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue) -> None:
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(zip_file, files)
+    args = [(file, zip_path, update_queue, source_path_obj) for file in files]
+
+    with Pool() as pool:
+        pool.map(zip_file, args)
 
 
 def manage_progress(update_queue: Queue, pbar: tqdm) -> None:
@@ -164,9 +169,8 @@ def manage_progress(update_queue: Queue, pbar: tqdm) -> None:
         update_queue.task_done()
 
 
-def upload_files(source_path: str, model_type: str) -> List[str]:
+def upload_files(source_path: str, model_type: str):
     source_path_obj = Path(source_path)
-
     with TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         total_size = 0
@@ -181,22 +185,23 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             path_error_message = "The source path does not point to a valid file or directory."
             raise ValueError(path_error_message)
 
-        update_queue: Queue[Optional[int]] = Queue()
-        with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
-            progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
-            progress_thread.start()
+        with Manager() as manager:
+            update_queue = manager.Queue()
+            with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
+                progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
+                progress_thread.start()
 
-            if source_path_obj.is_dir():
-                zip_path = temp_dir_path / "archive.zip"
-                zip_files(source_path_obj, zip_path, update_queue)
-                upload_path = str(zip_path)
-            elif source_path_obj.is_file():
-                temp_file_path = temp_dir_path / source_path_obj.name
-                temp_file_path.write_bytes(source_path_obj.read_bytes())
-                update_queue.put(temp_file_path.stat().st_size)
-                upload_path = str(temp_file_path)
+                if source_path_obj.is_dir():
+                    zip_path = temp_dir_path / "archive.zip"
+                    zip_files(source_path_obj, zip_path, update_queue)
+                    upload_path = str(zip_path)
+                elif source_path_obj.is_file():
+                    temp_file_path = temp_dir_path / source_path_obj.name
+                    shutil.copy(source_path_obj, temp_file_path)
+                    update_queue.put(temp_file_path.stat().st_size)
+                    upload_path = str(temp_file_path)
 
-            update_queue.put(None)  # Signal to stop the progress thread
-            progress_thread.join()
+                update_queue.put(None)  # Signal to stop the progress thread
+                progress_thread.join()
 
         return [token for token in [_upload_blob(upload_path, model_type)] if token]
