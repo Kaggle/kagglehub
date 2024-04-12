@@ -95,7 +95,7 @@ def delete_model(
         api_client = KaggleApiV1Client()
         api_client.post(url, {})
     except KaggleApiHTTPError as e:
-        if e.response and e.response.status_code == HTTPStatus.NOT_FOUND:
+        if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
             logger.info(f"Could not delete the specified resource under '{owner_slug}/{model_slug}'...")
         else:
             raise (e)
