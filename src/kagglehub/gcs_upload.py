@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from tempfile import TemporaryDirectory
-from typing import Optional, Union
+from typing import NoReturn, Optional, Union
 
 # Third-party imports
 import requests
@@ -143,8 +143,8 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_files(source_path_obj: Path, zip_path: str, update_queue: Queue) -> None:
-    def zip_file(file_path):
+def zip_files(source_path_obj: Path, zip_path: str, update_queue: Queue) -> NoReturn:
+    def zip_file(file_path: Path) -> None:
         arcname = file_path.relative_to(source_path_obj)
         size = file_path.stat().st_size
         with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_STORED) as zipf:
@@ -156,7 +156,7 @@ def zip_files(source_path_obj: Path, zip_path: str, update_queue: Queue) -> None
         executor.map(zip_file, files)
 
 
-def manage_progress(update_queue: Queue, pbar: tqdm) -> None:
+def manage_progress(update_queue: Queue, pbar: tqdm) -> NoReturn:
     while True:
         size = update_queue.get()
         if size is None:
