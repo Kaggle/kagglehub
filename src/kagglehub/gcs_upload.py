@@ -143,7 +143,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_files(source_path_obj: Path, zip_path: str, update_queue: Queue) -> None:
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue: Queue) -> None:
     def zip_file(file_path: Path) -> None:
         arcname = file_path.relative_to(source_path_obj)
         size = file_path.stat().st_size
@@ -182,7 +182,7 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             path_error_message = "The source path does not point to a valid file or directory."
             raise ValueError(path_error_message)
 
-        update_queue = queue.Queue()
+        update_queue: Queue[int] = Queue()
         with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
             progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
             progress_thread.start()
