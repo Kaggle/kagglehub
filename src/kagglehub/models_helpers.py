@@ -82,7 +82,7 @@ def delete_model(
     model_slug: str,
     framework: Optional[str] = None,
     instance_slug: Optional[str] = None,
-    version_number: Optional[str] = None,
+    version_number: Optional[int] = None,
 ) -> None:
     try:
         base_url = f"/models/{owner_slug}/{model_slug}"
