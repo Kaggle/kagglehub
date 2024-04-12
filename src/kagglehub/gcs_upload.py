@@ -176,7 +176,8 @@ def upload_files(source_path: str, model_type: str):
         elif source_path_obj.is_file():
             total_size = source_path_obj.stat().st_size
         else:
-            raise ValueError("The source path does not point to a valid file or directory.")
+            path_error_message = "The source path does not point to a valid file or directory."
+            raise ValueError(path_error_message)
 
         update_queue = queue.Queue()
         with tqdm(total=total_size, desc="Zipping", unit='B', unit_scale=True, unit_divisor=1024) as pbar:
