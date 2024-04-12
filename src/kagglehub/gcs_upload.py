@@ -144,7 +144,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
 
 
 def zip_files(source_path_obj: Path, zip_path: str, update_queue: Queue) -> None:
-    def zip_file(file_path: str) -> None:
+    def zip_file(file_path: Path) -> None:
         arcname = file_path.relative_to(source_path_obj)
         size = file_path.stat().st_size
         with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_STORED) as zipf:
