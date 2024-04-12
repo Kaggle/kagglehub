@@ -5,15 +5,15 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Union
+from typing import Union, Optional, NoReturn
 import queue
+from queue import Queue
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 import concurrent.futures
-from zipfile import ZipFile, ZIP_STORED
 import threading
 
 from kagglehub.clients import KaggleApiV1Client
@@ -140,20 +140,20 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_files(source_path_obj, zip_path, update_queue):
+def zip_files(source_path_obj: Path, zip_path: str, update_queue: Queue) -> NoReturn:
     def zip_file(file_path):
         arcname = file_path.relative_to(source_path_obj)
         size = file_path.stat().st_size
-        with zipfile.ZipFile(zip_path, 'a', zipfile.ZIP_STORED) as zipf:
+        with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_STORED) as zipf:
             zipf.write(file_path, arcname)
         update_queue.put(size)
 
-    files = [file for file in source_path_obj.rglob('*') if file.is_file()]
+    files = [file for file in source_path_obj.rglob("*") if file.is_file()]
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(zip_file, files)
 
 
-def manage_progress(update_queue, pbar):
+def manage_progress(update_queue: Queue, pbar: tqdm) -> NoReturn:
     while True:
         size = update_queue.get()
         if size is None:
@@ -180,12 +180,12 @@ def upload_files(source_path: str, model_type: str):
             raise ValueError(path_error_message)
 
         update_queue = queue.Queue()
-        with tqdm(total=total_size, desc="Zipping", unit='B', unit_scale=True, unit_divisor=1024) as pbar:
+        with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
             progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
             progress_thread.start()
 
             if source_path_obj.is_dir():
-                zip_path = temp_dir_path / 'archive.zip'
+                zip_path = temp_dir_path / "archive.zip"
                 zip_files(source_path_obj, zip_path, update_queue)
                 upload_path = str(zip_path)
             elif source_path_obj.is_file():
