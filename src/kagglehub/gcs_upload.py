@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from tempfile import TemporaryDirectory
-from typing import List, Union
+from typing import List, Optional, Union
 
 # Third-party imports
 import requests
@@ -181,7 +181,7 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             path_error_message = "The source path does not point to a valid file or directory."
             raise ValueError(path_error_message)
 
-        update_queue: Queue[int] = Queue()
+        update_queue: Queue[Optional[int]] = Queue()
         with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
             progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
             progress_thread.start()
