@@ -1,21 +1,24 @@
+# Standard library imports
+import concurrent.futures
 import logging
 import os
+import queue
+import threading
 import time
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Union, Optional, NoReturn
-import queue
 from queue import Queue
+from tempfile import TemporaryDirectory
+from typing import NoReturn, Optional, Union
 
+# Third-party imports
 import requests
 from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
-import concurrent.futures
-import threading
 
+# Local application/library specific imports
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
 
