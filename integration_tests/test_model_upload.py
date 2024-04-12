@@ -46,7 +46,7 @@ def retry(
     return decorator
 
 
-@retry(times=5, delay_seconds=5, exception_to_check=BackendError)
+@retry(times=5, delay_seconds=10, exception_to_check=BackendError)
 def upload_with_retries(handle: str, temp_dir: str, license_name: str) -> None:
     """
     Uploads a model with retries on BackendError indicating the instance slug is already in use.
