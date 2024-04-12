@@ -78,7 +78,11 @@ def create_model_if_missing(owner_slug: str, model_slug: str) -> None:
 
 
 def delete_model(
-    owner_slug: str, model_slug: str, framework: str = None, instance_slug: str = None, version_number: str = None
+    owner_slug: str,
+    model_slug: str,
+    framework: Optional[str] = None,
+    instance_slug: Optional[str] = None,
+    version_number: Optional[str] = None,
 ) -> None:
     try:
         base_url = f"/models/{owner_slug}/{model_slug}"
