@@ -77,29 +77,15 @@ def create_model_if_missing(owner_slug: str, model_slug: str) -> None:
             raise (e)
 
 
-def delete_model(
-    owner_slug: str,
-    model_slug: str,
-    framework: Optional[str] = None,
-    instance_slug: Optional[str] = None,
-    version_number: Optional[int] = None,
-) -> None:
+def delete_model(owner_slug: str, model_slug: str) -> None:
     try:
-        base_url = f"/models/{owner_slug}/{model_slug}"
-        if framework and instance_slug and version_number:
-            # Deleting a specific version of a model instance
-            url = f"{base_url}/{framework}/{instance_slug}/{version_number}/delete"
-        elif framework and instance_slug:
-            # Deleting a model instance
-            url = f"{base_url}/{framework}/{instance_slug}/delete"
-        else:
-            # Deleting a model
-            url = f"{base_url}/delete"
-
         api_client = KaggleApiV1Client()
-        api_client.post(url, {})
+        api_client.post(
+            f"/models/{owner_slug}/{model_slug}/delete",
+            {},
+        )
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
-            logger.info(f"Could not delete the specified resource under '{owner_slug}/{model_slug}'...")
+            logger.info(f"Could not delete Model '{model_slug}' for user '{owner_slug}'...")
         else:
             raise (e)

@@ -1,13 +1,12 @@
 # Standard library imports
 import logging
-import sys
 from typing import Optional
 
 # Local application/library specific imports
 from kagglehub import registry
 from kagglehub.gcs_upload import upload_files
 from kagglehub.handle import parse_model_handle
-from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version, delete_model
+from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version
 
 logger = logging.getLogger(__name__)
 
@@ -39,22 +38,18 @@ def model_upload(
         license_name: (string) model license.
         version_notes: (string) Optional to write to model versions.
     """
-    try:
-        # parse slug
-        h = parse_model_handle(handle)
+    # parse slug
+    h = parse_model_handle(handle)
 
-        if h.is_versioned():
-            is_versioned_exception = "The model handle should not include the version"
-            raise ValueError(is_versioned_exception)
+    if h.is_versioned():
+        is_versioned_exception = "The model handle should not include the version"
+        raise ValueError(is_versioned_exception)
 
-        # Create the model if it doesn't already exist
-        create_model_if_missing(h.owner, h.model)
+    # Create the model if it doesn't already exist
+    create_model_if_missing(h.owner, h.model)
 
-        # Upload the model files to GCS
-        tokens = upload_files(local_model_dir, "model")
+    # Upload the model files to GCS
+    tokens = upload_files(local_model_dir, "model")
 
-        # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
-        create_model_instance_or_version(h, tokens, license_name, version_notes)
-    except KeyboardInterrupt:
-        delete_model(h.owner, h.model, h.framework, h.variation, h.version)
-        sys.exit(1)
+    # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
+    create_model_instance_or_version(h, tokens, license_name, version_notes)
