@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Union
+from typing import List, Union
 
 # Third-party imports
 import requests
