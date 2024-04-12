@@ -44,7 +44,7 @@ def model_upload(
         if h.is_versioned():
             is_versioned_exception = "The model handle should not include the version"
             raise ValueError(is_versioned_exception)
-        print(h.variation)
+
         # Create the model if it doesn't already exist
         create_model_if_missing(h.owner, h.model)
 
