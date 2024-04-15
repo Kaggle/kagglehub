@@ -39,7 +39,7 @@ class TestHandle(BaseTestCase):
         h = parse_dataset_handle(handle)
 
         self.assertEqual("owner", h.owner)
-        self.assertEqual("dataset", h.dataset_name)
+        self.assertEqual("dataset", h.dataset)
 
     def test_invalid_dataset_handle(self) -> None:
         with self.assertRaises(ValueError):

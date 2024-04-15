@@ -10,10 +10,11 @@ from tests.fixtures import BaseTestCase
 
 from .utils import create_test_http_server
 
-GET_DATASET = "/datasets/akankshaaa013/top-grossing-movies-dataset/get"
+GET_DATASET = "/datasets/view/akankshaaa013/top-grossing-movies-dataset"
 CREATE_DATASET = "/datasets/create/new"
 
-TEMP_TEST_FILE = "temp_test_file"
+TEMP_TEST_FILE = "temp-test-file"
+
 
 
 class KaggleAPIHandler(BaseHTTPRequestHandler):
@@ -87,7 +88,7 @@ class TestDatasetUpload(BaseTestCase):
                 with TemporaryDirectory() as temp_dir:
                     test_filepath = Path(temp_dir) / TEMP_TEST_FILE
                     test_filepath.touch()  # Creates a temp file in the temp directory
-                    dataset_upload("invalid/invalid/invalid", temp_dir)
+                    dataset_upload("invalid/invalid/invalid/invalid", temp_dir)
 
     def test_dataset_upload_with_valid_handle(self) -> None:
         with create_test_http_server(KaggleAPIHandler):

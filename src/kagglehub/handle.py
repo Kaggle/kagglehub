@@ -9,9 +9,8 @@ from kagglehub.config import get_kaggle_api_endpoint
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
-NUM_DATASET_PARTS = 2  # e.g.: <owner>/<datasetname>
-
-# TODO(b/313706281): Implement a DatasetHandle class & parse_dataset_handle method.
+NUM_VERSIONED_DATASET_PARTS = 3  # e.g.: <owner>/<dataset>/<version>
+NUM_UNVERSIONED_DATASET_PARTS = 2  # e.g.: <ownser>/<dataset>
 
 
 @dataclass
@@ -51,21 +50,21 @@ class ModelHandle(ResourceHandle):
 @dataclass
 class DatasetHandle(ResourceHandle):
     owner: str
-    dataset_name: str
+    dataset: str
     version: Optional[int] = None
 
     def is_versioned(self) -> bool:
-        return self.version is not None
+        return self.version is not None and self.version > 0
 
     def __str__(self) -> str:
-        handle_str = f"{self.owner}/{self.dataset_name}"
+        handle_str = f"{self.owner}/{self.dataset}"
         if self.is_versioned():
             return f"{handle_str}/{self.version}"
         return handle_str
 
     def to_url(self) -> str:
         endpoint = get_kaggle_api_endpoint()
-        base_url = f"{endpoint}/datasets/{self.owner}/{self.dataset_name}"
+        base_url = f"{endpoint}/datasets/{self.owner}/{self.dataset}"
         if self.is_versioned():
             return f"{base_url}/versions/{self.version}"
         return base_url
@@ -108,10 +107,26 @@ def parse_model_handle(handle: str) -> ModelHandle:
 def parse_dataset_handle(handle: str) -> DatasetHandle:
     parts = handle.split("/")
 
-    if len(parts) == NUM_DATASET_PARTS:
+    if len(parts) == NUM_VERSIONED_DATASET_PARTS:
+        # Versioned handle
+        # e.g.: <owner>/>dataset>/<version>
+        try:
+            version = int(parts[2])
+        except ValueError as err:
+            msg = f"Invalid version number: {parts[4]}"
+            raise ValueError(msg) from err
         return DatasetHandle(
             owner=parts[0],
-            dataset_name=parts[1],
+            dataset=parts[1],
+            version=version,
+        )
+    elif len(parts) == NUM_UNVERSIONED_DATASET_PARTS:
+        # Unversioned handle
+        # e.g.: <owner>/<dataset>
+        return DatasetHandle(
+            owner=parts[0],
+            dataset=parts[1],
+            version=None,
         )
 
     msg = f"Invalid dataset handle: {handle}"

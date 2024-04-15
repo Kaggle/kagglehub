@@ -140,4 +140,4 @@ def _build_download_url_path(h: ModelHandle) -> str:
 
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
-    return f"datasets/{h.owner}/{h.dataset_name}/download"
+    return f"datasets/download/{h.owner}/{h.dataset}"
