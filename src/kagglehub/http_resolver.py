@@ -31,7 +31,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             return dataset_path # Already cached
         elif dataset_path and force_download:
             delete_from_cache(h, path)
-        
+
         url_path = _build_dataset_download_url_path(h)
         out_path = get_cached_path(h, path)
 

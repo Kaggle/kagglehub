@@ -26,8 +26,8 @@ def dataset_upload(handle: str, local_dataset_dir: str, version_notes = "") -> N
     Args:
         handle: (string) the dataset handle.
         local_dataset_dir: (string) path to a file in a local directory.
+        version_notes: (string) Optional to write dataset versions.
     """
-
     h = parse_dataset_handle(handle)
     
     # Create the dataset if it doesn't already exist

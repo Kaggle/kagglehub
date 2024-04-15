@@ -33,7 +33,7 @@ class TestHandle(BaseTestCase):
     def test_invalid_version_model_handle(self) -> None:
         with self.assertRaises(ValueError):
             parse_model_handle("google/bert/tensorFlow2/answer-equivalence-bem/invalid-version-number")
-    
+
     def test_dataset_handle(self) -> None:
         handle = "owner/dataset"
         h = parse_dataset_handle(handle)

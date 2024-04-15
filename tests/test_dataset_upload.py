@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import ClassVar, List
 
-from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD, TEMP_ARCHIVE_FILE
+from kagglehub.gcs_upload import TEMP_ARCHIVE_FILE
 from kagglehub.datasets import dataset_upload
 from tests.fixtures import BaseTestCase
 
@@ -18,10 +18,10 @@ TEMP_TEST_FILE = "temp_test_file"
 class KaggleAPIHandler(BaseHTTPRequestHandler):
     UPLOAD_BLOB_FILE_NAMES: ClassVar[List[str]] = []
 
-    def do_HEAD(self):
+    def do_HEAD(self) -> None:  # noqa: N802
         self.send_response(200)
 
-    def do_GET(self):
+    def do_GET(self) -> None:  # noqa: N802
         if self.path == f"/api/v1{GET_DATASET}":
             self.send_response(200)
             self.send_header("Content-type", "application/json")
@@ -34,7 +34,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             response_data = {"message": "Some response data"}
             self.wfile.write(bytes(json.dumps(response_data), "utf-8"))
 
-    def do_POST(self):
+    def do_POST(self) -> None:  # noqa: N802
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data.decode("utf-8"))
@@ -69,17 +69,14 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(error_message, "utf-8"))
 
 class GcsAPIHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
-        self.send_response(200)
-
-    def do_PUT(self):  # noqa: N802
+    def do_PUT(self) -> None:  # noqa: N802
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps({"status": "success", "message": "File uploaded"}).encode("utf-8"))
 
 class TestDatasetUpload(BaseTestCase):
-    def test_dataset_upload_with_invalid_handle(self):
+    def test_dataset_upload_with_invalid_handle(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with self.assertRaises(ValueError):
                 with TemporaryDirectory() as temp_dir:
@@ -87,7 +84,7 @@ class TestDatasetUpload(BaseTestCase):
                     test_filepath.touch() # Creates a temp file in the temp directory
                     dataset_upload("invalid/invalid/invalid", temp_dir)
 
-    def test_dataset_upload_with_valid_handle(self):
+    def test_dataset_upload_with_valid_handle(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
