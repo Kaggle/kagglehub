@@ -23,7 +23,7 @@ def dataset_download(handle: str, path: Optional[str] = None, *, force_download:
 def dataset_upload(handle: str, local_dataset_dir: str) -> None:
     """Upload dataset files.
     Args:
-        hadnle: (string) the dataset handle.
+        handle: (string) the dataset handle.
         local_dataset_dir: (string) path to a file in a local directory.
     """
 
