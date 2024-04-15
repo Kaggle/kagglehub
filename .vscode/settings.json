@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "python.testing.unittestArgs": [
         "-v",
         "-s",
@@ -15,4 +16,8 @@
     "python.testing.pytestArgs": [
         "tests"
     ]
+=======
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic"
+>>>>>>> 8fd176c (Fix tests and additional files)
 }

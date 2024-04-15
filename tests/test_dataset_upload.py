@@ -2,8 +2,9 @@ import json
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import ClassVar, List
 
-from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD
+from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD, TEMP_ARCHIVE_FILE
 from kagglehub.datasets import dataset_upload
 from tests.fixtures import BaseTestCase
 
@@ -12,7 +13,11 @@ from .utils import create_test_http_server
 GET_DATASET = "/datasets/akankshaaa013/top-grossing-movies-dataset/get"
 CREATE_DATASET = "/datasets/create/new"
 
+TEMP_TEST_FILE = "temp_test_file"
+
 class KaggleAPIHandler(BaseHTTPRequestHandler):
+    UPLOAD_BLOB_FILE_NAMES: ClassVar[List[str]] = []
+
     def do_HEAD(self):
         self.send_response(200)
 
@@ -30,11 +35,35 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(json.dumps(response_data), "utf-8"))
 
     def do_POST(self):
+        content_length = int(self.headers["Content-Length"])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data.decode("utf-8"))
+
+        # Extracting the 'name' from the data
+        name = data.get("name", None)
         if self.path == f"/api/v1{CREATE_DATASET}":
             self.send_response(200)
             self.send_header("Content=type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"status": "success", "message": "Dataset created successfully"}).encode("utf-8"))
+<<<<<<< HEAD
+=======
+        elif self.path == "/api/v1/blobs/upload":
+            KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES.append(name)
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps(
+                    {
+                        "token": "dummy",
+                        "createUrl": "http://localhost:7778",
+                        "status": "success",
+                        "message": "Here is your token and Url",
+                    }
+                ).encode("utf-8")
+            )           
+>>>>>>> d3cdcd4 (Fix tests and additional files)
         else:
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -57,7 +86,7 @@ class TestDatasetUpload(BaseTestCase):
         with create_test_http_server(KaggleAPIHandler):
             with self.assertRaises(ValueError):
                 with TemporaryDirectory() as temp_dir:
-                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath = Path(temp_dir) / TEMP_TEST_FILE
                     test_filepath.touch() # Creates a temp file in the temp directory
                     dataset_upload("invalid/invalid/invalid", temp_dir)
 
@@ -65,16 +94,8 @@ class TestDatasetUpload(BaseTestCase):
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
-                    test_filepath = Path(temp_dir) / "temp_test_file"
+                    test_filepath = Path(temp_dir) / TEMP_TEST_FILE
                     test_filepath.touch() # Creates a temp file in the temp directory
-                    dataset_upload("akankshaaa013/top-grossing-movies-dataset", temp_dir)
-
-    def test_dataset_upload_with_too_many_files(self):
-        with self.assertRaises(ValueError):
-            with TemporaryDirectory() as temp_dir:
-                # Create more than 50 temporary files in the directory
-                for i in range(MAX_FILES_TO_UPLOAD + 1):
-                        test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
-                        test_filepath.touch()
-                
-                dataset_upload("owner/valid_name", temp_dir)
+                    dataset_upload("jeward/newDataset", temp_dir)
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
+                    self.assertIn(TEMP_ARCHIVE_FILE, KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)

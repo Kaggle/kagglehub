@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from kagglehub import registry
+from kagglehub.datasets_helpers import create_dataset_instance_or_version, create_dataset_if_missing
 from kagglehub.gcs_upload import upload_files
 from kagglehub.handle import parse_dataset_handle
 
@@ -20,7 +21,7 @@ def dataset_download(handle: str, path: Optional[str] = None, *, force_download:
     h = parse_dataset_handle(handle)
     return registry.dataset_resolver(h, path, force_download=force_download)
 
-def dataset_upload(handle: str, local_dataset_dir: str) -> None:
+def dataset_upload(handle: str, local_dataset_dir: str, version_notes = "") -> None:
     """Upload dataset files.
     Args:
         handle: (string) the dataset handle.
@@ -30,6 +31,9 @@ def dataset_upload(handle: str, local_dataset_dir: str) -> None:
     h = parse_dataset_handle(handle)
     
     # Create the dataset if it doesn't already exist
+    create_dataset_if_missing(h.owner, h.dataset_name)
 
     # Upload the dataset files to GCS
-    Tokens = upload_files(local_dataset_dir, "dataset")
+    tokens = upload_files(local_dataset_dir, "dataset")
+
+    create_dataset_instance_or_version(h, tokens, version_notes)
