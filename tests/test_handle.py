@@ -44,4 +44,3 @@ class TestHandle(BaseTestCase):
     def test_invalid_dataset_handle(self) -> None:
         with self.assertRaises(ValueError):
             parse_dataset_handle("a-single-part")
-

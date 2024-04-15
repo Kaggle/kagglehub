@@ -9,7 +9,7 @@ from kagglehub.config import get_kaggle_api_endpoint
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
-NUM_DATASET_PARTS = 2 # e.g.: <owner>/<datasetname>
+NUM_DATASET_PARTS = 2  # e.g.: <owner>/<datasetname>
 
 # TODO(b/313706281): Implement a DatasetHandle class & parse_dataset_handle method.
 
@@ -104,13 +104,15 @@ def parse_model_handle(handle: str) -> ModelHandle:
     msg = f"Invalid model handle: {handle}"
     raise ValueError(msg)
 
+
 def parse_dataset_handle(handle: str) -> DatasetHandle:
     parts = handle.split("/")
 
     if len(parts) == NUM_DATASET_PARTS:
         return DatasetHandle(
             owner=parts[0],
-            dataset_name=parts[1],)
+            dataset_name=parts[1],
+        )
 
     msg = f"Invalid dataset handle: {handle}"
     raise ValueError(msg)
