@@ -18,9 +18,6 @@ def dataset_download(handle: str, path: Optional[str] = None, *, force_download:
     """
 
     h = parse_dataset_handle(handle)
-<<<<<<< HEAD
-    return registry.dataset_resolver(h, path, force_download=force_download)
-=======
     return registry.dataset_resolver(h, path, force_download=force_download)
 
 def dataset_upload(handle: str, local_dataset_dir: str) -> None:
@@ -36,4 +33,3 @@ def dataset_upload(handle: str, local_dataset_dir: str) -> None:
 
     # Upload the dataset files to GCS
     Tokens = upload_files(local_dataset_dir, "dataset")
->>>>>>> 0291069 (Add download and handler test)
