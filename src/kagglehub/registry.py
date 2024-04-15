@@ -30,3 +30,5 @@ class MultiImplRegistry:
 
 model_resolver = MultiImplRegistry("ModelResolver")
 # TODO(b/313706281): Add a dataset_resolver here.
+
+dataset_resolver = MultiImplRegistry("DatasetResolver")

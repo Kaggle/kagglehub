@@ -91,17 +91,17 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str) -> str:
+def _upload_blob(file_path: str, item_type: str) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Parameters
     ==========
     file_path: The path to the file to be uploaded.
-    model_type : The type of the model associated with the file.
+    item_type : The type of the item associated with the file.
     """
     file_size = os.path.getsize(file_path)
     data = {
-        "type": model_type,
+        "type": item_type,
         "name": os.path.basename(file_path),
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
