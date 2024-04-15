@@ -29,8 +29,9 @@ DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
 
 logger = logging.getLogger(__name__)
 
+
 class DatasetHttpResolver(Resolver[DatasetHandle]):
-    def is_supported(self, *_, **__) -> bool: # noqa: ANN002, ANN003
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
@@ -39,7 +40,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
         dataset_path = load_from_cache(h, path)
         if dataset_path and not force_download:
-            return dataset_path # Already cached
+            return dataset_path  # Already cached
         elif dataset_path and force_download:
             delete_from_cache(h, path)
         
@@ -78,6 +79,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         mark_as_complete(h, path)
         return out_path
 
+<<<<<<< HEAD
 class DatasetHttpResolver(Resolver[DatasetHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
         # Downloading files over HTTP is supported in all environments for all handles / paths.
@@ -130,6 +132,8 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         mark_as_complete(h, path)
         return out_path
 
+=======
+>>>>>>> 5f73ba0 (Lint fix)
 
 class ModelHttpResolver(Resolver[ModelHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
@@ -240,6 +244,7 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def _build_get_dataset_url_path(h: DatasetHandle) -> str:
     return f"datasets/view/{h.owner}/{h.dataset}"
 
@@ -248,6 +253,9 @@ def _build_download_url_path(h: ModelHandle) -> str:
 =======
 def _build_download_url_path(h: ModelHandle ) -> str:
 >>>>>>> 66db1ff (add helpers/other files  and modify tests)
+=======
+def _build_download_url_path(h: ModelHandle) -> str:
+>>>>>>> 5f73ba0 (Lint fix)
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
 
 
@@ -260,5 +268,5 @@ def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
 ?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
 
 
-def _build_dataset_download_url_path(h: DatasetHandle ) -> str:
+def _build_dataset_download_url_path(h: DatasetHandle) -> str:
     return f"datasets/{h.owner}/{h.dataset_name}/download"

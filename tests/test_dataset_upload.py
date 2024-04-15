@@ -11,48 +11,6 @@ from .server_stubs import serv
 
 TEMP_TEST_FILE = "temp-test-file"
 
-<<<<<<< HEAD
-=======
-class KaggleAPIHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):
-        self.send_response(200)
-
-    def do_GET(self):
-        if self.path == f"/api/v1{GET_DATASET}":
-            self.send_response(200)
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
-            self.wfile.write(bytes(json.dumps({"message": "Dataset exists!"}), "utf-8"))
-        else:
-            self.send_response(404)
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
-            response_data = {"message": "Some response data"}
-            self.wfile.write(bytes(json.dumps(response_data), "utf-8"))
-
-    def do_POST(self):
-        if self.path == f"/api/v1{CREATE_DATASET}":
-            self.send_response(200)
-            self.send_header("Content=type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "message": "Dataset created successfully"}).encode("utf-8"))
-        else:
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            error_message = json.dumps({"error": f"bad: {self.path}"})
-            self.wfile.write(bytes(error_message, "utf-8"))
-
-class GcsAPIHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):  # noqa: N802
-        self.send_response(200)
-
-    def do_PUT(self):  # noqa: N802
-        self.send_response(200)
-        self.send_header("Content-type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps({"status": "success", "message": "File uploaded"}).encode("utf-8"))
->>>>>>> 66db1ff (add helpers/other files  and modify tests)
 
 class TestDatasetUpload(BaseTestCase):
     def setUp(self) -> None:
