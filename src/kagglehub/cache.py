@@ -5,9 +5,12 @@ from typing import Optional
 
 from kagglehub.config import get_cache_folder
 from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
+<<<<<<< HEAD
 
 DATASETS_CACHE_SUBFOLDER = "datasets"
 DATASETS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
+=======
+>>>>>>> 66db1ff (add helpers/other files  and modify tests)
 
 MODELS_CACHE_SUBFOLDER = "models"
 MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
