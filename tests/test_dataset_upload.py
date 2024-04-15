@@ -55,14 +55,7 @@ class GcsAPIHandler(BaseHTTPRequestHandler):
 class TestDatasetUpload(BaseTestCase):
     def test_dataset_upload_with_invalid_handle(self):
         with create_test_http_server(KaggleAPIHandler):
-<<<<<<< HEAD
             with self.assertRaises(ValueError):
-                with TemporaryDirectory() as temp_dir:
-                    test_filepath = Path(temp_dir) / "temp_test_file"
-                    test_filepath.touch() # Creates a temp file in the temp directory
-                    dataset_upload("invalid/invalid/invalid", temp_dir)
-=======
-            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):                
                 with TemporaryDirectory() as temp_dir:
                     test_filepath = Path(temp_dir) / "temp_test_file"
                     test_filepath.touch() # Creates a temp file in the temp directory
@@ -85,4 +78,3 @@ class TestDatasetUpload(BaseTestCase):
                         test_filepath.touch()
                 
                 dataset_upload("owner/valid_name", temp_dir)
->>>>>>> bc95b04 (add dataset upload test)
