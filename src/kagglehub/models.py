@@ -1,8 +1,6 @@
-# Standard library imports
 import logging
 from typing import Optional
 
-# Local application/library specific imports
 from kagglehub import registry
 from kagglehub.gcs_upload import upload_files
 from kagglehub.handle import parse_model_handle

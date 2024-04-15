@@ -1,22 +1,19 @@
-# Standard library imports
-import concurrent.futures
 import logging
 import os
+import shutil
 import threading
 import time
 import zipfile
 from datetime import datetime
+from multiprocessing import Manager, Pool, Queue
 from pathlib import Path
-from multiprocessing import Pool, Queue, Manager
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Union
+from typing import List, Tuple, Union
 
-# Third-party imports
 import requests
 from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
-import shutil
 
 # Local application/library specific imports
 from kagglehub.clients import KaggleApiV1Client
@@ -143,7 +140,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_file(args):
+def zip_file(args: Tuple[Path, Path, Queue, Path]) -> None:
     file_path, zip_path, update_queue, source_path_obj = args
     arcname = file_path.relative_to(source_path_obj)
     size = file_path.stat().st_size
@@ -152,7 +149,7 @@ def zip_file(args):
     update_queue.put(size)
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue) -> None:
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue: Queue) -> None:
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
     args = [(file, zip_path, update_queue, source_path_obj) for file in files]
 
@@ -169,7 +166,7 @@ def manage_progress(update_queue: Queue, pbar: tqdm) -> None:
         update_queue.task_done()
 
 
-def upload_files(source_path: str, model_type: str):
+def upload_files(source_path: str, model_type: str) -> List[str]:
     source_path_obj = Path(source_path)
     with TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
