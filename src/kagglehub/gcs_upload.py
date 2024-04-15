@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import os
 import shutil
 import threading
@@ -140,7 +141,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_file(args: Tuple[Path, Path, Queue, Path]) -> None:
+def zip_file(args: Tuple[Path, Path, multiprocessing.queues.Queue, Path]) -> None:
     file_path, zip_path, update_queue, source_path_obj = args
     arcname = file_path.relative_to(source_path_obj)
     size = file_path.stat().st_size
@@ -149,7 +150,7 @@ def zip_file(args: Tuple[Path, Path, Queue, Path]) -> None:
     update_queue.put(size)
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue: Queue) -> None:
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue: multiprocessing.queues.Queue) -> None:
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
     args = [(file, zip_path, update_queue, source_path_obj) for file in files]
 
