@@ -14,8 +14,6 @@ def _create_dataset(owner_slug: str, dataset_slug: str) -> None:
     api_client.post("/datasets/create/new", data)
     logger.info(f"Dataset '{dataset_slug}' Created.")
 
-<<<<<<< HEAD
-=======
 def _create_dataset_instance(dataset_handle: DatasetHandle, files: List[str]) -> None:
     data = {"files": [{"token": file_token} for file_token in files]}
     api_client = KaggleApiV1Client()
@@ -43,7 +41,6 @@ def create_dataset_instance_or_version(dataset_handle: DatasetHandle, files: Lis
         else:
             raise(e)
 
->>>>>>> d3cdcd4 (Fix tests and additional files)
 def create_dataset_if_missing(owner_slug: str, dataset_slug: str) -> None:
     try:
         api_client = KaggleApiV1Client()
@@ -60,11 +57,7 @@ def create_dataset_if_missing(owner_slug: str, dataset_slug: str) -> None:
         else:
             raise (e)
         
-<<<<<<< HEAD
-def deleet_dataset(owner_slug: str, dataset_slug: str) -> None:
-=======
 def delete_dataset(owner_slug: str, dataset_slug: str) -> None:
->>>>>>> d3cdcd4 (Fix tests and additional files)
     try:
         api_client = KaggleApiV1Client()
         api_client.post(

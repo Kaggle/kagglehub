@@ -46,8 +46,6 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.send_header("Content=type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"status": "success", "message": "Dataset created successfully"}).encode("utf-8"))
-<<<<<<< HEAD
-=======
         elif self.path == "/api/v1/blobs/upload":
             KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES.append(name)
             self.send_response(200)
@@ -63,7 +61,6 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
                     }
                 ).encode("utf-8")
             )           
->>>>>>> d3cdcd4 (Fix tests and additional files)
         else:
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
