@@ -229,12 +229,17 @@ def _upload_file_or_folder(
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
     Parameters
     ==========
+<<<<<<< HEAD
     parent_path: The parent directory path from where the file or folder is to be uploaded.
     file_or_folder_name: The name of the file or folder to be uploaded.
     dir_mode: The mode to handle directories. Accepts 'zip', 'tar', or other values for skipping.
     model_type: Type of the model that is being uploaded.
     quiet: suppress verbose output (default is False)
     :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
+=======
+    source_path: the source path to upload from (can be a directory or a file)
+    item_type: Type of item (dataset, model) that is being uploaded.
+>>>>>>> e8a469a (add dataset upload test)
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
