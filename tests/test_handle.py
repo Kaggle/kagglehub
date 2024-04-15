@@ -1,4 +1,4 @@
-from kagglehub.handle import parse_model_handle
+from kagglehub.handle import parse_dataset_handle, parse_model_handle
 from tests.fixtures import BaseTestCase
 
 
@@ -33,3 +33,15 @@ class TestHandle(BaseTestCase):
     def test_invalid_version_model_handle(self) -> None:
         with self.assertRaises(ValueError):
             parse_model_handle("google/bert/tensorFlow2/answer-equivalence-bem/invalid-version-number")
+    
+    def test_dataset_handle(self) -> None:
+        handle = "owner/dataset"
+        h = parse_dataset_handle(handle)
+
+        self.assertEqual("owner", h.owner)
+        self.assertEqual("dataset", h.dataset_name)
+
+    def test_invalid_dataset_handle(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_dataset_handle("a-single-part")
+
