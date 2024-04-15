@@ -49,7 +49,7 @@ class ModelHandle(ResourceHandle):
 
 
 @dataclass
-class DatasetHandle:
+class DatasetHandle(ResourceHandle):
     owner: str
     dataset_name: str
     version: Optional[int] = None

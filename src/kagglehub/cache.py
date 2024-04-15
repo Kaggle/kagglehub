@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from kagglehub.config import get_cache_folder
-from kagglehub.handle import ModelHandle, ResourceHandle
+from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
 
 MODELS_CACHE_SUBFOLDER = "models"
 MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"

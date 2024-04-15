@@ -21,20 +21,20 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.write.write(bytes(json.dumps({"message": "Dataset exists!"}), "utf-8"))
+            self.wfile.write(bytes(json.dumps({"message": "Dataset exists!"}), "utf-8"))
         else:
             self.send_response(404)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             response_data = {"message": "Some response data"}
-            self.write.write(bytes(json.dumps(response_data), "utf-8"))
+            self.wfile.write(bytes(json.dumps(response_data), "utf-8"))
 
     def do_POST(self):
         if self.path == f"/api/v1{CREATE_DATASET}":
             self.send_response(200)
             self.send_header("Content=type", "application/json")
             self.end_headers()
-            self.write.write(json.dumps({"status": "success", "message": "Dataset created successfully"}).encode("utf-8"))
+            self.wfile.write(json.dumps({"status": "success", "message": "Dataset created successfully"}).encode("utf-8"))
         else:
             self.send_response(200)
             self.send_header("Content-Type", "application/json")

@@ -11,13 +11,61 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.handle import ModelHandle
+from kagglehub.handle import DatasetHandle, ModelHandle
 from kagglehub.resolver import Resolver
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 
 logger = logging.getLogger(__name__)
 
+class DatasetHttpResolver(Resolver[DatasetHandle]):
+    def is_supported(self, *_, **__) -> bool: # noqa: ANN002, ANN003
+        # Downloading files over HTTP is supported in all environments for all handles / paths.
+        return True
+
+    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+        api_client = KaggleApiV1Client()
+
+        dataset_path = load_from_cache(h, path)
+        if dataset_path and not force_download:
+            return dataset_path # Already cached
+        elif dataset_path and force_download:
+            delete_from_cache(h, path)
+        
+        url_path = _build_dataset_download_url_path(h)
+        out_path = get_cached_path(h, path)
+
+        # Create the intermediary directories
+        if path:
+            # Downloading a single file.
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            api_client.download_file(url_path + "/" + path, out_path, h)
+        else:
+            # Downloading the full archived bundle.
+            archive_path = get_cached_archive_path(h)
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+            # First, we download the archive.
+            api_client.download_file(url_path, archive_path, h)
+
+            # Create the directory to extract the archive to.
+            os.makedirs(out_path, exist_ok=True)
+
+            if not tarfile.is_tarfile(archive_path):
+                msg = "Unsupported archive type."
+                raise ValueError(msg)
+
+            # Extract all files to this directory.
+            logger.info("Extracting dataset files...")
+            with tarfile.open(archive_path) as f:
+                # Dataset archives are created by Kaggle via the Databundle Worker.
+                f.extractall(out_path)
+
+            # Delete the archive
+            os.remove(archive_path)
+
+        mark_as_complete(h, path)
+        return out_path
 
 class ModelHttpResolver(Resolver[ModelHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
@@ -85,5 +133,8 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/get"
 
 
-def _build_download_url_path(h: ModelHandle) -> str:
+def _build_download_url_path(h: ModelHandle ) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
+
+def _build_dataset_download_url_path(h: DatasetHandle ) -> str:
+    return f"datasets/{h.owner}/{h.dataset_name}/download"
