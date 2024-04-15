@@ -149,7 +149,7 @@ def zip_file(args: Tuple[Path, Path, Queue, Path]) -> None:
     update_queue.put(size)
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue) -> None:
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue) -> None:  # noqa: ANN001
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
     args = [(file, zip_path, update_queue, source_path_obj) for file in files]
 
