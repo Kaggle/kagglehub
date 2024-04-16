@@ -6,7 +6,7 @@ import time
 import zipfile
 from datetime import datetime
 from multiprocessing import Manager, Pool
-from multiprocessing.queues import JoinableQueue
+from multiprocessing.queues import Queue
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Tuple, Union
@@ -140,7 +140,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_file(args: Tuple[Path, Path, JoinableQueue, Path]) -> None:
+def zip_file(args: Tuple[Path, Path, Queue, Path]) -> None:
     file_path, zip_path, update_queue, source_path_obj = args
     arcname = file_path.relative_to(source_path_obj)
     size = file_path.stat().st_size
@@ -149,7 +149,7 @@ def zip_file(args: Tuple[Path, Path, JoinableQueue, Path]) -> None:
     update_queue.put(size)
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue: JoinableQueue) -> None:
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue: Queue) -> None:
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
     args = [(file, zip_path, update_queue, source_path_obj) for file in files]
 
@@ -157,7 +157,7 @@ def zip_files(source_path_obj: Path, zip_path: Path, update_queue: JoinableQueue
         pool.map(zip_file, args)
 
 
-def manage_progress(update_queue: JoinableQueue, pbar: tqdm) -> None:
+def manage_progress(update_queue: Queue, pbar: tqdm) -> None:
     while True:
         size = update_queue.get()
         if size is None:
