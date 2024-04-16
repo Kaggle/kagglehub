@@ -2,6 +2,10 @@
 
 ## Next (Unreleased)
 
+## v0.2.3 (April 16th, 2024)
+
+* Improve upload speed ([#100](https://github.com/Kaggle/kagglehub/pull/100))
+
 ## v0.2.2 (March 27th, 2024)
 
 * Add support for single file upload ([#97](https://github.com/Kaggle/kagglehub/pull/97))
