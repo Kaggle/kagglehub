@@ -9,7 +9,7 @@ from multiprocessing import Manager, Pool
 from multiprocessing.queues import Queue
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Tuple, Union
+from typing import List, Tuple, cast, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -183,7 +183,7 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             raise ValueError(path_error_message)
 
         with Manager() as manager:
-            update_queue = manager.Queue()
+            update_queue = cast(Queue, manager.Queue())
             with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
                 progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
                 progress_thread.start()
