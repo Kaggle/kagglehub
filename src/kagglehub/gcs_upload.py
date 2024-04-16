@@ -9,7 +9,7 @@ from multiprocessing import Manager, Pool
 from multiprocessing.queues import Queue
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Tuple, cast, Union
+from typing import List, Tuple, Union, cast
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
