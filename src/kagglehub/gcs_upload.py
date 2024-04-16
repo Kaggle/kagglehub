@@ -5,7 +5,8 @@ import threading
 import time
 import zipfile
 from datetime import datetime
-from multiprocessing import Manager, Pool, Queue
+from multiprocessing import Manager, Pool
+from multiprocessing.managers import SyncManager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Tuple, Union
@@ -140,7 +141,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_file(args: Tuple[Path, Path, Queue, Path]) -> None:
+def zip_file(args: Tuple[Path, Path, SyncManager.JoinableQueue, Path]) -> None:
     file_path, zip_path, update_queue, source_path_obj = args
     arcname = file_path.relative_to(source_path_obj)
     size = file_path.stat().st_size
@@ -149,7 +150,7 @@ def zip_file(args: Tuple[Path, Path, Queue, Path]) -> None:
     update_queue.put(size)
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue) -> None:  # noqa: ANN001
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue: SyncManager.JoinableQueue) -> None:  # noqa: ANN001
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
     args = [(file, zip_path, update_queue, source_path_obj) for file in files]
 
@@ -157,7 +158,7 @@ def zip_files(source_path_obj: Path, zip_path: Path, update_queue) -> None:  # n
         pool.map(zip_file, args)
 
 
-def manage_progress(update_queue: Queue, pbar: tqdm) -> None:
+def manage_progress(update_queue: SyncManager.JoinableQueue, pbar: tqdm) -> None:
     while True:
         size = update_queue.get()
         if size is None:
@@ -183,7 +184,7 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             raise ValueError(path_error_message)
 
         with Manager() as manager:
-            update_queue = manager.Queue()
+            update_queue = manager.JoinableQueue()
             with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
                 progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
                 progress_thread.start()
