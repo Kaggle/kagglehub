@@ -5,8 +5,7 @@ import threading
 import time
 import zipfile
 from datetime import datetime
-from multiprocessing import Manager, Pool
-from multiprocessing import Queue 
+from multiprocessing import Manager, Pool, Queue
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Tuple, Union, cast
@@ -183,7 +182,7 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             raise ValueError(path_error_message)
 
         with Manager() as manager:
-            update_queue = cast(Queue, manager.Queue())
+            update_queue = Queue()
             with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
                 progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
                 progress_thread.start()
