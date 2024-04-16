@@ -16,7 +16,6 @@ from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
-# Local application/library specific imports
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
 
@@ -150,7 +149,7 @@ def zip_file(args: Tuple[Path, Path, SyncManager.JoinableQueue, Path]) -> None:
     update_queue.put(size)
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue: SyncManager.JoinableQueue) -> None:  # noqa: ANN001
+def zip_files(source_path_obj: Path, zip_path: Path, update_queue: SyncManager.JoinableQueue) -> None:
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
     args = [(file, zip_path, update_queue, source_path_obj) for file in files]
 
