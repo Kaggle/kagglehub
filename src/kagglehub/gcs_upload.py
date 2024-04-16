@@ -183,7 +183,7 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             raise ValueError(path_error_message)
 
         with Manager() as manager:
-            update_queue = manager.JoinableQueue()
+            update_queue = manager.Queue()
             with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
                 progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
                 progress_thread.start()
