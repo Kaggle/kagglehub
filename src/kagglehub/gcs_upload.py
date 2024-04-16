@@ -1,12 +1,10 @@
 import logging
 import os
 import shutil
-import threading
 import time
 import zipfile
 from datetime import datetime
-from multiprocessing import Manager, Pool
-from multiprocessing.queues import JoinableQueue
+from multiprocessing import Pool
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Tuple, Union
@@ -140,30 +138,22 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def zip_file(args: Tuple[Path, Path, JoinableQueue, Path]) -> None:
-    file_path, zip_path, update_queue, source_path_obj = args
+def zip_file(args: Tuple[Path, Path, Path]) -> int:
+    file_path, zip_path, source_path_obj = args
     arcname = file_path.relative_to(source_path_obj)
     size = file_path.stat().st_size
     with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_STORED, allowZip64=True) as zipf:
         zipf.write(file_path, arcname)
-    update_queue.put(size)
+    return size
 
 
-def zip_files(source_path_obj: Path, zip_path: Path, update_queue: JoinableQueue) -> None:
+def zip_files(source_path_obj: Path, zip_path: Path) -> List[int]:
     files = [file for file in source_path_obj.rglob("*") if file.is_file()]
-    args = [(file, zip_path, update_queue, source_path_obj) for file in files]
+    args = [(file, zip_path, source_path_obj) for file in files]
 
     with Pool() as pool:
-        pool.map(zip_file, args)
-
-
-def manage_progress(update_queue: JoinableQueue, pbar: tqdm) -> None:
-    while True:
-        size = update_queue.get()
-        if size is None:
-            break
-        pbar.update(size)
-        update_queue.task_done()
+        sizes = pool.map(zip_file, args)
+    return sizes
 
 
 def upload_files(source_path: str, model_type: str) -> List[str]:
@@ -182,23 +172,17 @@ def upload_files(source_path: str, model_type: str) -> List[str]:
             path_error_message = "The source path does not point to a valid file or directory."
             raise ValueError(path_error_message)
 
-        with Manager() as manager:
-            update_queue = manager.JoinableQueue()
-            with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
-                progress_thread = threading.Thread(target=manage_progress, args=(update_queue, pbar))
-                progress_thread.start()
-
-                if source_path_obj.is_dir():
-                    zip_path = temp_dir_path / "archive.zip"
-                    zip_files(source_path_obj, zip_path, update_queue)
-                    upload_path = str(zip_path)
-                elif source_path_obj.is_file():
-                    temp_file_path = temp_dir_path / source_path_obj.name
-                    shutil.copy(source_path_obj, temp_file_path)
-                    update_queue.put(temp_file_path.stat().st_size)
-                    upload_path = str(temp_file_path)
-
-                update_queue.put(None)  # Signal to stop the progress thread
-                progress_thread.join()
+        with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
+            if source_path_obj.is_dir():
+                zip_path = temp_dir_path / "archive.zip"
+                sizes = zip_files(source_path_obj, zip_path)
+                for size in sizes:
+                    pbar.update(size)
+                upload_path = str(zip_path)
+            elif source_path_obj.is_file():
+                temp_file_path = temp_dir_path / source_path_obj.name
+                shutil.copy(source_path_obj, temp_file_path)
+                pbar.update(temp_file_path.stat().st_size)
+                upload_path = str(temp_file_path)
 
         return [token for token in [_upload_blob(upload_path, model_type)] if token]
