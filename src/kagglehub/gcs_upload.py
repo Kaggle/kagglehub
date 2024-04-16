@@ -6,7 +6,7 @@ import time
 import zipfile
 from datetime import datetime
 from multiprocessing import Manager, Pool
-from multiprocessing.queues import Queue
+from multiprocessing import Queue 
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Tuple, Union, cast
