@@ -1,12 +1,19 @@
 import logging
 from http import HTTPStatus
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
 from kagglehub.handle import ModelHandle
 
 logger = logging.getLogger(__name__)
+
+class Directory:
+    name: str
+    files: List[str]
+    directories: List['Directory']
+
+FileStructure = List[Directory]
 
 
 def _create_model(owner_slug: str, model_slug: str) -> None:
@@ -16,11 +23,14 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
     logger.info(f"Model '{model_slug}' Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None) -> None:
+def _create_model_instance(model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str] = None) -> None:
+    print([subdir for subdir in files_and_directories['directories']])
+    print([{"token": file_token} for file_token in files_and_directories['files']])
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
-        "files": [{"token": file_token} for file_token in files],
+        "files": [{"token": file_token} for file_token in files_and_directories['files']],
+        "directories": [subdir for subdir in files_and_directories['directories']]
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -30,8 +40,8 @@ def _create_model_instance(model_handle: ModelHandle, files: List[str], license_
     logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}")
 
 
-def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes: str = "") -> None:
-    data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files]}
+def _create_model_instance_version(model_handle: ModelHandle, files_and_directories: List[str], version_notes: str = "") -> None:
+    data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files_and_directories]}
     api_client = KaggleApiV1Client()
     api_client.post(
         f"/models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/create/version",
@@ -43,19 +53,19 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: str = ""
+    model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str], version_notes: str = ""
 ) -> None:
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/models/{model_handle}/get", model_handle)
         # the instance exist, create a new version.
-        _create_model_instance_version(model_handle, files, version_notes)
+        _create_model_instance_version(model_handle, files_and_directories, version_notes)
     except KaggleApiHTTPError as e:
         if e.response is not None and (
             e.response.status_code == HTTPStatus.NOT_FOUND  # noqa: PLR1714
             or e.response.status_code == HTTPStatus.FORBIDDEN
         ):
-            _create_model_instance(model_handle, files, license_name)
+            _create_model_instance(model_handle, files_and_directories, license_name)
         else:
             raise (e)
 
