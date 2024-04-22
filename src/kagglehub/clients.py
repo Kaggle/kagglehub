@@ -95,8 +95,7 @@ class KaggleApiV1Client:
             if latest_version > current_version:
                 logger.info(
                     "Warning: Looks like you're using an outdated `kagglehub` "
-                    f"version, please consider updating (latest version: {
-                        latest_version})"
+                    f"version, please consider updating (latest version: {latest_version})"
                 )
 
     def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
@@ -152,8 +151,7 @@ class KaggleApiV1Client:
                     logger.info(f"Download already complete ({size_read} bytes).")
                     return
 
-                logger.info(f"Resuming download from {size_read} bytes ({
-                            total_size - size_read} bytes left)...")
+                logger.info(f"Resuming download from {size_read} bytes ({total_size - size_read} bytes left)...")
 
                 # Send the request again with the 'Range' header.
                 with requests.get(
@@ -223,8 +221,7 @@ class KaggleJwtClient:
         if jwt_token is None:
             msg = (
                 "A JWT Token is required to call Kaggle, "
-                f"but none found in environment variable {
-                    KAGGLE_JWT_TOKEN_ENV_VAR_NAME}"
+                f"but none found in environment variable {KAGGLE_JWT_TOKEN_ENV_VAR_NAME}"
             )
             raise CredentialError(msg)
 
@@ -232,8 +229,7 @@ class KaggleJwtClient:
         if data_proxy_token is None:
             msg = (
                 "A Data Proxy Token is required to call Kaggle, "
-                f"but none found in environment variable {
-                    KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME}"
+                f"but none found in environment variable {KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME}"
             )
             raise CredentialError(msg)
 

@@ -121,8 +121,7 @@ def _upload_blob(file_path: str, model_type: str, ctx_factory: Optional[Callable
             try:
                 f.seek(uploaded_bytes)
                 reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
-                headers["Content-Range"] = f"bytes {
-                    uploaded_bytes}-{file_size - 1}/{file_size}"
+                headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
                 upload_response = requests.put(
                     session_uri, headers=headers, data=reader_wrapper, timeout=REQUEST_TIMEOUT
                 )
@@ -132,12 +131,12 @@ def _upload_blob(file_path: str, model_type: str, ctx_factory: Optional[Callable
                 elif upload_response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
                     uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 else:
-                    upload_failed_exception = f"Upload failed with status code {
-                        upload_response.status_code}: {upload_response.text}"
+                    upload_failed_exception = (
+                        f"Upload failed with status code {upload_response.status_code}: {upload_response.text}"
+                    )
                     raise BackendError(upload_failed_exception)
             except (requests.ConnectionError, requests.Timeout) as e:
-                logger.info(f"Network issue: {e}, retrying in {
-                            backoff_factor} seconds...")
+                logger.info(f"Network issue: {e}, retrying in {backoff_factor} seconds...")
                 time.sleep(backoff_factor)
                 backoff_factor = min(backoff_factor * 2, 60)
                 retry_count += 1
