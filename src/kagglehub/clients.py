@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 from urllib.parse import urljoin
 
 import requests
@@ -31,6 +31,7 @@ from kagglehub.exceptions import (
 )
 from kagglehub.handle import ResourceHandle
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
+from kagglehub.tracing import TraceContext, default_context_factory
 
 CHUNK_SIZE = 1048576
 # The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
@@ -66,8 +67,10 @@ def get_user_agent() -> str:
         _cached_user_agent = f"{base_user_agent} kkb/{build_date}"
     elif is_in_colab_notebook():
         colab_tag = os.getenv("COLAB_RELEASE_TAG")
-        runtime_suffix = "-managed" if os.getenv("TBE_RUNTIME_ADDR") else "-unmanaged"
-        _cached_user_agent = f"{base_user_agent} colab/{colab_tag}{runtime_suffix}"
+        runtime_suffix = "-managed" if os.getenv(
+            "TBE_RUNTIME_ADDR") else "-unmanaged"
+        _cached_user_agent = f"{
+            base_user_agent} colab/{colab_tag}{runtime_suffix}"
     else:
         _cached_user_agent = base_user_agent
 
@@ -81,9 +84,10 @@ logger = logging.getLogger(__name__)
 class KaggleApiV1Client:
     BASE_PATH = "api/v1"
 
-    def __init__(self) -> None:
+    def __init__(self, ctx_factory: Callable[[], TraceContext]) -> None:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
+        self.ctx_factory = ctx_factory if ctx_factory != None else default_context_factory
 
     def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
@@ -93,14 +97,16 @@ class KaggleApiV1Client:
             if latest_version > current_version:
                 logger.info(
                     "Warning: Looks like you're using an outdated `kagglehub` "
-                    f"version, please consider updating (latest version: {latest_version})"
+                    f"version, please consider updating (latest version: {
+                        latest_version})"
                 )
 
     def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers={"User-Agent": get_user_agent()},
+            headers={"User-Agent": get_user_agent(),
+                     "traceparent": self.ctx_factory().next()},
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -112,7 +118,10 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
-            headers={"User-Agent": get_user_agent()},
+            headers={
+                "User-Agent": get_user_agent(),
+                "traceparent": self.ctx_factory().next()
+            },
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -126,9 +135,13 @@ class KaggleApiV1Client:
     def download_file(self, path: str, out_file: str, resource_handle: Optional[ResourceHandle] = None) -> None:
         url = self._build_url(path)
         logger.info(f"Downloading from {url}...")
+        ctx = self.ctx_factory()
         with requests.get(
             url,
-            headers={"User-Agent": get_user_agent()},
+            headers={
+                "User-Agent": get_user_agent(),
+                "traceparent": ctx.next()
+            },
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -145,10 +158,12 @@ class KaggleApiV1Client:
                 update_hash_from_file(hash_object, out_file)
 
                 if size_read == total_size:
-                    logger.info(f"Download already complete ({size_read} bytes).")
+                    logger.info(
+                        f"Download already complete ({size_read} bytes).")
                     return
 
-                logger.info(f"Resuming download from {size_read} bytes ({total_size - size_read} bytes left)...")
+                logger.info(f"Resuming download from {size_read} bytes ({
+                            total_size - size_read} bytes left)...")
 
                 # Send the request again with the 'Range' header.
                 with requests.get(
@@ -156,18 +171,24 @@ class KaggleApiV1Client:
                     stream=True,
                     auth=self._get_http_basic_auth(),
                     timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
-                    headers={"Range": f"bytes={size_read}-"},
+                    headers={
+                        "Range": f"bytes={size_read}-",
+                        "traceparent": ctx.next()
+                    },
                 ) as resumed_response:
-                    _download_file(resumed_response, out_file, size_read, total_size, hash_object)
+                    _download_file(resumed_response, out_file,
+                                   size_read, total_size, hash_object)
             else:
-                _download_file(response, out_file, size_read, total_size, hash_object)
+                _download_file(response, out_file, size_read,
+                               total_size, hash_object)
 
             if hash_object:
                 actual_md5_hash = to_b64_digest(hash_object)
                 if actual_md5_hash != expected_md5_hash:
                     os.remove(out_file)  # Delete the corrupted file.
                     raise DataCorruptionError(
-                        _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(expected_md5_hash, actual_md5_hash)
+                        _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(
+                            expected_md5_hash, actual_md5_hash)
                     )
 
     def _get_http_basic_auth(self) -> Optional[HTTPBasicAuth]:
@@ -218,7 +239,8 @@ class KaggleJwtClient:
         if jwt_token is None:
             msg = (
                 "A JWT Token is required to call Kaggle, "
-                f"but none found in environment variable {KAGGLE_JWT_TOKEN_ENV_VAR_NAME}"
+                f"but none found in environment variable {
+                    KAGGLE_JWT_TOKEN_ENV_VAR_NAME}"
             )
             raise CredentialError(msg)
 
@@ -226,7 +248,8 @@ class KaggleJwtClient:
         if data_proxy_token is None:
             msg = (
                 "A Data Proxy Token is required to call Kaggle, "
-                f"but none found in environment variable {KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME}"
+                f"but none found in environment variable {
+                    KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME}"
             )
             raise CredentialError(msg)
 
@@ -240,7 +263,10 @@ class KaggleJwtClient:
         self,
         request_name: str,
         data: dict,
-        timeout: Tuple[float, float] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+        timeout: Tuple[float, float] = (
+            DEFAULT_CONNECT_TIMEOUT,
+            DEFAULT_READ_TIMEOUT
+        ),
     ) -> dict:
         url = f"{self.endpoint}{KaggleJwtClient.BASE_PATH}{request_name}"
         with requests.post(

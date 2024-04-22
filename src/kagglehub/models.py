@@ -5,6 +5,7 @@ from kagglehub import registry
 from kagglehub.gcs_upload import upload_files
 from kagglehub.handle import parse_model_handle
 from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version
+from kagglehub.tracing import TraceContext
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,15 @@ def model_upload(
     if h.is_versioned():
         is_versioned_exception = "The model handle should not include the version"
         raise ValueError(is_versioned_exception)
-
+    ctx = TraceContext()
+    def shared_context_factory():
+        return ctx
     # Create the model if it doesn't already exist
-    create_model_if_missing(h.owner, h.model)
+    create_model_if_missing(h.owner, h.model, shared_context_factory)
 
     # Upload the model files to GCS
-    tokens = upload_files(local_model_dir, "model")
+    tokens = upload_files(local_model_dir, "model", shared_context_factory)
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
-    create_model_instance_or_version(h, tokens, license_name, version_notes)
+    create_model_instance_or_version(
+        h, tokens, license_name, version_notes, shared_context_factory)
