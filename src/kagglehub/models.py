@@ -44,8 +44,10 @@ def model_upload(
         is_versioned_exception = "The model handle should not include the version"
         raise ValueError(is_versioned_exception)
     ctx = TraceContext()
+
     def shared_context_factory():
         return ctx
+    logger.debug(f"Using shared trace {ctx.trace}")
     # Create the model if it doesn't already exist
     create_model_if_missing(h.owner, h.model, shared_context_factory)
 
