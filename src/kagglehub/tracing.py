@@ -28,8 +28,8 @@ class TraceContext:
         exc_type: Optional[Type[BaseException]],
         exc_val: Optional[BaseException],
         traceback: Optional[TracebackType],
-    ) -> bool:
-        return False
+    ) -> None:
+        return
 
     def next(self) -> str:
         """
