@@ -29,7 +29,7 @@ class TraceContext:
         exc_val: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> bool:
-        pass
+        return
 
     def next(self) -> str:
         """
