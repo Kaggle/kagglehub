@@ -68,8 +68,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
             else:
                 return file_size
         except (ConnectionError, Timeout):
-            logger.info(f"Network issue while checking uploaded size, retrying in {
-                        backoff_factor} seconds...")
+            logger.info(f"Network issue while checking uploaded size, retrying in {backoff_factor} seconds...")
             time.sleep(backoff_factor)
             backoff_factor = min(backoff_factor * 2, 60)
             retry_count += 1

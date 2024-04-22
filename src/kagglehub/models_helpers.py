@@ -33,8 +33,7 @@ def _create_model_instance(
 
     api_client = KaggleApiV1Client(ctx_factory)
     api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
-    logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {
-                model_handle.to_url()}")
+    logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}")
 
 
 def _create_model_instance_version(
@@ -51,8 +50,7 @@ def _create_model_instance_version(
         data,
     )
     logger.info(
-        f"Your model instance version has been created.\nFiles are being processed...\nSee at: {
-            model_handle.to_url()}"
+        f"Your model instance version has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}"
     )
 
 
@@ -106,7 +104,6 @@ def delete_model(owner_slug: str, model_slug: str, ctx_factory: Optional[Callabl
         )
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
-            logger.info(f"Could not delete Model '{
-                        model_slug}' for user '{owner_slug}'...")
+            logger.info(f"Could not delete Model '{model_slug}' for user '{owner_slug}'...")
         else:
             raise (e)

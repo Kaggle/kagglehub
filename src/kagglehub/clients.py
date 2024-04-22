@@ -68,8 +68,7 @@ def get_user_agent() -> str:
     elif is_in_colab_notebook():
         colab_tag = os.getenv("COLAB_RELEASE_TAG")
         runtime_suffix = "-managed" if os.getenv("TBE_RUNTIME_ADDR") else "-unmanaged"
-        _cached_user_agent = f"{
-            base_user_agent} colab/{colab_tag}{runtime_suffix}"
+        _cached_user_agent = f"{base_user_agent} colab/{colab_tag}{runtime_suffix}"
     else:
         _cached_user_agent = base_user_agent
 

@@ -48,7 +48,7 @@ def model_upload(
     def shared_context_factory() -> TraceContext:
         return ctx
 
-    logger.debug(f"Using shared trace {ctx.trace}")
+    logger.debug(f"Using shared trace: {ctx.trace}")
     # Create the model if it doesn't already exist
     create_model_if_missing(h.owner, h.model, shared_context_factory)
 
