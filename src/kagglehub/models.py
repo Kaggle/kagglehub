@@ -45,8 +45,9 @@ def model_upload(
         raise ValueError(is_versioned_exception)
     ctx = TraceContext()
 
-    def shared_context_factory():
+    def shared_context_factory() -> TraceContext:
         return ctx
+
     logger.debug(f"Using shared trace {ctx.trace}")
     # Create the model if it doesn't already exist
     create_model_if_missing(h.owner, h.model, shared_context_factory)
@@ -55,5 +56,4 @@ def model_upload(
     tokens = upload_files(local_model_dir, "model", shared_context_factory)
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
-    create_model_instance_or_version(
-        h, tokens, license_name, version_notes, shared_context_factory)
+    create_model_instance_or_version(h, tokens, license_name, version_notes, shared_context_factory)

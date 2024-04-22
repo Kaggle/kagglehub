@@ -7,7 +7,7 @@ from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -27,12 +27,7 @@ REQUEST_TIMEOUT = 600
 
 
 def parse_datetime_string(string: str) -> Union[datetime, str]:
-    time_formats = [
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%dT%H:%M:%SZ",
-        "%Y-%m-%dT%H:%M:%S.%f",
-        "%Y-%m-%dT%H:%M:%S.%fZ"
-    ]
+    time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
         try:
             return datetime.strptime(string[:26], t).replace(microsecond=0)  # noqa: DTZ007
@@ -43,8 +38,7 @@ def parse_datetime_string(string: str) -> Union[datetime, str]:
 
 class File(object):  # noqa: UP004
     def __init__(self, init_dict: dict) -> None:
-        parsed_dict = {k: parse_datetime_string(
-            v) for k, v in init_dict.items()}
+        parsed_dict = {k: parse_datetime_string(v) for k, v in init_dict.items()}
         self.__dict__.update(parsed_dict)
 
     @staticmethod
@@ -64,8 +58,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
 
     while retry_count < MAX_RETRIES:
         try:
-            response = requests.put(
-                session_uri, headers=headers, timeout=REQUEST_TIMEOUT)
+            response = requests.put(session_uri, headers=headers, timeout=REQUEST_TIMEOUT)
             if response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
                 range_header = response.headers.get("Range")
                 if range_header:
@@ -84,8 +77,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str,
-                 ctx_factory: Callable[[], TraceContext] = None) -> str:
+def _upload_blob(file_path: str, model_type: str, ctx_factory: Optional[Callable[[], TraceContext]] = None) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Parameters
@@ -101,7 +93,7 @@ def _upload_blob(file_path: str, model_type: str,
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
-    if ctx_factory == None:
+    if ctx_factory is None:
         ctx_factory = default_context_factory
     api_client = KaggleApiV1Client(ctx_factory)
     response = api_client.post("/blobs/upload", data=data)
@@ -118,7 +110,7 @@ def _upload_blob(file_path: str, model_type: str,
     headers = {
         "Content-Type": "application/octet-stream",
         "Content-Range": f"bytes 0-{file_size - 1}/{file_size}",
-        "traceparent": ctx_factory().next()
+        "traceparent": ctx_factory().next(),
     }
 
     retry_count = 0
@@ -139,13 +131,10 @@ def _upload_blob(file_path: str, model_type: str,
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
                 elif upload_response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
-                    uploaded_bytes = _check_uploaded_size(
-                        session_uri, file_size)
+                    uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 else:
-                    upload_failed_exception = (
-                        f"Upload failed with status code {
-                            upload_response.status_code}: {upload_response.text}"
-                    )
+                    upload_failed_exception = f"Upload failed with status code {
+                        upload_response.status_code}: {upload_response.text}"
                     raise BackendError(upload_failed_exception)
             except (requests.ConnectionError, requests.Timeout) as e:
                 logger.info(f"Network issue: {e}, retrying in {
@@ -178,8 +167,9 @@ def zip_files(source_path_obj: Path, zip_path: Path) -> List[int]:
     return sizes
 
 
-def upload_files(source_path: str, model_type: str,
-                 ctx_factory: Callable[[], TraceContext] = None) -> List[str]:
+def upload_files(
+    source_path: str, model_type: str, ctx_factory: Optional[Callable[[], TraceContext]] = None
+) -> List[str]:
     source_path_obj = Path(source_path)
     with TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
@@ -207,6 +197,6 @@ def upload_files(source_path: str, model_type: str,
                 shutil.copy(source_path_obj, temp_file_path)
                 pbar.update(temp_file_path.stat().st_size)
                 upload_path = str(temp_file_path)
-        if ctx_factory == None:
+        if ctx_factory is None:
             ctx_factory = default_context_factory
         return [token for token in [_upload_blob(upload_path, model_type, ctx_factory)] if token]

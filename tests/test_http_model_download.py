@@ -86,7 +86,11 @@ EXPECTED_MODEL_SUBPATH = os.path.join(
 # Test cases for the ModelHttpResolver.
 class TestHttpModelDownload(BaseTestCase):
     def _download_model_and_assert_downloaded(
-        self, d: str, model_handle: str, expected_subdir_or_subpath: str, **kwargs  # noqa: ANN003
+        self,
+        d: str,
+        model_handle: str,
+        expected_subdir_or_subpath: str,
+        **kwargs,  # noqa: ANN003
     ) -> None:
         # Download the full model and ensure all files are there.
         model_path = kagglehub.model_download(model_handle, **kwargs)

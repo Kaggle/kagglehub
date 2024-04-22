@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import List, Optional, Callable
+from typing import Callable, List, Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
@@ -10,21 +10,19 @@ from kagglehub.tracing import TraceContext
 logger = logging.getLogger(__name__)
 
 
-def _create_model(owner_slug: str, model_slug: str,
-                  ctx_factory: Callable[[], TraceContext] = None) -> None:
-    data = {
-        "ownerSlug": owner_slug,
-        "slug": model_slug,
-        "title": model_slug,
-        "isPrivate": True
-    }
+def _create_model(owner_slug: str, model_slug: str, ctx_factory: Optional[Callable[[], TraceContext]] = None) -> None:
+    data = {"ownerSlug": owner_slug, "slug": model_slug, "title": model_slug, "isPrivate": True}
     api_client = KaggleApiV1Client(ctx_factory)
     api_client.post("/models/create/new", data)
     logger.info(f"Model '{model_slug}' Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None,
-                           ctx_factory: Callable[[], TraceContext] = None) -> None:
+def _create_model_instance(
+    model_handle: ModelHandle,
+    files: List[str],
+    license_name: Optional[str] = None,
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
+) -> None:
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
@@ -34,19 +32,18 @@ def _create_model_instance(model_handle: ModelHandle, files: List[str], license_
         data["licenseName"] = license_name
 
     api_client = KaggleApiV1Client(ctx_factory)
-    api_client.post(
-        f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
+    api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
     logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {
                 model_handle.to_url()}")
 
 
-def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes: str = "",
-                                   ctx_factory: Callable[[], TraceContext] = None) -> None:
-    data = {
-        "versionNotes": version_notes,
-        "files": [
-            {"token": file_token} for file_token in files]
-    }
+def _create_model_instance_version(
+    model_handle: ModelHandle,
+    files: List[str],
+    version_notes: str = "",
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
+) -> None:
+    data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files]}
     api_client = KaggleApiV1Client(ctx_factory)
     api_client.post(
         f"/models/{model_handle.owner}/{model_handle.model}/{
@@ -60,28 +57,30 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: str = "",
-    ctx_factory: Callable[[], TraceContext] = None
+    model_handle: ModelHandle,
+    files: List[str],
+    license_name: Optional[str],
+    version_notes: str = "",
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
 ) -> None:
     try:
         api_client = KaggleApiV1Client(ctx_factory)
         api_client.get(f"/models/{model_handle}/get", model_handle)
         # the instance exist, create a new version.
-        _create_model_instance_version(
-            model_handle, files, version_notes, ctx_factory)
+        _create_model_instance_version(model_handle, files, version_notes, ctx_factory)
     except KaggleApiHTTPError as e:
         if e.response is not None and (
             e.response.status_code == HTTPStatus.NOT_FOUND  # noqa: PLR1714
             or e.response.status_code == HTTPStatus.FORBIDDEN
         ):
-            _create_model_instance(model_handle, files,
-                                   license_name, ctx_factory)
+            _create_model_instance(model_handle, files, license_name, ctx_factory)
         else:
             raise (e)
 
 
-def create_model_if_missing(owner_slug: str, model_slug: str,
-                            ctx_factory: Callable[[], TraceContext] = None) -> None:
+def create_model_if_missing(
+    owner_slug: str, model_slug: str, ctx_factory: Optional[Callable[[], TraceContext]] = None
+) -> None:
     try:
         api_client = KaggleApiV1Client(ctx_factory)
         api_client.get(f"/models/{owner_slug}/{model_slug}/get")
@@ -98,8 +97,7 @@ def create_model_if_missing(owner_slug: str, model_slug: str,
             raise (e)
 
 
-def delete_model(owner_slug: str, model_slug: str,
-                 ctx_factory: Callable[[], TraceContext] = None) -> None:
+def delete_model(owner_slug: str, model_slug: str, ctx_factory: Optional[Callable[[], TraceContext]] = None) -> None:
     try:
         api_client = KaggleApiV1Client(ctx_factory)
         api_client.post(
