@@ -82,10 +82,10 @@ logger = logging.getLogger(__name__)
 class KaggleApiV1Client:
     BASE_PATH = "api/v1"
 
-    def __init__(self, ctx_factory: Callable[[], TraceContext]) -> None:
+    def __init__(self, ctx_factory: Optional[Callable[[], TraceContext]] = None) -> None:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
-        self.ctx_factory = ctx_factory if ctx_factory is not None else default_context_factory
+        self.ctx_factory = default_context_factory if ctx_factory is None else ctx_factory
 
     def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
