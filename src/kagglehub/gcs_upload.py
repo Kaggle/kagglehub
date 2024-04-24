@@ -28,7 +28,12 @@ class UploadFileInfo:
 
 
 class UploadDirectoryInfo:
-    def __init__(self, name: str, files: List[UploadFileInfo] = None, directories: List["UploadDirectoryInfo"] = None):
+    def __init__(
+        self,
+        name: str,
+        files: Optional[List["UploadFileInfo"]] = None,
+        directories: Optional[List["UploadDirectoryInfo"]] = None,
+    ):
         self.name = name
         self.files = files if files is not None else []
         self.directories = directories if directories is not None else []
