@@ -28,7 +28,7 @@ class UploadFileInfo:
 
 
 class UploadDirectoryInfo:
-    def __init__(self, name: str, files: List[UploadFileInfo] = None, directories: List['UploadDirectoryInfo'] = None):
+    def __init__(self, name: str, files: List[UploadFileInfo] = None, directories: List["UploadDirectoryInfo"] = None):
         self.name = name
         self.files = files if files is not None else []
         self.directories = directories if directories is not None else []
@@ -151,8 +151,8 @@ def _upload_blob(file_path: str, model_type: str) -> str:
 
 
 def upload_files_and_directories(
-    folder: str, model_type: str, quiet: bool = False
-) -> UploadDirectoryInfo:  # noqa: FBT002, FBT001
+    folder: str, model_type: str, quiet: bool = False # noqa: FBT002, FBT001
+) -> UploadDirectoryInfo:
     # Count the total number of files
     file_count = 0
     for _, _, files in os.walk(folder):
@@ -181,7 +181,7 @@ def upload_files_and_directories(
         if token:
             root_dict.files.append(token)
     else:
-        for root, dirs, files in os.walk(folder):
+        for root, _, files in os.walk(folder):
             # Path of the current folder relative to the base folder
             path = os.path.relpath(root, folder)
 

@@ -21,7 +21,7 @@ def _create_model_instance(
     model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str] = None
 ) -> None:
     serialized_data = [
-        {'name': d.name, 'files': [{'token': file} for file in d.files], 'directories': d.directories}
+        {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
         for d in files_and_directories.directories
     ]
     data = {
@@ -42,7 +42,7 @@ def _create_model_instance_version(
     model_handle: ModelHandle, files_and_directories: FileStructure, version_notes: str = ""
 ) -> None:
     serialized_data = [
-        {'name': d.name, 'files': [{'token': file} for file in d.files], 'directories': d.directories}
+        {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
         for d in files_and_directories.directories
     ]
     data = {
