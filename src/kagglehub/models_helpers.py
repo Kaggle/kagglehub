@@ -5,17 +5,9 @@ from typing import List, Optional, Union
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
 from kagglehub.handle import ModelHandle
+from kagglehub.gcs_upload import FileStructure
 
 logger = logging.getLogger(__name__)
-
-
-class Directory:
-    name: str
-    files: List[str]
-    directories: List["Directory"]
-
-
-FileStructure = List[Directory]
 
 
 def _create_model(owner_slug: str, model_slug: str) -> None:
@@ -28,13 +20,15 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
 def _create_model_instance(
     model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str] = None
 ) -> None:
-    print([subdir for subdir in files_and_directories["directories"]])
-    print([{"token": file_token} for file_token in files_and_directories["files"]])
+    serialized_data = [
+        {'name': d.name, 'files': [{'token': file} for file in d.files], 'directories': d.directories}
+        for d in files_and_directories.directories
+    ]
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
-        "files": [{"token": file_token} for file_token in files_and_directories["files"]],
-        "directories": [subdir for subdir in files_and_directories["directories"]],
+        "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": serialized_data,
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -45,12 +39,16 @@ def _create_model_instance(
 
 
 def _create_model_instance_version(
-    model_handle: ModelHandle, files_and_directories: List[str], version_notes: str = ""
+    model_handle: ModelHandle, files_and_directories: FileStructure, version_notes: str = ""
 ) -> None:
+    serialized_data = [
+        {'name': d.name, 'files': [{'token': file} for file in d.files], 'directories': d.directories}
+        for d in files_and_directories.directories
+    ]
     data = {
         "versionNotes": version_notes,
-        "files": [{"token": file_token} for file_token in files_and_directories["files"]],
-        "directories": [subdir for subdir in files_and_directories["directories"]],
+        "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": serialized_data,
     }
     api_client = KaggleApiV1Client()
     api_client.post(

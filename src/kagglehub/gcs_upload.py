@@ -23,16 +23,18 @@ REQUEST_TIMEOUT = 600
 
 
 class UploadFileInfo:
-    token: str
+    def __init__(self, token: str):
+        self.token = token
 
 
-class Directory:
-    name: str
-    files: List[UploadFileInfo]
-    directories: List["Directory"]
+class UploadDirectoryInfo:
+    def __init__(self, name: str, files: List[UploadFileInfo] = None, directories: List['UploadDirectoryInfo'] = None):
+        self.name = name
+        self.files = files if files is not None else []
+        self.directories = directories if directories is not None else []
 
 
-FileStructure = Union[UploadFileInfo, Directory]
+FileStructure = Union[UploadFileInfo, UploadDirectoryInfo]
 
 
 def parse_datetime_string(string: str) -> Union[datetime, str]:
@@ -148,7 +150,9 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]:  # noqa: FBT002, FBT001
+def upload_files_and_directories(
+    folder: str, model_type: str, quiet: bool = False
+) -> UploadDirectoryInfo:  # noqa: FBT002, FBT001
     # Count the total number of files
     file_count = 0
     for _, _, files in os.walk(folder):
@@ -166,23 +170,16 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
                         file_path = os.path.join(root, file)
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
-            # Upload the zip file
-            return {
-                "files": [
-                    token
-                    for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
-                    if token is not None
-                ],
-                "directories": [],
-            }
+            tokens = _upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)
+            return UploadDirectoryInfo(name="archive", files=tokens)
 
-    root_dict = {'files': [], 'directories': []}
+    root_dict = UploadDirectoryInfo(name="root")
     if os.path.isfile(folder):
         # Directly upload the file if the path is a file
         file_name = os.path.basename(folder)
         token = _upload_file_or_folder(os.path.dirname(folder), file_name, model_type, quiet)
         if token:
-            root_dict["files"].append(token)
+            root_dict.files.append(token)
     else:
         for root, dirs, files in os.walk(folder):
             # Path of the current folder relative to the base folder
@@ -193,21 +190,21 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
             if path != ".":
                 for part in path.split(os.sep):
                     # Find or create the subdirectory in the current dictionary
-                    for subdir in current_dict["directories"]:
-                        if subdir["name"] == part:
+                    for subdir in current_dict.directories:
+                        if subdir.name == part:
                             current_dict = subdir
                             break
                     else:
                         # If the directory is not found, create a new one
-                        new_dir = {"name": part, "files": [], "directories": []}
-                        current_dict["directories"].append(new_dir)
+                        new_dir = UploadDirectoryInfo(name=part)
+                        current_dict.directories.append(new_dir)
                         current_dict = new_dir
 
             # Add file tokens to the current directory in the dictionary
             for file in files:
                 token = _upload_file_or_folder(root, file, model_type, quiet)
                 if token:
-                    current_dict["files"].append(token)
+                    current_dict.files.append(token)
 
     return root_dict
 
