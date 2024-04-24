@@ -63,7 +63,6 @@ def _create_model_instance_version(
 def create_model_instance_or_version(
     model_handle: ModelHandle,
     files_and_directories: UploadDirectoryInfo,
-    license_name: Optional[str],
     version_notes: str = "",
 ) -> None:
     try:
@@ -74,7 +73,7 @@ def create_model_instance_or_version(
     except BackendError as e:
         if e.error_code == HTTPStatus.CONFLICT:
             # Instance already exist, creating a new version instead.
-            _create_model_instance_version(model_handle, files, version_notes)
+            _create_model_instance_version(model_handle, files_and_directories, version_notes)
         else:
             raise (e)
 
