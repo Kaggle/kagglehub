@@ -4,8 +4,8 @@ from typing import Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
-from kagglehub.gcs_upload import FileStructure
 from kagglehub.handle import ModelHandle
+from kagglehub.gcs_upload import UploadDirectoryInfo
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +18,13 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
 
 
 def _create_model_instance(
-    model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str] = None
+    model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, license_name: Optional[str] = None
 ) -> None:
     serialized_data = [
         {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
         for d in files_and_directories.directories
     ]
+    print(files_and_directories)
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
@@ -39,7 +40,7 @@ def _create_model_instance(
 
 
 def _create_model_instance_version(
-    model_handle: ModelHandle, files_and_directories: FileStructure, version_notes: str = ""
+    model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, version_notes: str = ""
 ) -> None:
     serialized_data = [
         {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
@@ -62,7 +63,7 @@ def _create_model_instance_version(
 
 def create_model_instance_or_version(
     model_handle: ModelHandle,
-    files_and_directories: FileStructure,
+    files_and_directories: UploadDirectoryInfo,
     license_name: Optional[str],
     version_notes: str = "",
 ) -> None:

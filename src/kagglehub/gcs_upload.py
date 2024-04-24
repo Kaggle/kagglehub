@@ -34,9 +34,6 @@ class UploadDirectoryInfo:
         self.directories = directories if directories is not None else []
 
 
-FileStructure = List[UploadDirectoryInfo]
-
-
 def parse_datetime_string(string: str) -> Union[datetime, str]:
     time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
