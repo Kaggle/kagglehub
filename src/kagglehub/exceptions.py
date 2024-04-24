@@ -19,7 +19,9 @@ class ColabEnvironmentError(Exception):
 
 
 class BackendError(Exception):
-    pass
+    def __init__(self, message: str, error_code: Optional[int] = None) -> None:
+        self.error_code = error_code
+        super().__init__(message)
 
 
 class NotFoundError(Exception):
@@ -102,4 +104,5 @@ def process_post_response(response: Dict[str, Any]) -> None:
         error_message = response.get("message", "No error message provided")
         raise BackendError(error_message)
     elif "error" in response and response["error"] != "":
-        raise BackendError(response["error"])
+        error_code = int(response["errorCode"]) if "errorCode" in response else None
+        raise BackendError(response["error"], error_code)
