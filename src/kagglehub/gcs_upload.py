@@ -1,13 +1,10 @@
 import logging
 import os
-import shutil
 import time
 import zipfile
 from datetime import datetime
-from multiprocessing import Pool
-from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -32,7 +29,7 @@ class UploadFileInfo:
 class Directory:
     name: str
     files: List[UploadFileInfo]
-    directories: List['Directory']
+    directories: List["Directory"]
 
 
 FileStructure = Union[UploadFileInfo, Directory]
@@ -171,12 +168,12 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
 
             # Upload the zip file
             return {
-                'files': [
+                "files": [
                     token
                     for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
                     if token is not None
                 ],
-                'directories': [],
+                "directories": [],
             }
 
     root_dict = {'files': [], 'directories': []}
@@ -185,10 +182,9 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
         file_name = os.path.basename(folder)
         token = _upload_file_or_folder(os.path.dirname(folder), file_name, model_type, quiet)
         if token:
-            root_dict['files'].append(token)
+            root_dict["files"].append(token)
     else:
         for root, dirs, files in os.walk(folder):
-            print("dfkafsss")
             # Path of the current folder relative to the base folder
             path = os.path.relpath(root, folder)
 
@@ -197,21 +193,21 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
             if path != ".":
                 for part in path.split(os.sep):
                     # Find or create the subdirectory in the current dictionary
-                    for subdir in current_dict['directories']:
-                        if subdir['name'] == part:
+                    for subdir in current_dict["directories"]:
+                        if subdir["name"] == part:
                             current_dict = subdir
                             break
                     else:
                         # If the directory is not found, create a new one
-                        new_dir = {'name': part, 'files': [], 'directories': []}
-                        current_dict['directories'].append(new_dir)
+                        new_dir = {"name": part, "files": [], "directories": []}
+                        current_dict["directories"].append(new_dir)
                         current_dict = new_dir
 
             # Add file tokens to the current directory in the dictionary
             for file in files:
                 token = _upload_file_or_folder(root, file, model_type, quiet)
                 if token:
-                    current_dict['files'].append(token)
+                    current_dict["files"].append(token)
 
     return root_dict
 
