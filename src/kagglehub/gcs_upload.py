@@ -99,7 +99,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     file_size = os.path.getsize(file_path)
     data = {
         "type": model_type,
-        "name": str(file_path),
+        "name": os.path.basename(file_path),
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
@@ -170,37 +170,45 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
             # Upload the zip file
-            return [
+            return {'files': [
                 token
                 for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
                 if token is not None
-            ]
+            ], 'directories': []}
 
     root_dict = {'files': [], 'directories': []}
-    for root, dirs, files in os.walk(folder):
-        # Path of the current folder relative to the base folder
-        path = os.path.relpath(root, folder)
+    if os.path.isfile(folder):
+        # Directly upload the file if the path is a file
+        file_name = os.path.basename(folder)
+        token = _upload_file_or_folder(os.path.dirname(folder), file_name, model_type, quiet)
+        if token:
+            root_dict['files'].append(token)
+    else:
+        for root, dirs, files in os.walk(folder):
+            print("dfkafsss")
+            # Path of the current folder relative to the base folder
+            path = os.path.relpath(root, folder)
 
-        # Navigate or create the dictionary path to the current folder
-        current_dict = root_dict
-        if path != ".":
-            for part in path.split(os.sep):
-                # Find or create the subdirectory in the current dictionary
-                for subdir in current_dict['directories']:
-                    if subdir['name'] == part:
-                        current_dict = subdir
-                        break
-                else:
-                    # If the directory is not found, create a new one
-                    new_dir = {'name': part, 'files': [], 'directories': []}
-                    current_dict['directories'].append(new_dir)
-                    current_dict = new_dir
+            # Navigate or create the dictionary path to the current folder
+            current_dict = root_dict
+            if path != ".":
+                for part in path.split(os.sep):
+                    # Find or create the subdirectory in the current dictionary
+                    for subdir in current_dict['directories']:
+                        if subdir['name'] == part:
+                            current_dict = subdir
+                            break
+                    else:
+                        # If the directory is not found, create a new one
+                        new_dir = {'name': part, 'files': [], 'directories': []}
+                        current_dict['directories'].append(new_dir)
+                        current_dict = new_dir
 
-        # Add file tokens to the current directory in the dictionary
-        for file in files:
-            token = _upload_file_or_folder(root, file, folder, model_type, quiet)
-            if token:
-                current_dict['files'].append(token)
+            # Add file tokens to the current directory in the dictionary
+            for file in files:
+                token = _upload_file_or_folder(root, file, model_type, quiet)
+                if token:
+                    current_dict['files'].append(token)
 
     return root_dict
 
@@ -230,9 +238,7 @@ def _upload_file_or_folder(
     return None
 
 
-def _upload_file(
-    file_name: str, full_path: str, quiet: bool, model_type: str
-) -> Optional[str]:  # noqa: FBT001
+def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========

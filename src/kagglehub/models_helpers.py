@@ -8,10 +8,12 @@ from kagglehub.handle import ModelHandle
 
 logger = logging.getLogger(__name__)
 
+
 class Directory:
     name: str
     files: List[str]
     directories: List['Directory']
+
 
 FileStructure = List[Directory]
 
@@ -23,14 +25,16 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
     logger.info(f"Model '{model_slug}' Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str] = None) -> None:
+def _create_model_instance(
+    model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str] = None
+) -> None:
     print([subdir for subdir in files_and_directories['directories']])
     print([{"token": file_token} for file_token in files_and_directories['files']])
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
         "files": [{"token": file_token} for file_token in files_and_directories['files']],
-        "directories": [subdir for subdir in files_and_directories['directories']]
+        "directories": [subdir for subdir in files_and_directories['directories']],
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -40,8 +44,14 @@ def _create_model_instance(model_handle: ModelHandle, files_and_directories: Fil
     logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}")
 
 
-def _create_model_instance_version(model_handle: ModelHandle, files_and_directories: List[str], version_notes: str = "") -> None:
-    data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files_and_directories]}
+def _create_model_instance_version(
+    model_handle: ModelHandle, files_and_directories: List[str], version_notes: str = ""
+) -> None:
+    data = {
+        "versionNotes": version_notes,
+        "files": [{"token": file_token} for file_token in files_and_directories['files']],
+        "directories": [subdir for subdir in files_and_directories['directories']],
+    }
     api_client = KaggleApiV1Client()
     api_client.post(
         f"/models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/create/version",
@@ -53,7 +63,10 @@ def _create_model_instance_version(model_handle: ModelHandle, files_and_director
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str], version_notes: str = ""
+    model_handle: ModelHandle,
+    files_and_directories: FileStructure,
+    license_name: Optional[str],
+    version_notes: str = "",
 ) -> None:
     try:
         api_client = KaggleApiV1Client()
