@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class Directory:
     name: str
     files: List[str]
-    directories: List['Directory']
+    directories: List["Directory"]
 
 
 FileStructure = List[Directory]
@@ -28,13 +28,13 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
 def _create_model_instance(
     model_handle: ModelHandle, files_and_directories: FileStructure, license_name: Optional[str] = None
 ) -> None:
-    print([subdir for subdir in files_and_directories['directories']])
-    print([{"token": file_token} for file_token in files_and_directories['files']])
+    print([subdir for subdir in files_and_directories["directories"]])
+    print([{"token": file_token} for file_token in files_and_directories["files"]])
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
-        "files": [{"token": file_token} for file_token in files_and_directories['files']],
-        "directories": [subdir for subdir in files_and_directories['directories']],
+        "files": [{"token": file_token} for file_token in files_and_directories["files"]],
+        "directories": [subdir for subdir in files_and_directories["directories"]],
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -49,8 +49,8 @@ def _create_model_instance_version(
 ) -> None:
     data = {
         "versionNotes": version_notes,
-        "files": [{"token": file_token} for file_token in files_and_directories['files']],
-        "directories": [subdir for subdir in files_and_directories['directories']],
+        "files": [{"token": file_token} for file_token in files_and_directories["files"]],
+        "directories": [subdir for subdir in files_and_directories["directories"]],
     }
     api_client = KaggleApiV1Client()
     api_client.post(
