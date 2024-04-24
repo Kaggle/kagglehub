@@ -4,6 +4,8 @@ import abc
 from dataclasses import dataclass
 from typing import Optional
 
+from kagglehub.config import get_kaggle_api_endpoint
+
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
@@ -37,10 +39,11 @@ class ModelHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
+        endpoint = get_kaggle_api_endpoint()
         if self.is_versioned():
-            return f"https://www.kaggle.com/models/{self.owner}/{self.model}/{self.framework}/{self.variation}/{self.version}"
+            return f"{endpoint}/models/{self.owner}/{self.model}/{self.framework}/{self.variation}/{self.version}"
         else:
-            return f"https://www.kaggle.com/models/{self.owner}/{self.model}/{self.framework}/{self.variation}"
+            return f"{endpoint}/models/{self.owner}/{self.model}/{self.framework}/{self.variation}"
 
 
 @dataclass
@@ -59,7 +62,8 @@ class DatasetHandle:
         return handle_str
 
     def to_url(self) -> str:
-        base_url = f"https://www.kaggle.com/datasets/{self.owner}/{self.dataset_name}"
+        endpoint = get_kaggle_api_endpoint()
+        base_url = f"{endpoint}/datasets/{self.owner}/{self.dataset_name}"
         if self.is_versioned():
             return f"{base_url}/versions/{self.version}"
         return base_url
