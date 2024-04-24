@@ -24,7 +24,6 @@ def _create_model_instance(
         {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
         for d in files_and_directories.directories
     ]
-    print(files_and_directories)
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
