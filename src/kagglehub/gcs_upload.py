@@ -88,7 +88,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str, relative_path: str) -> str:
+def _upload_blob(file_path: str, model_type: str) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Parameters
@@ -97,11 +97,9 @@ def _upload_blob(file_path: str, model_type: str, relative_path: str) -> str:
     model_type : The type of the model associated with the file.
     """
     file_size = os.path.getsize(file_path)
-    string_paths = [str(path) for path in relative_path]
-    print(relative_path)
     data = {
         "type": model_type,
-        "name": str(relative_path),
+        "name": str(file_path),
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
@@ -174,7 +172,7 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
             # Upload the zip file
             return [
                 token
-                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, folder, model_type, quiet)]
+                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
                 if token is not None
             ]
 
@@ -210,7 +208,6 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
 def _upload_file_or_folder(
     parent_path: str,
     file_or_folder_name: str,
-    base_path: str,
     model_type: str,
     quiet: bool = False,  # noqa: FBT002, FBT001
 ) -> Optional[str]:
@@ -226,16 +223,15 @@ def _upload_file_or_folder(
     :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
-    relative_path = os.path.relpath(full_path, start=base_path)
     if os.path.isfile(full_path):
-        return _upload_file(file_or_folder_name, full_path, relative_path, quiet, model_type)
+        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
     elif not quiet:
         logger.info("Skipping: " + file_or_folder_name)
     return None
 
 
 def _upload_file(
-    file_name: str, full_path: str, relative_path: str, quiet: bool, model_type: str
+    file_name: str, full_path: str, quiet: bool, model_type: str
 ) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
@@ -251,7 +247,7 @@ def _upload_file(
         logger.info("Starting upload for file " + file_name)
 
     content_length = os.path.getsize(full_path)
-    token = _upload_blob(full_path, model_type, relative_path)
+    token = _upload_blob(full_path, model_type)
     if not quiet:
         logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
     return token
