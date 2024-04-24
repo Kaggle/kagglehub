@@ -170,7 +170,11 @@ def upload_files_and_directories(
                         file_path = os.path.join(root, file)
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
-            tokens = _upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)
+            tokens = [
+                token
+                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+                if token is not None
+            ]
             return UploadDirectoryInfo(name="archive", files=tokens)
 
     root_dict = UploadDirectoryInfo(name="root")
