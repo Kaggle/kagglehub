@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import List, Optional
+from typing import Optional
 
 from kagglehub.clients import BackendError, KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
