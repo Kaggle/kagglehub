@@ -24,11 +24,12 @@ def _create_model_instance(
         {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
         for d in files_and_directories.directories
     ]
+    print([{"token": file_token} for file_token in files_and_directories.files])
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
-        "directories": serialized_data,
+        # "directories": serialized_data,
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -48,7 +49,7 @@ def _create_model_instance_version(
     data = {
         "versionNotes": version_notes,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
-        "directories": serialized_data,
+        # "directories": serialized_data,
     }
     api_client = KaggleApiV1Client()
     api_client.post(

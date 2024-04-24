@@ -22,16 +22,11 @@ MAX_RETRIES = 5
 REQUEST_TIMEOUT = 600
 
 
-class UploadFileInfo:
-    def __init__(self, token: str):
-        self.token = token
-
-
 class UploadDirectoryInfo:
     def __init__(
         self,
         name: str,
-        files: Optional[List["UploadFileInfo"]] = None,
+        files: Optional[List[str]] = None,
         directories: Optional[List["UploadDirectoryInfo"]] = None,
     ):
         self.name = name
@@ -39,7 +34,7 @@ class UploadDirectoryInfo:
         self.directories = directories if directories is not None else []
 
 
-FileStructure = Union[UploadFileInfo, UploadDirectoryInfo]
+FileStructure = List[UploadDirectoryInfo]
 
 
 def parse_datetime_string(string: str) -> Union[datetime, str]:
