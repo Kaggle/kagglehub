@@ -4,8 +4,8 @@ from typing import Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
-from kagglehub.handle import ModelHandle
 from kagglehub.gcs_upload import UploadDirectoryInfo
+from kagglehub.handle import ModelHandle
 
 logger = logging.getLogger(__name__)
 
