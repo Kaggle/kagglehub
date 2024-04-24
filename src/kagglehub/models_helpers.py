@@ -61,7 +61,7 @@ def _create_model_instance_version(
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: str = ""
+    model_handle: ModelHandle, files: UploadDirectoryInfo, license_name: Optional[str], version_notes: str = ""
 ) -> None:
     try:
         _create_model_instance(model_handle, files, license_name)
