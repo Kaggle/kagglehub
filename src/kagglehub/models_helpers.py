@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import Optional
+from typing import List, Optional
 
 from kagglehub.clients import BackendError, KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
@@ -61,19 +61,14 @@ def _create_model_instance_version(
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle,
-    files_and_directories: UploadDirectoryInfo,
-    version_notes: str = "",
+    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: str = ""
 ) -> None:
     try:
-        api_client = KaggleApiV1Client()
-        api_client.get(f"/models/{model_handle}/get", model_handle)
-        # the instance exist, create a new version.
-        _create_model_instance_version(model_handle, files_and_directories, version_notes)
+        _create_model_instance(model_handle, files, license_name)
     except BackendError as e:
         if e.error_code == HTTPStatus.CONFLICT:
             # Instance already exist, creating a new version instead.
-            _create_model_instance_version(model_handle, files_and_directories, version_notes)
+            _create_model_instance_version(model_handle, files, version_notes)
         else:
             raise (e)
 
