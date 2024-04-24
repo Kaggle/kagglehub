@@ -28,13 +28,14 @@ REQUEST_TIMEOUT = 600
 class UploadFileInfo:
     token: str
 
+
 class Directory:
     name: str
     files: List[UploadFileInfo]
     directories: List['Directory']
 
-FileStructure = Union[UploadFileInfo, Directory]
 
+FileStructure = Union[UploadFileInfo, Directory]
 
 
 def parse_datetime_string(string: str) -> Union[datetime, str]:
@@ -98,8 +99,6 @@ def _upload_blob(file_path: str, model_type: str, relative_path: str) -> str:
     file_size = os.path.getsize(file_path)
     string_paths = [str(path) for path in relative_path]
     print(relative_path)
-    string_paths = [str(path) for path in relative_path]
-    print(relative_path)
     data = {
         "type": model_type,
         "name": str(relative_path),
@@ -153,36 +152,37 @@ def _upload_blob(file_path: str, model_type: str, relative_path: str) -> str:
 
     return response["token"]
 
+
 def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]:  # noqa: FBT002, FBT001
     # Count the total number of files
-    # file_count = 0
-    # for _, _, files in os.walk(folder):
-    #     file_count += len(files)
+    file_count = 0
+    for _, _, files in os.walk(folder):
+        file_count += len(files)
 
-    # if file_count > MAX_FILES_TO_UPLOAD:
-    #     if not quiet:
-    #         logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
+    if file_count > MAX_FILES_TO_UPLOAD:
+        if not quiet:
+            logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
 
-    #     with TemporaryDirectory() as temp_dir:
-    #         zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
-    #         with zipfile.ZipFile(zip_path, "w") as zipf:
-    #             for root, _, files in os.walk(folder):
-    #                 for file in files:
-    #                     file_path = os.path.join(root, file)
-    #                     zipf.write(file_path, os.path.relpath(file_path, folder))
+        with TemporaryDirectory() as temp_dir:
+            zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
+            with zipfile.ZipFile(zip_path, "w") as zipf:
+                for root, _, files in os.walk(folder):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        zipf.write(file_path, os.path.relpath(file_path, folder))
 
-    #         # Upload the zip file
-    #         return [
-    #             token
-    #             for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, folder, model_type, quiet)]
-    #             if token is not None
-    #         ]
+            # Upload the zip file
+            return [
+                token
+                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, folder, model_type, quiet)]
+                if token is not None
+            ]
 
     root_dict = {'files': [], 'directories': []}
     for root, dirs, files in os.walk(folder):
         # Path of the current folder relative to the base folder
         path = os.path.relpath(root, folder)
-        
+
         # Navigate or create the dictionary path to the current folder
         current_dict = root_dict
         if path != ".":
@@ -204,12 +204,15 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
             if token:
                 current_dict['files'].append(token)
 
-
     return root_dict
 
 
 def _upload_file_or_folder(
-    parent_path: str, file_or_folder_name: str, base_path: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
+    parent_path: str,
+    file_or_folder_name: str,
+    base_path: str,
+    model_type: str,
+    quiet: bool = False,  # noqa: FBT002, FBT001
 ) -> Optional[str]:
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
@@ -231,7 +234,9 @@ def _upload_file_or_folder(
     return None
 
 
-def _upload_file(file_name: str, full_path: str, relative_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+def _upload_file(
+    file_name: str, full_path: str, relative_path: str, quiet: bool, model_type: str
+) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========
