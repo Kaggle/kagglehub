@@ -8,7 +8,6 @@ from multiprocessing import Pool
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List, Optional, Tuple, Union
-from typing import List, Optional, Tuple, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -88,7 +87,6 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str, relative_path: str) -> str:
 def _upload_blob(file_path: str, model_type: str, relative_path: str) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
