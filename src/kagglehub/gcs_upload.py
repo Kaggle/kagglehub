@@ -170,11 +170,14 @@ def upload_files(folder: str, model_type: str, quiet: bool = False) -> List[str]
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
             # Upload the zip file
-            return {'files': [
-                token
-                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
-                if token is not None
-            ], 'directories': []}
+            return {
+                'files': [
+                    token
+                    for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+                    if token is not None
+                ],
+                'directories': [],
+            }
 
     root_dict = {'files': [], 'directories': []}
     if os.path.isfile(folder):
