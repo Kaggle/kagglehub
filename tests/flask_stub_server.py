@@ -123,7 +123,7 @@ def model_instance_create():  # noqa: ANN201
 
 
 class ServerThread(threading.Thread):
-    def __init__(self, app):
+    def __init__(self, app: Flask):
         threading.Thread.__init__(self)
         self.server = make_server("127.0.0.1", 7777, app)
         self.ctx = app.app_context()
