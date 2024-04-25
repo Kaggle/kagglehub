@@ -24,6 +24,12 @@ def get_test_file_path(relative_path: str) -> str:
     return os.path.join(Path(__file__).parent, "data", relative_path)
 
 
+def resolve_endpoint() -> Tuple[str, int]:
+    endpoint = os.environ.get("KAGGLE_API_ENDPOINT", "127.0.0.1:7777")
+    address, port = endpoint.replace("http://", "").split(":")
+    return address, port
+
+
 @contextmanager
 def create_test_cache() -> Generator[str, None, None]:
     with TemporaryDirectory() as d:
@@ -106,8 +112,3 @@ class InvalidResourceHandle(ResourceHandle):
 
     def to_url(self) -> str:
         return "invalid"
-
-def resolve_endpoint() -> Tuple[str, int]:
-    endpoint = os.environ.get("KAGGLE_API_ENDPOINT", "127.0.0.1:7777")
-    address, port = endpoint.replace("http://", "").split(":")
-    return address, port
