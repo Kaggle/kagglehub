@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Generator, Optional, Type
+from typing import Generator, Optional, Tuple, Type
 from unittest import mock
 from urllib.parse import urlparse
 
@@ -106,3 +106,8 @@ class InvalidResourceHandle(ResourceHandle):
 
     def to_url(self) -> str:
         return "invalid"
+
+def resolve_endpoint() -> Tuple[str, int]:
+    endpoint = os.environ.get("KAGGLE_API_ENDPOINT", "127.0.0.1:7777")
+    address, port = endpoint.replace("http://", "").split(":")
+    return address, port

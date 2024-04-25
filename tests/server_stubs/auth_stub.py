@@ -1,8 +1,9 @@
-import os
 import threading
 
 from flask import Flask, jsonify, request
-from werkzeug.serving import make_server
+from flask.typing import ResponseReturnValue
+
+from ..utils import resolve_endpoint
 
 app = Flask(__name__)
 
@@ -41,18 +42,18 @@ def simulate_308(*, state: bool) -> None:
 
 
 @app.route("/", methods=["HEAD"])
-def head():  # noqa: ANN201
+def head() -> ResponseReturnValue:
     return "", 200
 
 
 @app.route("/api/v1/models/<org_slug>/<model_slug>/get", methods=["GET"])
-def model_get(org_slug: str, model_slug: str):  # noqa: ANN201
+def model_get(org_slug: str, model_slug: str) -> ResponseReturnValue:
     data = {"message": f"Model exists {org_slug}/{model_slug} !"}
     return jsonify(data), 200
 
 
 @app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/get", methods=["GET"])
-def model_get_instance(org_slug: str, model_slug: str, framework: str, variation: str):  # noqa: ANN201
+def model_get_instance(org_slug: str, model_slug: str, framework: str, variation: str) -> ResponseReturnValue:
     data = {"message": f"Instance exists {org_slug}/{model_slug}/{framework}/{variation} !"}
     return jsonify(data), 200
 
@@ -60,25 +61,25 @@ def model_get_instance(org_slug: str, model_slug: str, framework: str, variation
 @app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/<version>/get", methods=["GET"])
 def model_get_instance_version(
     org_slug: str, model_slug: str, framework: str, variation: str, version: int
-):  # noqa: ANN201
+) -> ResponseReturnValue:
     data = {"message": f"Instance exists {org_slug}/{model_slug}/{framework}/{variation}/{version} !"}
     return jsonify(data), 200
 
 
 @app.errorhandler(404)
-def error():  # noqa: ANN201
+def error() -> ResponseReturnValue:
     data = {"message": "Some response data"}
     return jsonify(data), 404
 
 
 @app.route("/api/v1/models/create/new", methods=["POST"])
-def model_create():  # noqa: ANN201
+def model_create() -> ResponseReturnValue:
     data = {"status": "success", "message": "Model created successfully"}
     return jsonify(data), 200
 
 
 @app.route("/api/v1/models/<org_slug>/<model_slug>/create/instance", methods=["POST"])
-def model_instance_create_instance(org_slug: str, model_slug: str):  # noqa: ANN201
+def model_instance_create_instance(org_slug: str, model_slug: str) -> ResponseReturnValue:
     post_data = request.get_json()
     # TODO: error here
     if post_data.get("licenseName", "") not in ALLOWED_LICENSE_VALUES:
@@ -89,7 +90,9 @@ def model_instance_create_instance(org_slug: str, model_slug: str):  # noqa: ANN
 
 
 @app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/create/version", methods=["POST"])
-def model_instance_create_version(org_slug: str, model_slug: str, framework: str, variation: str):  # noqa: ANN201
+def model_instance_create_version(
+    org_slug: str, model_slug: str, framework: str, variation: str
+) -> ResponseReturnValue:
     post_data = request.get_json()
     # TODO: error here
     if post_data.get("licenseName", "") not in ALLOWED_LICENSE_VALUES:
@@ -103,13 +106,14 @@ def model_instance_create_version(org_slug: str, model_slug: str, framework: str
 
 
 @app.route("/api/v1/blobs/upload", methods=["POST"])
-def blob_upload():  # noqa: ANN201
+def blob_upload() -> ResponseReturnValue:
     if shared_data["simulate_308"] and shared_data["blob_request_count"] < 0:
         _increment_blob_request()
         return "", 308
+    address, port = resolve_endpoint()
     data = {
         "token": "dummy",
-        "createUrl": "http://127.0.0.1:7777//upload/storage/v1/b/kaggle-models-data/o",
+        "createUrl": f"http://{address}:{port}/upload/storage/v1/b/kaggle-models-data/o",
         "status": "success",
         "message": "Here is your token and Url",
     }
@@ -120,36 +124,6 @@ def blob_upload():  # noqa: ANN201
 
 
 @app.route("/upload/storage/v1/b/kaggle-models-data/o", methods=["PUT"])
-def model_instance_create():  # noqa: ANN201
+def model_instance_create() -> ResponseReturnValue:
     data = {"status": "success", "message": "File uploaded"}
     return jsonify(data), 200
-
-
-class ServerThread(threading.Thread):
-    def __init__(self, app: Flask, host: str, port: int):
-        threading.Thread.__init__(self)
-        self.server = make_server(host, port, app)
-
-    def run(self) -> None:
-        self.server.serve_forever()
-
-    def shutdown(self) -> None:
-        self.server.shutdown()
-
-
-def start_server() -> None:
-    global server  # noqa: PLW0603
-    os.environ["KAGGLE_API_ENDPOINT"] = "http://localhost:7777"
-    endpoint = os.environ.get("KAGGLE_API_ENDPOINT", "127.0.0.1:7777")
-    address, port = endpoint.replace("http://", "").split(":")
-    server = ServerThread(app, address, port)
-    server.start()
-
-
-def stop_server() -> None:
-    global server  # noqa: PLW0602
-    server.shutdown()
-
-
-if __name__ == "__main__":
-    start_server()

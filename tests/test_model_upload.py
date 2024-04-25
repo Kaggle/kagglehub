@@ -7,7 +7,8 @@ from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD, TEMP_ARCHIVE_FILE
 from kagglehub.models import model_upload
 from tests.fixtures import BaseTestCase
 
-from . import flask_stub_server as stub
+from .server_stubs import auth_stub as stub
+from .server_stubs import serv
 
 TEMP_TEST_FILE = "temp_test_file"
 APACHE_LICENSE = "Apache 2.0"
@@ -19,11 +20,11 @@ class TestModelUpload(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):  # noqa: ANN102
-        stub.start_server()
+        serv.start_server(stub.app)
 
     @classmethod
     def tearDownClass(cls):  # noqa: ANN102
-        stub.stop_server()
+        serv.stop_server()
 
     def test_model_upload_with_invalid_handle(self) -> None:
         with self.assertRaises(ValueError):
