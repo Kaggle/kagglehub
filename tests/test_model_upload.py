@@ -7,7 +7,7 @@ from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD, TEMP_ARCHIVE_FILE
 from kagglehub.models import model_upload
 from tests.fixtures import BaseTestCase
 
-from .server_stubs import auth_stub as stub
+from .server_stubs import model_upload_stub as stub
 from .server_stubs import serv
 
 TEMP_TEST_FILE = "temp_test_file"
