@@ -245,7 +245,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn("single_dummy_file.txt", KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
 
-    def test_model_upload_with_directory_structure(self):
+    def test_model_upload_with_directory_structure(self) -> None:
         with create_test_http_server(KaggleAPIHandler):
             with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
                 with TemporaryDirectory() as temp_dir:
