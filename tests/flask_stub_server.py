@@ -58,7 +58,9 @@ def model_get_instance(org_slug: str, model_slug: str, framework: str, variation
 
 
 @app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/<version>/get", methods=["GET"])
-def model_get_instance_version(org_slug: str, model_slug: str, framework: str, variation: str, version: int):  # noqa: ANN201
+def model_get_instance_version(
+    org_slug: str, model_slug: str, framework: str, variation: str, version: int
+):  # noqa: ANN201
     data = {"message": f"Instance exists {org_slug}/{model_slug}/{framework}/{variation}/{version} !"}
     return jsonify(data), 200
 
