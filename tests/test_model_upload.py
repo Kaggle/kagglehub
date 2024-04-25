@@ -263,6 +263,6 @@ class TestModelUpload(BaseTestCase):
 
                     model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
 
-                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 0)
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 4)
                     expected_files = {"file1.txt", "ile2.txt", "file3.txt", "file4.txt"}
                     self.assertTrue(set(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES).issubset(expected_files))
