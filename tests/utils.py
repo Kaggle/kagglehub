@@ -27,7 +27,7 @@ def get_test_file_path(relative_path: str) -> str:
 def resolve_endpoint() -> Tuple[str, int]:
     endpoint = os.environ.get("KAGGLE_API_ENDPOINT", "127.0.0.1:7777")
     address, port = endpoint.replace("http://", "").split(":")
-    return address, port
+    return address, int(port)
 
 
 @contextmanager
