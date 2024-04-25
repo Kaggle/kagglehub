@@ -266,3 +266,7 @@ class TestModelUpload(BaseTestCase):
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 4)
                     expected_files = {"file1.txt", "file2.txt", "file3.txt", "file4.txt"}
                     self.assertTrue(set(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES).issubset(expected_files))
+
+                    # TODO: Add assertions on CreateModelInstanceRequest.Directories and
+                    # CreateModelInstanceRequest.Files to verify the expected structure
+                    # is sent.
