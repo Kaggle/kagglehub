@@ -50,7 +50,6 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data.decode("utf-8"))
-        print(data)
 
         # Extracting the 'name' from the data
         name = data.get("name", None)
