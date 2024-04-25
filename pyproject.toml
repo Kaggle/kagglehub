@@ -32,10 +32,21 @@ dependencies = [
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
 
+[project.optional-dependencies]
+dev = [
+  "flask",
+  "pytest",
+  "coverage[toml]>=6.5",
+  "black>=23.1.0",
+  "mypy>=1.0.0",
+  "ruff>=0.0.243",
+]
+
 [tool.hatch.envs.default]
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
+  "flask",
 ]
 
 [tool.hatch.envs.default.scripts]
