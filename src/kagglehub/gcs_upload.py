@@ -4,7 +4,7 @@ import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -32,6 +32,13 @@ class UploadDirectoryInfo:
         self.name = name
         self.files = files if files is not None else []
         self.directories = directories if directories is not None else []
+
+    def serialize(self) -> Dict:
+        return {
+            "name": self.name,
+            "files": [{"token": file} for file in self.files],
+            "directories": [directory.serialize() for directory in self.directories]
+        }
 
 
 def parse_datetime_string(string: str) -> Union[datetime, str]:
@@ -230,8 +237,6 @@ def _upload_file_or_folder(
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
         return _upload_file(file_or_folder_name, full_path, quiet, model_type)
-    elif not quiet:
-        logger.info("Skipping: " + file_or_folder_name)
     return None
 
 

@@ -20,10 +20,7 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
 def _create_model_instance(
     model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, license_name: Optional[str] = None
 ) -> None:
-    serialized_data = [
-        {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
-        for d in files_and_directories.directories
-    ]
+    serialized_data = files_and_directories.serialize()
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
@@ -41,10 +38,7 @@ def _create_model_instance(
 def _create_model_instance_version(
     model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, version_notes: str = ""
 ) -> None:
-    serialized_data = [
-        {"name": d.name, "files": [{"token": file} for file in d.files], "directories": d.directories}
-        for d in files_and_directories.directories
-    ]
+    serialized_data = files_and_directories.serialize()
     data = {
         "versionNotes": version_notes,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
