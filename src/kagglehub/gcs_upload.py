@@ -37,7 +37,7 @@ class UploadDirectoryInfo:
         return {
             "name": self.name,
             "files": [{"token": file} for file in self.files],
-            "directories": [directory.serialize() for directory in self.directories]
+            "directories": [directory.serialize() for directory in self.directories],
         }
 
 

@@ -50,6 +50,7 @@ class KaggleAPIHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data.decode("utf-8"))
+        print(data)
 
         # Extracting the 'name' from the data
         name = data.get("name", None)
@@ -244,3 +245,25 @@ class TestModelUpload(BaseTestCase):
 
                     self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 1)
                     self.assertIn("single_dummy_file.txt", KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES)
+
+    def test_model_upload_with_directory_structure(self):
+        with create_test_http_server(KaggleAPIHandler):
+            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
+                with TemporaryDirectory() as temp_dir:
+                    base_path = Path(temp_dir)
+                    (base_path / "dir1").mkdir()
+                    (base_path / "dir2").mkdir()
+
+                    (base_path / "file1.txt").touch()
+
+                    (base_path / "dir1" / "file2.txt").touch()
+                    (base_path / "dir1" / "file3.txt").touch()
+
+                    (base_path / "dir1" / "subdir1").mkdir()
+                    (base_path / "dir1" / "subdir1" / "file4.txt").touch()
+
+                    model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 0)
+                    expected_files = {"file1.txt", "ile2.txt", "file3.txt", "file4.txt"}
+                    self.assertTrue(set(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES).issubset(expected_files))
