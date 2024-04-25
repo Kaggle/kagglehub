@@ -1,3 +1,4 @@
+import os
 import threading
 
 from flask import Flask, jsonify, request
@@ -123,10 +124,9 @@ def model_instance_create():  # noqa: ANN201
 
 
 class ServerThread(threading.Thread):
-    def __init__(self, app: Flask):
+    def __init__(self, app: Flask, host: str, port: int):
         threading.Thread.__init__(self)
-        self.server = make_server("127.0.0.1", 7777, app)
-        self.ctx = app.app_context()
+        self.server = make_server(host, port, app)
 
     def run(self) -> None:
         self.server.serve_forever()
@@ -137,7 +137,10 @@ class ServerThread(threading.Thread):
 
 def start_server() -> None:
     global server  # noqa: PLW0603
-    server = ServerThread(app)
+    os.environ["KAGGLE_API_ENDPOINT"] = "http://localhost:7777"
+    endpoint = os.environ.get("KAGGLE_API_ENDPOINT", "127.0.0.1:7777")
+    address, port = endpoint.replace("http://", "").split(":")
+    server = ServerThread(app, address, port)
     server.start()
 
 
@@ -147,4 +150,4 @@ def stop_server() -> None:
 
 
 if __name__ == "__main__":
-    app.run("127.0.0.1", port=7777, debug=False, use_reloader=False)
+    start_server()
