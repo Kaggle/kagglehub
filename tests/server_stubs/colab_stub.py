@@ -36,9 +36,12 @@ def models_is_supported() -> ResponseReturnValue:
     version = LATEST_MODEL_VERSION
     if "version" in data:
         version = data["version"]
-    _ = f"{data["model"]}/{data["framework"]}/{data["variation"]}/{version}"
+    model = data["model"]
+    framework = data["framework"]
+    variation = data["variation"]
+    slug = f"{model}/{framework}/{variation}/{version}"
     if data["owner"] == "unavailable":
-        return "", 400
+        return slug, 400
     return "", 200
 
 
@@ -48,7 +51,10 @@ def models_mount() -> ResponseReturnValue:
     version = LATEST_MODEL_VERSION
     if "version" in data:
         version = data["version"]
-    slug = f"{data["model"]}/{data["framework"]}/{data["variation"]}/{version}"
+    model = data["model"]
+    framework = data["framework"]
+    variation = data["variation"]
+    slug = f"{model}/{framework}/{variation}/{version}"
     cache_mount_folder = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
     base_path = f"{cache_mount_folder}/{slug}"
     os.makedirs(base_path, exist_ok=True)
