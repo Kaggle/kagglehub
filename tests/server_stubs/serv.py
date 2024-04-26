@@ -18,6 +18,9 @@ class ServerThread(threading.Thread):
         self.server.shutdown()
 
 
+server: ServerThread
+
+
 def start_server(app: Flask) -> None:
     global server  # noqa: PLW0603
     address, port = resolve_endpoint()
@@ -28,7 +31,3 @@ def start_server(app: Flask) -> None:
 def stop_server() -> None:
     global server  # noqa: PLW0602
     server.shutdown()
-
-
-if __name__ == "__main__":
-    start_server()

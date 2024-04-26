@@ -1,4 +1,5 @@
 import threading
+from typing import List, TypedDict
 
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
@@ -11,7 +12,13 @@ APACHE_LICENSE = "Apache 2.0"
 ALLOWED_LICENSE_VALUES = APACHE_LICENSE
 
 
-shared_data = {"files": [], "simulate_308": False, "blob_request_count": 0}
+class SharedData(TypedDict):
+    files: List[str]
+    simulate_308: bool
+    blob_request_count: int
+
+
+shared_data: SharedData = {"files": [], "simulate_308": False, "blob_request_count": 0}
 lock = threading.Lock()
 
 
@@ -31,7 +38,7 @@ def reset() -> None:
     lock.acquire()
     shared_data["files"] = []
     shared_data["blob_request_count"] = 0
-    shared_data["simulate_308"] = 0
+    shared_data["simulate_308"] = False
     lock.release()
 
 
@@ -67,7 +74,7 @@ def model_get_instance_version(
 
 
 @app.errorhandler(404)
-def error() -> ResponseReturnValue:
+def error(e):  # noqa: ANN201
     data = {"message": "Some response data"}
     return jsonify(data), 404
 
