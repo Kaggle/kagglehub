@@ -21,9 +21,9 @@ class ServerThread(threading.Thread):
 server: ServerThread
 
 
-def start_server(app: Flask) -> None:
+def start_server(app: Flask, var_name: str = "KAGGLE_API_ENDPOINT") -> None:
     global server  # noqa: PLW0603
-    address, port = resolve_endpoint()
+    address, port = resolve_endpoint(var_name)
     server = ServerThread(app, address, port)
     server.start()
 
