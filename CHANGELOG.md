@@ -2,6 +2,10 @@
 
 ## Next (Unreleased)
 
+## v0.2.4 (April 26th, 2024)
+
+* Remove zipping in upload ([#105]((https://github.com/Kaggle/kagglehub/pull/105)))
+
 ## v0.2.3 (April 16th, 2024)
 
 * Improve upload speed ([#100](https://github.com/Kaggle/kagglehub/pull/100))
