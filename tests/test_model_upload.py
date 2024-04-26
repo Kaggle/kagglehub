@@ -38,8 +38,8 @@ class TestModelUpload(BaseTestCase):
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data["files"])
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_instance_with_nested_directories(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -50,16 +50,16 @@ class TestModelUpload(BaseTestCase):
             test_filepath = nested_dir / TEMP_TEST_FILE
             test_filepath.touch()
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data["files"])
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_version_with_valid_handle(self) -> None:
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, APACHE_LICENSE, "model_type")
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data["files"])
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_with_too_many_files(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -68,8 +68,8 @@ class TestModelUpload(BaseTestCase):
                 test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
                 test_filepath.touch()
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data["files"])
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_resumable(self) -> None:
         stub.simulate_308(state=True)  # Enable simulation of 308 response for this test
@@ -79,25 +79,25 @@ class TestModelUpload(BaseTestCase):
             with open(test_filepath, "wb") as f:
                 f.write(os.urandom(1000))
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
-            self.assertGreaterEqual(stub.shared_data["blob_request_count"], 1)
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data["files"])
+            self.assertGreaterEqual(stub.shared_data.blob_request_count, 1)
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_with_none_license(self) -> None:
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, None, "model_type")
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data["files"])
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_without_license(self) -> None:
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, version_notes="model_type")
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data["files"])
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_with_invalid_license_fails(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -116,5 +116,5 @@ class TestModelUpload(BaseTestCase):
                 "metaresearch/new-model/pyTorch/new-variation", str(test_filepath), APACHE_LICENSE, "model_type"
             )
 
-            self.assertEqual(len(stub.shared_data["files"]), 1)
-            self.assertIn("single_dummy_file.txt", stub.shared_data["files"])
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn("single_dummy_file.txt", stub.shared_data.files)

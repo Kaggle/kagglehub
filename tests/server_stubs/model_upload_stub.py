@@ -1,5 +1,6 @@
 import threading
-from typing import List, TypedDict
+from dataclasses import dataclass, field
+from typing import List
 
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
@@ -12,39 +13,40 @@ APACHE_LICENSE = "Apache 2.0"
 ALLOWED_LICENSE_VALUES = APACHE_LICENSE
 
 
-class SharedData(TypedDict):
-    files: List[str]
-    simulate_308: bool
-    blob_request_count: int
+@dataclass
+class SharedData:
+    files: List[str] = field(default_factory=list)
+    simulate_308: bool = False
+    blob_request_count: int = 0
 
 
-shared_data: SharedData = {"files": [], "simulate_308": False, "blob_request_count": 0}
+shared_data: SharedData = SharedData()
 lock = threading.Lock()
 
 
 def _increment_blob_request() -> None:
     lock.acquire()
-    shared_data["blob_request_count"] += 1
+    shared_data.blob_request_count += 1
     lock.release()
 
 
 def _add_file(file: str) -> None:
     lock.acquire()
-    shared_data["files"].append(file)
+    shared_data.files.append(file)
     lock.release()
 
 
 def reset() -> None:
     lock.acquire()
-    shared_data["files"] = []
-    shared_data["blob_request_count"] = 0
-    shared_data["simulate_308"] = False
+    shared_data.files = []
+    shared_data.blob_request_count = 0
+    shared_data.simulate_308 = False
     lock.release()
 
 
 def simulate_308(*, state: bool) -> None:
     lock.acquire()
-    shared_data["simulate_308"] = state
+    shared_data.simulate_308 = state
     lock.release()
 
 
@@ -114,7 +116,7 @@ def model_instance_create_version(
 
 @app.route("/api/v1/blobs/upload", methods=["POST"])
 def blob_upload() -> ResponseReturnValue:
-    if shared_data["simulate_308"] and shared_data["blob_request_count"] < 0:
+    if shared_data.simulate_308 and shared_data.blob_request_count < 0:
         _increment_blob_request()
         return "", 308
     address, port = resolve_endpoint()
