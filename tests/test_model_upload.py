@@ -120,27 +120,25 @@ class TestModelUpload(BaseTestCase):
             self.assertIn("single_dummy_file.txt", stub.shared_data.files)
 
     def test_model_upload_with_directory_structure(self) -> None:
-        with create_test_http_server(KaggleAPIHandler):
-            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
-                with TemporaryDirectory() as temp_dir:
-                    base_path = Path(temp_dir)
-                    (base_path / "dir1").mkdir()
-                    (base_path / "dir2").mkdir()
+        with TemporaryDirectory() as temp_dir:
+            base_path = Path(temp_dir)
+            (base_path / "dir1").mkdir()
+            (base_path / "dir2").mkdir()
 
-                    (base_path / "file1.txt").touch()
+            (base_path / "file1.txt").touch()
 
-                    (base_path / "dir1" / "file2.txt").touch()
-                    (base_path / "dir1" / "file3.txt").touch()
+            (base_path / "dir1" / "file2.txt").touch()
+            (base_path / "dir1" / "file3.txt").touch()
 
-                    (base_path / "dir1" / "subdir1").mkdir()
-                    (base_path / "dir1" / "subdir1" / "file4.txt").touch()
+            (base_path / "dir1" / "subdir1").mkdir()
+            (base_path / "dir1" / "subdir1" / "file4.txt").touch()
 
-                    model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
 
-                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 4)
-                    expected_files = {"file1.txt", "file2.txt", "file3.txt", "file4.txt"}
-                    self.assertTrue(set(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES).issubset(expected_files))
+            self.assertEqual(len(stub.shared_data.files), 4)
+            expected_files = {"file1.txt", "file2.txt", "file3.txt", "file4.txt"}
+            self.assertTrue(set(stub.shared_data.files).issubset(expected_files))
 
-                    # TODO: Add assertions on CreateModelInstanceRequest.Directories and
-                    # CreateModelInstanceRequest.Files to verify the expected structure
-                    # is sent.
+            # TODO: Add assertions on CreateModelInstanceRequest.Directories and
+            # CreateModelInstanceRequest.Files to verify the expected structure
+            # is sent.
