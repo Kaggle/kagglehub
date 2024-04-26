@@ -1,9 +1,10 @@
 import logging
 from http import HTTPStatus
-from typing import List, Optional
+from typing import Optional
 
-from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import BackendError, KaggleApiHTTPError
+from kagglehub.clients import BackendError, KaggleApiV1Client
+from kagglehub.exceptions import KaggleApiHTTPError
+from kagglehub.gcs_upload import UploadDirectoryInfo
 from kagglehub.handle import ModelHandle
 
 logger = logging.getLogger(__name__)
@@ -16,11 +17,15 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
     logger.info(f"Model '{model_slug}' Created.")
 
 
-def _create_model_instance(model_handle: ModelHandle, files: List[str], license_name: Optional[str] = None) -> None:
+def _create_model_instance(
+    model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, license_name: Optional[str] = None
+) -> None:
+    serialized_data = files_and_directories.serialize()
     data = {
         "instanceSlug": model_handle.variation,
         "framework": model_handle.framework,
-        "files": [{"token": file_token} for file_token in files],
+        "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": serialized_data["directories"],
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -30,8 +35,15 @@ def _create_model_instance(model_handle: ModelHandle, files: List[str], license_
     logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}")
 
 
-def _create_model_instance_version(model_handle: ModelHandle, files: List[str], version_notes: str = "") -> None:
-    data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files]}
+def _create_model_instance_version(
+    model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, version_notes: str = ""
+) -> None:
+    serialized_data = files_and_directories.serialize()
+    data = {
+        "versionNotes": version_notes,
+        "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": serialized_data["directories"],
+    }
     api_client = KaggleApiV1Client()
     api_client.post(
         f"/models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/create/version",
@@ -43,7 +55,7 @@ def _create_model_instance_version(model_handle: ModelHandle, files: List[str], 
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files: List[str], license_name: Optional[str], version_notes: str = ""
+    model_handle: ModelHandle, files: UploadDirectoryInfo, license_name: Optional[str], version_notes: str = ""
 ) -> None:
     try:
         _create_model_instance(model_handle, files, license_name)
