@@ -74,8 +74,8 @@ def model_get_instance_version(
 
 
 @app.errorhandler(404)
-def error(e):  # noqa: ANN201
-    data = {"message": "Some response data"}
+def error(e: Exception):  # noqa: ANN201
+    data = {"message": "Some response data", "error": str(e)}
     return jsonify(data), 404
 
 
