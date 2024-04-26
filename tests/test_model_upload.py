@@ -39,7 +39,7 @@ class TestModelUpload(BaseTestCase):
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
             self.assertEqual(len(stub.shared_data.files), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
+            self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
     def test_model_upload_instance_with_nested_directories(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -51,7 +51,7 @@ class TestModelUpload(BaseTestCase):
             test_filepath.touch()
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
             self.assertEqual(len(stub.shared_data.files), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
+            self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
     def test_model_upload_version_with_valid_handle(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -59,7 +59,7 @@ class TestModelUpload(BaseTestCase):
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, APACHE_LICENSE, "model_type")
             self.assertEqual(len(stub.shared_data.files), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
+            self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
     def test_model_upload_with_too_many_files(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -81,7 +81,7 @@ class TestModelUpload(BaseTestCase):
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
             self.assertGreaterEqual(stub.shared_data.blob_request_count, 1)
             self.assertEqual(len(stub.shared_data.files), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
+            self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
     def test_model_upload_with_none_license(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -89,7 +89,7 @@ class TestModelUpload(BaseTestCase):
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, None, "model_type")
             self.assertEqual(len(stub.shared_data.files), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
+            self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
     def test_model_upload_without_license(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -97,7 +97,7 @@ class TestModelUpload(BaseTestCase):
             test_filepath.touch()  # Create a temporary file in the temporary directory
             model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, version_notes="model_type")
             self.assertEqual(len(stub.shared_data.files), 1)
-            self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
+            self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
     def test_model_upload_with_invalid_license_fails(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -118,3 +118,29 @@ class TestModelUpload(BaseTestCase):
 
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn("single_dummy_file.txt", stub.shared_data.files)
+
+    def test_model_upload_with_directory_structure(self) -> None:
+        with create_test_http_server(KaggleAPIHandler):
+            with create_test_http_server(GcsAPIHandler, "http://localhost:7778"):
+                with TemporaryDirectory() as temp_dir:
+                    base_path = Path(temp_dir)
+                    (base_path / "dir1").mkdir()
+                    (base_path / "dir2").mkdir()
+
+                    (base_path / "file1.txt").touch()
+
+                    (base_path / "dir1" / "file2.txt").touch()
+                    (base_path / "dir1" / "file3.txt").touch()
+
+                    (base_path / "dir1" / "subdir1").mkdir()
+                    (base_path / "dir1" / "subdir1" / "file4.txt").touch()
+
+                    model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+
+                    self.assertEqual(len(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES), 4)
+                    expected_files = {"file1.txt", "file2.txt", "file3.txt", "file4.txt"}
+                    self.assertTrue(set(KaggleAPIHandler.UPLOAD_BLOB_FILE_NAMES).issubset(expected_files))
+
+                    # TODO: Add assertions on CreateModelInstanceRequest.Directories and
+                    # CreateModelInstanceRequest.Files to verify the expected structure
+                    # is sent.

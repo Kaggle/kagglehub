@@ -102,6 +102,22 @@ class TestModelUpload(unittest.TestCase):
             # Create Version
             model_upload(self.handle, temp_dir, LICENSE_NAME)
 
+    def test_model_upload_directory_structure(self) -> None:
+        nested_dir = Path(self.temp_dir) / "nested"
+        nested_dir.mkdir()
+
+        with open(Path(self.temp_dir) / "file1.txt", "w") as f:
+            f.write("dummy content in nested file")
+
+        # Create dummy files in the nested directory
+        nested_dummy_files = ["nested_model.h5", "nested_config.json", "nested_metadata.json"]
+        for file in nested_dummy_files:
+            with open(nested_dir / file, "w") as f:
+                f.write("dummy content in nested file")
+
+        # Call the model upload function with the base directory
+        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
+
     def test_model_upload_nested_dir(self) -> None:
         # Create a nested directory within self.temp_dir
         nested_dir = Path(self.temp_dir) / "nested"
