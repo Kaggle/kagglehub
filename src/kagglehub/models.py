@@ -22,6 +22,7 @@ def model_download(handle: str, path: Optional[str] = None, *, force_download: O
         A string representing the path to the requested model files.
     """
     h = parse_model_handle(handle)
+    logger.info(f"Downloading Model: {handle}")
     return registry.model_resolver(h, path, force_download=force_download)
 
 
@@ -38,7 +39,7 @@ def model_upload(
     """
     # parse slug
     h = parse_model_handle(handle)
-
+    logger.info(f"Uploading Model {handle}")
     if h.is_versioned():
         is_versioned_exception = "The model handle should not include the version"
         raise ValueError(is_versioned_exception)

@@ -165,3 +165,33 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 # Use specific Python version (Must be a valid tag from: https://hub.docker.com/_/python)
 ./docker-hatch -v 3.9 run lint:all
 ```
+
+## Vscode setup
+
+### Prerequisites
+Install the recommended extensions.
+
+### Instructions
+
+Configure hatch to create virtual env in project folder.
+```
+hatch config set dirs.env.virtual .env
+```
+
+After, create all the python environments needed by running `hatch -e all run tests`.
+
+Finally, configure vscode to use one of the selected environments:
+`cmd + shift + p` -> `python: Select Interpreter` -> Pick one of the folders in `./.env`
+
+## Support
+
+The kagglehub library has configured automatic logging which is stored in a log folder. The log destination is resolved via the [os.path.expanduser](https://docs.python.org/3/library/os.path.html#os.path.expanduser)
+
+The table below contains possible locations:
+| os      | log path                                       |
+|---------|------------------------------------------------|
+| osx     | /user/$USERNAME/.kaggle/logs/kagglehub.log                   |
+| linux   | ~/.kaggle/logs/kagglehub.log                   |
+| windows | C:\Users\\%USERNAME%\\.kaggle\logs\kagglehub.log |
+
+Please include the log to help troubleshoot issues.

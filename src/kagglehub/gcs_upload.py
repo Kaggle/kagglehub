@@ -155,7 +155,9 @@ def _upload_blob(file_path: str, model_type: str) -> str:
 
 
 def upload_files_and_directories(
-    folder: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
+    folder: str,
+    model_type: str,
+    quiet: bool = False,  # noqa: FBT002, FBT001
 ) -> UploadDirectoryInfo:
     # Count the total number of files
     file_count = 0
