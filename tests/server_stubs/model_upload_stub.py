@@ -90,7 +90,6 @@ def model_create() -> ResponseReturnValue:
 @app.route("/api/v1/models/<org_slug>/<model_slug>/create/instance", methods=["POST"])
 def model_instance_create_instance(org_slug: str, model_slug: str) -> ResponseReturnValue:
     post_data = request.get_json()
-    # TODO: error here
     if post_data.get("licenseName", "") not in ALLOWED_LICENSE_VALUES:
         data = {"error": f"bad: {request.path}"}
         return jsonify(data), 200
@@ -103,7 +102,6 @@ def model_instance_create_version(
     org_slug: str, model_slug: str, framework: str, variation: str
 ) -> ResponseReturnValue:
     post_data = request.get_json()
-    # TODO: error here
     if post_data.get("licenseName", "") not in ALLOWED_LICENSE_VALUES:
         data = {"error": f"bad: {request.path}"}
         return jsonify(data), 200
