@@ -188,10 +188,10 @@ Finally, configure vscode to use one of the selected environments:
 The kagglehub library has configured automatic logging which is stored in a log folder. The log destination is resolved via the [os.path.expanduser](https://docs.python.org/3/library/os.path.html#os.path.expanduser)
 
 The table below contains possible locations:
-| os      | log path                                       |
-|---------|------------------------------------------------|
-| osx     | /user/$USERNAME/.kaggle/logs/kagglehub.log                   |
-| linux   | ~/.kaggle/logs/kagglehub.log                   |
+| os      | log path                                         |
+|---------|--------------------------------------------------|
+| osx     | /user/$USERNAME/.kaggle/logs/kagglehub.log       |
+| linux   | ~/.kaggle/logs/kagglehub.log                     |
 | windows | C:\Users\\%USERNAME%\\.kaggle\logs\kagglehub.log |
 
 Please include the log to help troubleshoot issues.
