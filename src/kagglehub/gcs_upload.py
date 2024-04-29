@@ -1,13 +1,10 @@
 import logging
 import os
-import shutil
 import time
 import zipfile
 from datetime import datetime
-from multiprocessing import Pool
-from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Dict, Callable, List, Optional, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -24,6 +21,25 @@ MAX_FILES_TO_UPLOAD = 50
 TEMP_ARCHIVE_FILE = "archive.zip"
 MAX_RETRIES = 5
 REQUEST_TIMEOUT = 600
+
+
+class UploadDirectoryInfo:
+    def __init__(
+        self,
+        name: str,
+        files: Optional[List[str]] = None,
+        directories: Optional[List["UploadDirectoryInfo"]] = None,
+    ):
+        self.name = name
+        self.files = files if files is not None else []
+        self.directories = directories if directories is not None else []
+
+    def serialize(self) -> Dict:
+        return {
+            "name": self.name,
+            "files": [{"token": file} for file in self.files],
+            "directories": [directory.serialize() for directory in self.directories],
+        }
 
 
 def parse_datetime_string(string: str) -> Union[datetime, str]:
@@ -147,54 +163,110 @@ def _upload_blob(file_path: str, model_type: str, ctx_factory: Optional[Callable
     return response["token"]
 
 
-def zip_file(args: Tuple[Path, Path, Path]) -> int:
-    file_path, zip_path, source_path_obj = args
-    arcname = file_path.relative_to(source_path_obj)
-    size = file_path.stat().st_size
-    with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_STORED, allowZip64=True) as zipf:
-        zipf.write(file_path, arcname)
-    return size
+def upload_files_and_directories(
+    folder: str, model_type: str, quiet: bool = False,  # noqa: FBT002, FBT001
+    ctx_factory: Callable[[],TraceContext] = None
+) -> UploadDirectoryInfo:
+    # Count the total number of files
+    file_count = 0
+    for _, _, files in os.walk(folder):
+        file_count += len(files)
+
+    if file_count > MAX_FILES_TO_UPLOAD:
+        if not quiet:
+            logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
+
+        with TemporaryDirectory() as temp_dir:
+            zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
+            with zipfile.ZipFile(zip_path, "w") as zipf:
+                for root, _, files in os.walk(folder):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        zipf.write(file_path, os.path.relpath(file_path, folder))
+
+            tokens = [
+                token
+                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet, ctx_factory)]
+                if token is not None
+            ]
+            return UploadDirectoryInfo(name="archive", files=tokens)
+
+    root_dict = UploadDirectoryInfo(name="root")
+    if os.path.isfile(folder):
+        # Directly upload the file if the path is a file
+        file_name = os.path.basename(folder)
+        token = _upload_file_or_folder(os.path.dirname(folder), file_name, model_type, quiet)
+        if token:
+            root_dict.files.append(token)
+    else:
+        for root, _, files in os.walk(folder):
+            # Path of the current folder relative to the base folder
+            path = os.path.relpath(root, folder)
+
+            # Navigate or create the dictionary path to the current folder
+            current_dict = root_dict
+            if path != ".":
+                for part in path.split(os.sep):
+                    # Find or create the subdirectory in the current dictionary
+                    for subdir in current_dict.directories:
+                        if subdir.name == part:
+                            current_dict = subdir
+                            break
+                    else:
+                        # If the directory is not found, create a new one
+                        new_dir = UploadDirectoryInfo(name=part)
+                        current_dict.directories.append(new_dir)
+                        current_dict = new_dir
+
+            # Add file tokens to the current directory in the dictionary
+            for file in files:
+                token = _upload_file_or_folder(root, file, model_type, quiet)
+                if token:
+                    current_dict.files.append(token)
+
+    return root_dict
 
 
-def zip_files(source_path_obj: Path, zip_path: Path) -> List[int]:
-    files = [file for file in source_path_obj.rglob("*") if file.is_file()]
-    args = [(file, zip_path, source_path_obj) for file in files]
+def _upload_file_or_folder(
+    parent_path: str,
+    file_or_folder_name: str,
+    model_type: str,
+    quiet: bool = False,  # noqa: FBT002, FBT001
+    ctx_factory :
+) -> Optional[str]:
+    """
+    Uploads a file or each file inside a folder individually from a specified path to a remote service.
+    Parameters
+    ==========
+    parent_path: The parent directory path from where the file or folder is to be uploaded.
+    file_or_folder_name: The name of the file or folder to be uploaded.
+    dir_mode: The mode to handle directories. Accepts 'zip', 'tar', or other values for skipping.
+    model_type: Type of the model that is being uploaded.
+    quiet: suppress verbose output (default is False)
+    :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
+    """
+    full_path = os.path.join(parent_path, file_or_folder_name)
+    if os.path.isfile(full_path):
+        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
+    return None
 
-    with Pool() as pool:
-        sizes = pool.map(zip_file, args)
-    return sizes
 
+def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+    """Helper function to upload a single file
+    Parameters
+    ==========
+    file_name: name of the file to upload
+    full_path: path to the file to upload
+    quiet: suppress verbose output
+    model_type: Type of the model that is being uploaded.
+    :return: None - upload unsuccessful; instance of UploadFile - upload successful
+    """
 
-def upload_files(
-    source_path: str, model_type: str, ctx_factory: Optional[Callable[[], TraceContext]] = None
-) -> List[str]:
-    source_path_obj = Path(source_path)
-    with TemporaryDirectory() as temp_dir:
-        temp_dir_path = Path(temp_dir)
-        total_size = 0
+    if not quiet:
+        logger.info("Starting upload for file " + file_name)
 
-        if source_path_obj.is_dir():
-            for file_path in source_path_obj.rglob("*"):
-                if file_path.is_file():
-                    total_size += file_path.stat().st_size
-        elif source_path_obj.is_file():
-            total_size = source_path_obj.stat().st_size
-        else:
-            path_error_message = "The source path does not point to a valid file or directory."
-            raise ValueError(path_error_message)
-
-        with tqdm(total=total_size, desc="Zipping", unit="B", unit_scale=True, unit_divisor=1024) as pbar:
-            if source_path_obj.is_dir():
-                zip_path = temp_dir_path / "archive.zip"
-                sizes = zip_files(source_path_obj, zip_path)
-                for size in sizes:
-                    pbar.update(size)
-                upload_path = str(zip_path)
-            elif source_path_obj.is_file():
-                temp_file_path = temp_dir_path / source_path_obj.name
-                shutil.copy(source_path_obj, temp_file_path)
-                pbar.update(temp_file_path.stat().st_size)
-                upload_path = str(temp_file_path)
-        if ctx_factory is None:
-            ctx_factory = default_context_factory
-        return [token for token in [_upload_blob(upload_path, model_type, ctx_factory)] if token]
+    content_length = os.path.getsize(full_path)
+    token = _upload_blob(full_path, model_type)
+    if not quiet:
+        logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
+    return token

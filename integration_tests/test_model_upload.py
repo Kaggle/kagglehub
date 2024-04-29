@@ -11,7 +11,6 @@ from typing import Callable, Type, TypeVar
 
 from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
-from kagglehub.exceptions import BackendError
 
 LICENSE_NAME = "MIT"
 
@@ -46,19 +45,6 @@ def retry(
     return decorator
 
 
-@retry(times=5, delay_seconds=10, exception_to_check=BackendError)
-def upload_with_retries(handle: str, temp_dir: str, license_name: str) -> None:
-    """
-    Uploads a model with retries on BackendError indicating the instance slug is already in use.
-
-    Args:
-        handle: The model handle.
-        temp_dir: Temporary directory where the model is stored.
-        license_name: License name for the model.
-    """
-    model_upload(handle, temp_dir, license_name)
-
-
 class TestModelUpload(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
@@ -79,7 +65,7 @@ class TestModelUpload(unittest.TestCase):
         model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # Create Version
-        upload_with_retries(self.handle, self.temp_dir, LICENSE_NAME)
+        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
         # If delete model does not raise an error, then the upload was successful.
 
@@ -93,7 +79,7 @@ class TestModelUpload(unittest.TestCase):
             model_upload(self.handle, temp_dir, LICENSE_NAME)
 
             # Create Version
-            upload_with_retries(self.handle, temp_dir, LICENSE_NAME)
+            model_upload(self.handle, temp_dir, LICENSE_NAME)
 
     def test_model_upload_directory(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -114,7 +100,23 @@ class TestModelUpload(unittest.TestCase):
             model_upload(self.handle, temp_dir, LICENSE_NAME)
 
             # Create Version
-            upload_with_retries(self.handle, temp_dir, LICENSE_NAME)
+            model_upload(self.handle, temp_dir, LICENSE_NAME)
+
+    def test_model_upload_directory_structure(self) -> None:
+        nested_dir = Path(self.temp_dir) / "nested"
+        nested_dir.mkdir()
+
+        with open(Path(self.temp_dir) / "file1.txt", "w") as f:
+            f.write("dummy content in nested file")
+
+        # Create dummy files in the nested directory
+        nested_dummy_files = ["nested_model.h5", "nested_config.json", "nested_metadata.json"]
+        for file in nested_dummy_files:
+            with open(nested_dir / file, "w") as f:
+                f.write("dummy content in nested file")
+
+        # Call the model upload function with the base directory
+        model_upload(self.handle, self.temp_dir, LICENSE_NAME)
 
     def test_model_upload_nested_dir(self) -> None:
         # Create a nested directory within self.temp_dir
