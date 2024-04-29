@@ -4,6 +4,7 @@
 
 ## v0.2.4 (April 26th, 2024)
 
+* Create a new version when model instance exist but no versions are ready yet ([#108]((https://github.com/Kaggle/kagglehub/pull/108)))
 * Remove zipping in upload ([#105]((https://github.com/Kaggle/kagglehub/pull/105)))
 
 ## v0.2.3 (April 16th, 2024)
