@@ -1,6 +1,13 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from kagglehub.models import model_upload
 from kagglehub.tracing import TraceContext
+from tests.fixtures import BaseTestCase
+
+from .server_stubs import model_upload_stub as stub
+from .server_stubs import serv
 
 _CANONICAL_EXAMPLE = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
 
@@ -37,6 +44,28 @@ class TraceContextSuite(unittest.TestCase):
             _, trace, span, _ = traceparent.split("-")
             self.assertNotEqual(trace, f"{0:016x}")
             self.assertNotEqual(span, f"{0:08x}")
+
+
+class TestModelUpload(BaseTestCase):
+    def setUp(self) -> None:
+        stub.reset()
+
+    @classmethod
+    def setUpClass(cls):  # noqa: ANN102
+        serv.start_server(stub.app)
+
+    @classmethod
+    def tearDownClass(cls):  # noqa: ANN102
+        serv.stop_server()
+
+    def test_model_upload_instance_with_valid_handle(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            test_filepath = Path(temp_dir) / "temp_test_file"
+            test_filepath.touch()  # Create a temporary file in the temporary directory
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, "Apache 2.0", "model_type")
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn("temp_test_file", stub.shared_data.files)
+            self.assertGreaterEqual(stub.shared_data.traceparent_header_count, 2)
 
 
 if __name__ == "__main__":

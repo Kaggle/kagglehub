@@ -18,10 +18,17 @@ class SharedData:
     files: List[str] = field(default_factory=list)
     simulate_308: bool = False
     blob_request_count: int = 0
+    traceparent_header_count: int = 0
 
 
 shared_data: SharedData = SharedData()
 lock = threading.Lock()
+
+
+def _increment_traceparent() -> None:
+    lock.acquire()
+    shared_data.traceparent_header_count += 1
+    lock.release()
 
 
 def _increment_blob_request() -> None:
@@ -41,6 +48,7 @@ def reset() -> None:
     shared_data.files = []
     shared_data.blob_request_count = 0
     shared_data.simulate_308 = False
+    shared_data.traceparent_header_count = 0
     lock.release()
 
 
@@ -48,6 +56,13 @@ def simulate_308(*, state: bool) -> None:
     lock.acquire()
     shared_data.simulate_308 = state
     lock.release()
+
+
+@app.before_request
+def before_req() -> None:
+    traceparent = request.headers.get("traceparent")
+    if traceparent:
+        _increment_traceparent()
 
 
 @app.route("/", methods=["HEAD"])
