@@ -119,6 +119,7 @@ select = [
   "ANN001", 
   "ANN002", 
   "ANN003", 
+  "ANN102",
   "ANN201", 
   "ANN202",
   "ANN401",

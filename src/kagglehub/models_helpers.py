@@ -22,7 +22,7 @@ def _create_model_instance(
     model_handle: ModelHandle,
     files_and_directories: UploadDirectoryInfo,
     license_name: Optional[str] = None,
-    ctx_factory: Optional[Callable[[], TraceContext]] = None
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
 ) -> None:
     serialized_data = files_and_directories.serialize()
     data = {
@@ -40,7 +40,6 @@ def _create_model_instance(
 
 
 def _create_model_instance_version(
-    
     model_handle: ModelHandle,
     files_and_directories: UploadDirectoryInfo,
     version_notes: str = "",

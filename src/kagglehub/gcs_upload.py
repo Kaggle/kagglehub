@@ -4,7 +4,7 @@ import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
-from typing import Dict, Callable, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -164,8 +164,10 @@ def _upload_blob(file_path: str, model_type: str, ctx_factory: Optional[Callable
 
 
 def upload_files_and_directories(
-    folder: str, model_type: str, quiet: bool = False,  # noqa: FBT002, FBT001
-    ctx_factory: Callable[[],TraceContext] = None
+    folder: str,
+    model_type: str,
+    quiet: bool = False,  # noqa: FBT002, FBT001
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
 ) -> UploadDirectoryInfo:
     # Count the total number of files
     file_count = 0
@@ -232,7 +234,7 @@ def _upload_file_or_folder(
     file_or_folder_name: str,
     model_type: str,
     quiet: bool = False,  # noqa: FBT002, FBT001
-    ctx_factory :
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
 ) -> Optional[str]:
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
@@ -247,11 +249,17 @@ def _upload_file_or_folder(
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
-        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
+        return _upload_file(file_or_folder_name, full_path, quiet, model_type, ctx_factory)
     return None
 
 
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+def _upload_file(
+    file_name: str,
+    full_path: str,
+    quiet: bool,  # noqa: FBT001
+    model_type: str,
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
+) -> Optional[str]:
     """Helper function to upload a single file
     Parameters
     ==========
@@ -266,7 +274,7 @@ def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -
         logger.info("Starting upload for file " + file_name)
 
     content_length = os.path.getsize(full_path)
-    token = _upload_blob(full_path, model_type)
+    token = _upload_blob(full_path, model_type, ctx_factory)
     if not quiet:
         logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
     return token

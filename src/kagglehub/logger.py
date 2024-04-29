@@ -13,4 +13,4 @@ def _configure_logger() -> None:
     library_logger.setLevel(get_log_verbosity())
 
 
-# _configure_logger()
+_configure_logger()

@@ -53,7 +53,7 @@ def model_upload(
     create_model_if_missing(h.owner, h.model, shared_context_factory)
 
     # Upload the model files to GCS
-    tokens = upload_files_and_directories(local_model_dir, "model", shared_context_factory)
+    tokens = upload_files_and_directories(local_model_dir, "model", quiet=False, ctx_factory=shared_context_factory)
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
     create_model_instance_or_version(h, tokens, license_name, version_notes, shared_context_factory)
