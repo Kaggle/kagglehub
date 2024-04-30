@@ -166,7 +166,7 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 ./docker-hatch -v 3.9 run lint:all
 ```
 
-## Vscode setup
+## VS Code setup
 
 ### Prerequisites
 Install the recommended extensions.

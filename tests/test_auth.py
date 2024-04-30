@@ -3,7 +3,8 @@ import logging
 from unittest import mock
 
 import kagglehub
-from kagglehub.auth import _capture_logger_output, logger
+from kagglehub.auth import _capture_logger_output
+from kagglehub.auth import _logger as logger
 from kagglehub.config import get_kaggle_credentials
 from tests.fixtures import BaseTestCase
 

@@ -1,12 +1,13 @@
 import io
 import logging
 from contextlib import contextmanager
-from typing import Generator
+from logging import Logger
+from typing import Generator, Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 INVALID_CREDENTIALS_ERROR = 401
 
@@ -21,7 +22,7 @@ NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 
 
 @contextmanager
-def _capture_logger_output() -> Generator[io.StringIO, None, None]:
+def _capture_logger_output(logger: Optional[Logger] = None) -> Generator[io.StringIO, None, None]:
     """Capture output that is logged using the logger.
 
     Example:
@@ -34,6 +35,7 @@ def _capture_logger_output() -> Generator[io.StringIO, None, None]:
     """
     buffer = io.StringIO()
     handler = logging.StreamHandler(buffer)
+    logger = _logger if logger is None else logger
     logger.addHandler(handler)
     try:
         yield buffer
@@ -115,13 +117,13 @@ def _validate_credentials_helper() -> None:
     api_client = KaggleApiV1Client()
     response = api_client.get("/hello")
     if "code" not in response:
-        logger.info("Kaggle credentials successfully validated.")
+        _logger.info("Kaggle credentials successfully validated.")
     elif response["code"] == INVALID_CREDENTIALS_ERROR:
-        logger.error(
+        _logger.error(
             "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
         )
     else:
-        logger.warning("Unable to validate Kaggle credentials at this time.")
+        _logger.warning("Unable to validate Kaggle credentials at this time.")
 
 
 def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001

@@ -4,6 +4,7 @@ from typing import Optional
 from kagglehub import registry
 from kagglehub.gcs_upload import upload_files_and_directories
 from kagglehub.handle import parse_model_handle
+from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ def model_download(handle: str, path: Optional[str] = None, *, force_download: O
         A string representing the path to the requested model files.
     """
     h = parse_model_handle(handle)
-    logger.info(f"Downloading Model: {handle}")
+    logger.info(f"Downloading Model: {h.to_url} ...", extra={**EXTRA_CONSOLE_BLOCK})
     return registry.model_resolver(h, path, force_download=force_download)
 
 
@@ -39,7 +40,7 @@ def model_upload(
     """
     # parse slug
     h = parse_model_handle(handle)
-    logger.info(f"Uploading Model {handle}")
+    logger.info(f"Uploading Model {h.to_url()} ...")
     if h.is_versioned():
         is_versioned_exception = "The model handle should not include the version"
         raise ValueError(is_versioned_exception)
