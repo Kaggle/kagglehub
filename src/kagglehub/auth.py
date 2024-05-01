@@ -1,8 +1,7 @@
 import io
 import logging
 from contextlib import contextmanager
-from logging import Logger
-from typing import Generator, Optional
+from typing import Generator
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
@@ -22,7 +21,7 @@ NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 
 
 @contextmanager
-def _capture_logger_output(logger: Optional[Logger] = None) -> Generator[io.StringIO, None, None]:
+def _capture_logger_output() -> Generator[io.StringIO, None, None]:
     """Capture output that is logged using the logger.
 
     Example:
@@ -35,12 +34,11 @@ def _capture_logger_output(logger: Optional[Logger] = None) -> Generator[io.Stri
     """
     buffer = io.StringIO()
     handler = logging.StreamHandler(buffer)
-    logger = _logger if logger is None else logger
-    logger.addHandler(handler)
+    _logger.addHandler(handler)
     try:
         yield buffer
     finally:
-        logger.removeHandler(handler)
+        _logger.removeHandler(handler)
 
 
 def _is_in_notebook() -> bool:

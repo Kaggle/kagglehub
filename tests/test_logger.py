@@ -1,9 +1,10 @@
 import logging
 import unittest
+from contextlib import redirect_stderr
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from kagglehub.auth import _capture_logger_output
 from kagglehub.logger import (
     _CONSOLE_BLOCK_KEY,
     EXTRA_CONSOLE_BLOCK,
@@ -20,10 +21,10 @@ class TestLoggerConfigurations(unittest.TestCase):
             _configure_logger(log_path)
             logger = logging.getLogger(str(f))
             logger.setLevel(logging.DEBUG)
-            with _capture_logger_output(logger) as output:
-                logger.info("This is an info message")
-                logger.error("This is an error message")
-            self.assertEqual(output.getvalue(), "This is an info message\nThis is an error message\n")
+            with self.assertLogs(logger, level="INFO") as cm:
+                logger.info("HIDE")
+                logger.info("SHOW")
+                self.assertEqual(cm.output, [f"INFO:{f}:HIDE", f"INFO:{f}:SHOW"])
 
     def test_console_filter_discards_logrecord(self) -> None:
         with TemporaryDirectory() as f:
@@ -32,31 +33,46 @@ class TestLoggerConfigurations(unittest.TestCase):
             logger = logging.getLogger(str(f))
             logger.setLevel(logging.DEBUG)
             logger.addFilter(_block_logrecord_factory([_CONSOLE_BLOCK_KEY]))
-            with _capture_logger_output(logger) as output:
-                logger.info("This is an blocked message", extra={**EXTRA_CONSOLE_BLOCK})
-                logger.info("This is not blocked message")
-            self.assertEqual(output.getvalue(), "This is not blocked message\n")
+            with self.assertLogs(logger, level="INFO") as cm:
+                logger.info("HIDE", extra={**EXTRA_CONSOLE_BLOCK})
+                logger.info("SHOW")
+                self.assertEqual(cm.output, [f"INFO:{f}:SHOW"])
 
     def test_kagglehub_console_filter_discards_logrecord(self) -> None:
         with TemporaryDirectory() as f:
             log_path = Path(f) / "test-log"
-            _configure_logger(log_path)
             logger = logging.getLogger("kagglehub")
-            with _capture_logger_output(logger) as output:
-                logger.info("This is an blocked message", extra={**EXTRA_CONSOLE_BLOCK})
-                logger.info("This is not blocked message")
-            self.assertEqual(output.getvalue(), "This is not blocked message\n")
+            stream = StringIO()
+            with redirect_stderr(stream):
+                # reconfigure logger, otherwise streamhandler doesnt use the modified stderr
+                _configure_logger(log_path)
+                logger.info("HIDE", extra={**EXTRA_CONSOLE_BLOCK})
+                logger.info("SHOW")
+                self.assertEqual(stream.getvalue(), "SHOW\n")
+
+    def test_kagglehub_child_console_filter_discards_logrecord(self) -> None:
+        with TemporaryDirectory() as f:
+            log_path = Path(f) / "test-log"
+            # parent = logging.getLogger("kagglehub")
+            logger = logging.getLogger("kagglehub.models")
+            stream = StringIO()
+            with redirect_stderr(stream):
+                # reconfigure logger, otherwise streamhandler doesnt use the modified stderr
+                _configure_logger(log_path)
+                logger.info("HIDE", extra={**EXTRA_CONSOLE_BLOCK})
+                logger.info("SHOW")
+                self.assertEqual(stream.getvalue(), "SHOW\n")
 
     def test_kagglehub_file_filter(self) -> None:
         with TemporaryDirectory() as f:
             log_path = Path(f) / "testasdfasf-log"
             _configure_logger(log_path)
             logger = logging.getLogger("kagglehub")
-            logger.info("This is a blocked message", extra={**EXTRA_FILE_BLOCK})
-            logger.info("This is not a blocked message")
+            logger.info("HIDE", extra={**EXTRA_FILE_BLOCK})
+            logger.info("SHOW")
             text = (log_path / "kagglehub.log").read_text()
-            self.assertRegex(text, "^.*This is not a blocked message.*$")
-            self.assertRegex(text, "^(?!.*This is a blocked message).*$")
+            self.assertRegex(text, "^.*SHOW.*$")
+            self.assertRegex(text, "^(?!.*HIDE).*$")
 
 
 if __name__ == "__main__":

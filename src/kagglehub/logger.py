@@ -39,6 +39,7 @@ def _configure_logger(log_dir: Optional[Path] = None) -> None:
     file_handler = RotatingFileHandler(
         str(log_dir / "kagglehub.log"), maxBytes=1024 * 1024 * 5, backupCount=5, delay=True
     )
+    file_handler.addFilter(_block_logrecord_factory([_FILE_BLOCK_KEY]))
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(threadName)s - %(funcName)s - %(message)s"
     )
@@ -47,12 +48,13 @@ def _configure_logger(log_dir: Optional[Path] = None) -> None:
     library_logger.addHandler(file_handler)
 
     sh = logging.StreamHandler()
+    sh.addFilter(_block_logrecord_factory([_CONSOLE_BLOCK_KEY]))
+    sh.setLevel(get_log_verbosity())
     library_logger.addHandler(sh)
     # Disable propagation of the library log outputs.
     # This prevents the same message again from being printed again if a root logger is defined.
     library_logger.propagate = False
     library_logger.setLevel(get_log_verbosity())
-    library_logger.addFilter(_block_logrecord_factory([_FILE_BLOCK_KEY, _CONSOLE_BLOCK_KEY]))
 
 
 _configure_logger()
