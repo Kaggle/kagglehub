@@ -5,6 +5,7 @@ from unittest import mock
 import kagglehub
 from kagglehub.auth import _capture_logger_output, logger
 from kagglehub.config import get_kaggle_credentials
+from kagglehub.exceptions import UnauthenticatedError
 from tests.fixtures import BaseTestCase
 
 from .server_stubs import auth_stub as stub
@@ -83,3 +84,15 @@ class TestAuth(BaseTestCase):
             logger.error("This is an error message")
 
         self.assertEqual(output.getvalue(), "This is an info message\nThis is an error message\n")
+
+    def test_whoami_raises_unauthenticated_error(self) -> None:
+        with self.assertRaises(UnauthenticatedError):
+            kagglehub.whoami()
+
+    def test_whoami_success(self) -> None:
+        with mock.patch("builtins.input") as mock_input:
+            mock_input.side_effect = ["lastplacelarry", "some-key"]
+            kagglehub.login(validate_credentials=False)
+            result = kagglehub.whoami()
+
+            self.assertEqual(result, {"username": "lastplacelarry"})
