@@ -6,6 +6,7 @@ import kagglehub
 from kagglehub.auth import _capture_logger_output, logger
 from kagglehub.config import get_kaggle_credentials
 from kagglehub.exceptions import UnauthenticatedError
+from kagglehub.exceptions import UnauthenticatedError
 from tests.fixtures import BaseTestCase
 
 from .server_stubs import auth_stub as stub
