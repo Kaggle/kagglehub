@@ -93,4 +93,6 @@ class TestAuth(BaseTestCase):
         with mock.patch("builtins.input") as mock_input:
             mock_input.side_effect = ["lastplacelarry", "some-key"]
             kagglehub.login(validate_credentials=False)
-            kagglehub.whoami()
+            result = kagglehub.whoami()
+
+            self.assertEqual(result, {'username': 'lastplacelarry'})
