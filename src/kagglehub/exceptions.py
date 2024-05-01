@@ -42,6 +42,13 @@ class ColabHTTPError(requests.HTTPError):
         super().__init__(message, response=response)
 
 
+class UnauthenticatedError(Exception):
+    """Exception raised for errors in the authentication process."""
+    
+    def __init__(self, message: str = "User is not authenticated") -> None:
+        super().__init__(message)
+
+
 def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Optional[ResourceHandle] = None) -> None:
     """
     Wrapper around `response.raise_for_status()` that provides nicer error messages
