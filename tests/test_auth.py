@@ -95,4 +95,4 @@ class TestAuth(BaseTestCase):
             kagglehub.login(validate_credentials=False)
             result = kagglehub.whoami()
 
-            self.assertEqual(result, {'username': 'lastplacelarry'})
+            self.assertEqual(result, {"username": "lastplacelarry"})
