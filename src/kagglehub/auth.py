@@ -4,7 +4,8 @@ from contextlib import contextmanager
 from typing import Generator
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.config import set_kaggle_credentials
+from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials
+from kagglehub.exceptions import UnauthenticatedError
 
 logger = logging.getLogger(__name__)
 
@@ -140,3 +141,17 @@ def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
         return
 
     _validate_credentials_helper()
+
+
+def whoami() -> dict:
+    """
+    Return a dictionary with the username of the authenticated Kaggle user or raise an error if unauthenticated.
+    """
+    try:
+        credentials = get_kaggle_credentials()
+        if credentials and credentials.username:
+            return {'username': credentials.username}
+        else:
+            raise UnauthenticatedError()
+    except Exception as e:
+        raise UnauthenticatedError() from e
