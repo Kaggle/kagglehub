@@ -150,7 +150,7 @@ def whoami() -> dict:
     try:
         credentials = get_kaggle_credentials()
         if credentials and credentials.username:
-            return {'username': credentials.username}
+            return {"username": credentials.username}
         else:
             raise UnauthenticatedError()
     except Exception as e:
