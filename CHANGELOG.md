@@ -2,6 +2,12 @@
 
 ## Next (Unreleased)
 
+## v0.2.5 (May 2nd, 2024)
+
+* Add missing packaging dependencies ([#115]((https://github.com/Kaggle/kagglehub/pull/115))) 
+* Create whoami method ([#114]((https://github.com/Kaggle/kagglehub/pull/114)))
+* Migrate all tests to use Flask ([#111]((https://github.com/Kaggle/kagglehub/pull/111)))
+
 ## v0.2.4 (April 26th, 2024)
 
 * Create a new version when model instance exist but no versions are ready yet ([#108]((https://github.com/Kaggle/kagglehub/pull/108)))
