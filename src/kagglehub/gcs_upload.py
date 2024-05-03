@@ -257,5 +257,5 @@ def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -
     content_length = os.path.getsize(full_path)
     token = _upload_blob(full_path, model_type)
     if not quiet:
-        logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
+        logger.info("Upload successful: " + full_path + " (" + File.get_size(content_length) + ")")
     return token
