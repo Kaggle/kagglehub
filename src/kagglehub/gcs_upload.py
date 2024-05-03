@@ -238,15 +238,14 @@ def _upload_file_or_folder(
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
-        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
+        return _upload_file(full_path, quiet, model_type)
     return None
 
 
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+def _upload_file(full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========
-    file_name: name of the file to upload
     full_path: path to the file to upload
     quiet: suppress verbose output
     model_type: Type of the model that is being uploaded.
@@ -254,10 +253,10 @@ def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -
     """
 
     if not quiet:
-        logger.info("Starting upload for file " + file_name)
+        logger.info("Starting upload for file " + full_path)
 
     content_length = os.path.getsize(full_path)
     token = _upload_blob(full_path, model_type)
     if not quiet:
-        logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
+        logger.info("Upload successful: " + full_path + " (" + File.get_size(content_length) + ")")
     return token
