@@ -236,15 +236,14 @@ def _upload_file_or_folder(
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
-        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
+        return _upload_file(full_path, quiet, model_type)
     return None
 
 
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+def _upload_file(full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========
-    file_name: name of the file to upload
     full_path: path to the file to upload
     quiet: suppress verbose output
     model_type: Type of the model that is being uploaded.
