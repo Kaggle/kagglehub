@@ -4,7 +4,7 @@ import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -13,6 +13,7 @@ from tqdm.utils import CallbackIOWrapper
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
+from kagglehub.tracing import TraceContext, default_context_factory
 
 logger = logging.getLogger(__name__)
 
@@ -91,13 +92,14 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str) -> str:
+def _upload_blob(file_path: str, model_type: str, ctx_factory: Optional[Callable[[], TraceContext]] = None) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Parameters
     ==========
     file_path: The path to the file to be uploaded.
     model_type : The type of the model associated with the file.
+    ctx_factory: The function to initalize a trace context
     """
     file_size = os.path.getsize(file_path)
     data = {
@@ -106,7 +108,9 @@ def _upload_blob(file_path: str, model_type: str) -> str:
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
-    api_client = KaggleApiV1Client()
+    if ctx_factory is None:
+        ctx_factory = default_context_factory
+    api_client = KaggleApiV1Client(ctx_factory)
     response = api_client.post("/blobs/upload", data=data)
 
     # Validate response content
@@ -118,7 +122,11 @@ def _upload_blob(file_path: str, model_type: str) -> str:
         raise BackendError(token_exception)
 
     session_uri = response["createUrl"]
-    headers = {"Content-Type": "application/octet-stream", "Content-Range": f"bytes 0-{file_size - 1}/{file_size}"}
+    headers = {
+        "Content-Type": "application/octet-stream",
+        "Content-Range": f"bytes 0-{file_size - 1}/{file_size}",
+        "traceparent": ctx_factory().next(),
+    }
 
     retry_count = 0
     uploaded_bytes = 0
@@ -150,12 +158,16 @@ def _upload_blob(file_path: str, model_type: str) -> str:
                 retry_count += 1
                 uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 pbar.n = uploaded_bytes  # Update progress bar to reflect actual uploaded bytes
+                headers["traceparent"] = ctx_factory().next()
 
     return response["token"]
 
 
 def upload_files_and_directories(
-    folder: str, model_type: str, quiet: bool = False  # noqa: FBT002, FBT001
+    folder: str,
+    model_type: str,
+    quiet: bool = False,  # noqa: FBT002, FBT001
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
 ) -> UploadDirectoryInfo:
     # Count the total number of files
     file_count = 0
@@ -176,7 +188,7 @@ def upload_files_and_directories(
 
             tokens = [
                 token
-                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet, ctx_factory)]
                 if token is not None
             ]
             return UploadDirectoryInfo(name="archive", files=tokens)
@@ -222,6 +234,7 @@ def _upload_file_or_folder(
     file_or_folder_name: str,
     model_type: str,
     quiet: bool = False,  # noqa: FBT002, FBT001
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
 ) -> Optional[str]:
     """
     Uploads a file or each file inside a folder individually from a specified path to a remote service.
@@ -236,11 +249,17 @@ def _upload_file_or_folder(
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
-        return _upload_file(file_or_folder_name, full_path, quiet, model_type)
+        return _upload_file(file_or_folder_name, full_path, quiet, model_type, ctx_factory)
     return None
 
 
-def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+def _upload_file(
+    file_name: str,
+    full_path: str,
+    quiet: bool,  # noqa: FBT001
+    model_type: str,
+    ctx_factory: Optional[Callable[[], TraceContext]] = None,
+) -> Optional[str]:
     """Helper function to upload a single file
     Parameters
     ==========
@@ -255,7 +274,7 @@ def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -
         logger.info("Starting upload for file " + file_name)
 
     content_length = os.path.getsize(full_path)
-    token = _upload_blob(full_path, model_type)
+    token = _upload_blob(full_path, model_type, ctx_factory)
     if not quiet:
         logger.info("Upload successful: " + file_name + " (" + File.get_size(content_length) + ")")
     return token

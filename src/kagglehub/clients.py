@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Optional, Tuple
+from typing import Callable, Optional, Tuple
 from urllib.parse import urljoin
 
 import requests
@@ -31,6 +31,7 @@ from kagglehub.exceptions import (
 )
 from kagglehub.handle import ResourceHandle
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
+from kagglehub.tracing import TraceContext, default_context_factory
 
 CHUNK_SIZE = 1048576
 # The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
@@ -81,9 +82,10 @@ logger = logging.getLogger(__name__)
 class KaggleApiV1Client:
     BASE_PATH = "api/v1"
 
-    def __init__(self) -> None:
+    def __init__(self, ctx_factory: Optional[Callable[[], TraceContext]] = None) -> None:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
+        self.ctx_factory = default_context_factory if ctx_factory is None else ctx_factory
 
     def _check_for_version_update(self, response: requests.Response) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
@@ -100,7 +102,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers={"User-Agent": get_user_agent()},
+            headers={"User-Agent": get_user_agent(), "traceparent": self.ctx_factory().next()},
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -112,7 +114,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.post(
             url,
-            headers={"User-Agent": get_user_agent()},
+            headers={"User-Agent": get_user_agent(), "traceparent": self.ctx_factory().next()},
             json=data,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -126,9 +128,10 @@ class KaggleApiV1Client:
     def download_file(self, path: str, out_file: str, resource_handle: Optional[ResourceHandle] = None) -> None:
         url = self._build_url(path)
         logger.info(f"Downloading from {url}...")
+        ctx = self.ctx_factory()
         with requests.get(
             url,
-            headers={"User-Agent": get_user_agent()},
+            headers={"User-Agent": get_user_agent(), "traceparent": ctx.next()},
             stream=True,
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
@@ -156,7 +159,7 @@ class KaggleApiV1Client:
                     stream=True,
                     auth=self._get_http_basic_auth(),
                     timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
-                    headers={"Range": f"bytes={size_read}-"},
+                    headers={"Range": f"bytes={size_read}-", "traceparent": ctx.next()},
                 ) as resumed_response:
                     _download_file(resumed_response, out_file, size_read, total_size, hash_object)
             else:
