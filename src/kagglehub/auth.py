@@ -7,7 +7,7 @@ from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials
 from kagglehub.exceptions import UnauthenticatedError
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 INVALID_CREDENTIALS_ERROR = 401
 
@@ -35,11 +35,11 @@ def _capture_logger_output() -> Generator[io.StringIO, None, None]:
     """
     buffer = io.StringIO()
     handler = logging.StreamHandler(buffer)
-    logger.addHandler(handler)
+    _logger.addHandler(handler)
     try:
         yield buffer
     finally:
-        logger.removeHandler(handler)
+        _logger.removeHandler(handler)
 
 
 def _is_in_notebook() -> bool:
@@ -116,13 +116,13 @@ def _validate_credentials_helper() -> None:
     api_client = KaggleApiV1Client()
     response = api_client.get("/hello")
     if "code" not in response:
-        logger.info("Kaggle credentials successfully validated.")
+        _logger.info("Kaggle credentials successfully validated.")
     elif response["code"] == INVALID_CREDENTIALS_ERROR:
-        logger.error(
+        _logger.error(
             "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
         )
     else:
-        logger.warning("Unable to validate Kaggle credentials at this time.")
+        _logger.warning("Unable to validate Kaggle credentials at this time.")
 
 
 def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
