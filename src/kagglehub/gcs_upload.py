@@ -252,7 +252,7 @@ def _upload_file(file_name: str, full_path: str, quiet: bool, model_type: str) -
     """
 
     if not quiet:
-        logger.info("Starting upload for file " + file_name)
+        logger.info("Starting upload for file " + full_path)
 
     content_length = os.path.getsize(full_path)
     token = _upload_blob(full_path, model_type)
