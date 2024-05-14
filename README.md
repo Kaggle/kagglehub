@@ -16,7 +16,7 @@ Authenticating is **only** needed to access public resources requiring user cons
 
 First, you will need a Kaggle account. You can sign up [here](https://www.kaggle.com/account/login).
 
-After login in, you can download your Kaggle API credentials at https://www.kaggle.com/settings by clicking on the "Create New Token" button under the "API" section.
+After login, you can download your Kaggle API credentials at https://www.kaggle.com/settings by clicking on the "Create New Token" button under the "API" section.
 
 You have 3 different options to authenticate.
 
