@@ -97,6 +97,8 @@ def _get_completion_marker_filepath(handle: ResourceHandle, path: Optional[str] 
     # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_models_completion_marker_filepath(handle, path)
+    elif isinstance(handle, DatasetHandle):
+        return _get_dataset_completion_marker_filepath(handle, path)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)

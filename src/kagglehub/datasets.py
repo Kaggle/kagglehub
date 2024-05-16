@@ -3,7 +3,7 @@ from typing import Optional
 
 from kagglehub import registry
 from kagglehub.datasets_helpers import create_dataset_or_version
-from kagglehub.gcs_upload import upload_files
+from kagglehub.gcs_upload import upload_files_and_directories
 from kagglehub.handle import parse_dataset_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 
@@ -35,6 +35,6 @@ def dataset_upload(handle: str, local_dataset_dir: str, version_notes: str = "")
     h = parse_dataset_handle(handle)
 
     # Upload the dataset files to GCS
-    tokens = upload_files(local_dataset_dir, "dataset")
+    tokens = upload_files_and_directories(local_dataset_dir, "dataset")
 
     create_dataset_or_version(h, tokens, version_notes)
