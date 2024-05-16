@@ -9,7 +9,7 @@ from kagglehub.config import get_kaggle_api_endpoint
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
-NUM_VERSIONED_DATASET_PARTS = 3  # e.g.: <owner>/<dataset>/<version>
+NUM_VERSIONED_DATASET_PARTS = 4  # e.g.: <owner>/<dataset>/versions/<version>
 NUM_UNVERSIONED_DATASET_PARTS = 2  # e.g.: <ownser>/<dataset>
 
 
@@ -59,7 +59,7 @@ class DatasetHandle(ResourceHandle):
     def __str__(self) -> str:
         handle_str = f"{self.owner}/{self.dataset}"
         if self.is_versioned():
-            return f"{handle_str}/{self.version}"
+            return f"{handle_str}/versions/{self.version}"
         return handle_str
 
     def to_url(self) -> str:
@@ -109,11 +109,11 @@ def parse_dataset_handle(handle: str) -> DatasetHandle:
 
     if len(parts) == NUM_VERSIONED_DATASET_PARTS:
         # Versioned handle
-        # e.g.: <owner>/>dataset>/<version>
+        # e.g.: <owner>/>dataset>/versions/<version>
         try:
-            version = int(parts[2])
+            version = int(parts[3])
         except ValueError as err:
-            msg = f"Invalid version number: {parts[4]}"
+            msg = f"Invalid version number: {parts[3]}"
             raise ValueError(msg) from err
         return DatasetHandle(
             owner=parts[0],

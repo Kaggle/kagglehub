@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Optional
 
 from kagglehub.config import get_cache_folder
-from kagglehub.handle import ModelHandle, ResourceHandle
+from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
+
+DATASETS_CACHE_SUBFOLDER = "datasets"
+DATASETS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
 MODELS_CACHE_SUBFOLDER = "models"
 MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
@@ -26,9 +29,10 @@ def load_from_cache(handle: ResourceHandle, path: Optional[str] = None) -> Optio
 
 
 def get_cached_path(handle: ResourceHandle, path: Optional[str] = None) -> str:
-    # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_model_path(handle, path)
+    elif isinstance(handle, DatasetHandle):
+        return _get_dataset_path(handle, path)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
@@ -37,6 +41,8 @@ def get_cached_path(handle: ResourceHandle, path: Optional[str] = None) -> str:
 def get_cached_archive_path(handle: ResourceHandle) -> str:
     if isinstance(handle, ModelHandle):
         return _get_model_archive_path(handle)
+    elif isinstance(handle, DatasetHandle):
+        return _get_dataset_path(handle)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
@@ -95,6 +101,17 @@ def _get_completion_marker_filepath(handle: ResourceHandle, path: Optional[str] 
         msg = "Invalid handle"
         raise ValueError(msg)
 
+def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
+    base_path = os.path.join(
+        get_cache_folder(),
+        DATASETS_CACHE_SUBFOLDER,
+        handle.owner,
+        handle.dataset,
+        str(handle.version),
+    )
+
+    return os.path.join(base_path, path) if path else base_path
+
 
 def _get_model_path(handle: ModelHandle, path: Optional[str] = None) -> str:
     base_path = os.path.join(
@@ -119,6 +136,26 @@ def _get_model_archive_path(handle: ModelHandle) -> str:
         handle.framework,
         handle.variation,
         f"{handle.version!s}.archive",
+    )
+
+
+def _get_dataset_completion_marker_filepath(handle: DatasetHandle, path: Optional[str] = None) -> str:
+    if path:
+        return os.path.join(
+            get_cache_folder(),
+            DATASETS_CACHE_SUBFOLDER,
+            handle.owner,
+            handle.dataset,
+            str(handle.version),
+            f"{path}.complete",
+        )
+    
+    return os.path.join(
+        get_cache_folder(),
+        DATASETS_CACHE_SUBFOLDER,
+        handle.owner,
+        handle.dataset,
+        f"{handle.version!s}.complete",
     )
 
 
