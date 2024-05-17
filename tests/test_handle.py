@@ -34,13 +34,26 @@ class TestHandle(BaseTestCase):
         with self.assertRaises(ValueError):
             parse_model_handle("google/bert/tensorFlow2/answer-equivalence-bem/invalid-version-number")
 
-    def test_dataset_handle(self) -> None:
+    def test_unversioned_dataset_handle(self) -> None:
         handle = "owner/dataset"
         h = parse_dataset_handle(handle)
 
         self.assertEqual("owner", h.owner)
         self.assertEqual("dataset", h.dataset)
+        self.assertEqual(None, h.version)
+        self.assertFalse(h.is_versioned())
+        self.assertEqual(handle, str(h))
 
     def test_invalid_dataset_handle(self) -> None:
         with self.assertRaises(ValueError):
             parse_dataset_handle("a-single-part")
+
+    def test_versioned_dataset_handle(self) -> None:
+        handle = "owner/versionedDataset/versions/2"
+        h = parse_dataset_handle(handle)
+
+        self.assertEqual("owner", h.owner)
+        self.assertEqual("versionedDataset", h.dataset)
+        self.assertEqual(2, h.version)
+        self.assertTrue(h.is_versioned())
+        self.assertEqual(handle, str(h))

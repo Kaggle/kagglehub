@@ -5,7 +5,6 @@ from kagglehub import registry
 from kagglehub.datasets_helpers import create_dataset_or_version
 from kagglehub.gcs_upload import upload_files_and_directories
 from kagglehub.handle import parse_dataset_handle
-from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,6 @@ def dataset_download(handle: str, path: Optional[str] = None, *, force_download:
     """
 
     h = parse_dataset_handle(handle)
-    logger.info(f"Downloading Datset: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
     return registry.dataset_resolver(h, path, force_download=force_download)
 
 
