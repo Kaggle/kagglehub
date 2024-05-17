@@ -4,13 +4,21 @@ from typing import List
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
+from kagglehub.gcs_upload import UploadDirectoryInfo
 from kagglehub.handle import DatasetHandle
 
 logger = logging.getLogger(__name__)
 
 
-def _create_dataset(dataset_handle: DatasetHandle, files: List[str]) -> None:
-    data = {"files": [{"token": file_token} for file_token in files]}
+def _create_dataset(dataset_handle: DatasetHandle, files_and_directories: UploadDirectoryInfo) -> None:
+    serialized_data = files_and_directories.serialize()
+    data = {
+        "ownerSlug": dataset_handle.owner,
+        "datasetSlug": dataset_handle.dataset,
+        "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": serialized_data["directories"],
+    }
+
     api_client = KaggleApiV1Client()
     api_client.post("/datasets/create/new", data)
     logger.info(
@@ -18,14 +26,19 @@ def _create_dataset(dataset_handle: DatasetHandle, files: List[str]) -> None:
     )
 
 
-def _create_dataset_version(dataset_handle: DatasetHandle, files: List[str], version_notes: str = "") -> None:
-    data = {"versionNotes": version_notes, "files": [{"token": file_token} for file_token in files]}
+def _create_dataset_version(dataset_handle: DatasetHandle, files_and_directories: UploadDirectoryInfo, version_notes: str = "") -> None:
+    serialized_data = files_and_directories.serialize()
+    data = {
+        "versionNotes": version_notes,
+        "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": serialized_data["directories"],
+    }
     api_client = KaggleApiV1Client()
     api_client.post(f"/datasets/create/{dataset_handle.version}/{dataset_handle.owner}/{dataset_handle.dataset}", data)
     logger.info(f"Your dataset has been created.\nFiles are being processed...\nSee at: {dataset_handle.to_url()}")
 
 
-def create_dataset_or_version(dataset_handle: DatasetHandle, files: List[str], version_notes: str = "") -> None:
+def create_dataset_or_version(dataset_handle: DatasetHandle, files: UploadDirectoryInfo, version_notes: str = "") -> None:
     try:
         api_client = KaggleApiV1Client()
         api_client.get(f"/view/datasets/{dataset_handle}", dataset_handle)
