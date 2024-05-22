@@ -3,6 +3,8 @@ import os
 import tarfile
 from typing import Optional
 
+from tqdm.contrib.concurrent import thread_map
+
 from kagglehub.cache import (
     delete_from_cache,
     get_cached_archive_path,
@@ -13,8 +15,6 @@ from kagglehub.cache import (
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.handle import ModelHandle
 from kagglehub.resolver import Resolver
-
-from tqdm.contrib.concurrent import thread_map
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
@@ -77,8 +77,8 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 os.remove(archive_path)
             else:
                 # Download files individually in parallel
-                def _inner_download_file(file: str):
-                    file_out_path = out_path + "/" + file 
+                def _inner_download_file(file: str) -> None:
+                    file_out_path = out_path + "/" + file
                     os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
                     api_client.download_file(url_path + "/" + file, file_out_path, h)
 
@@ -86,9 +86,8 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                     _inner_download_file,
                     files,
                     desc=f"Downloading {len(files)} files",
-                    max_workers=8 # Never use more than 8 threads in parallel to download files.
+                    max_workers=8,  # Never use more than 8 threads in parallel to download files.
                 )
-                    
 
         mark_as_complete(h, path)
         return out_path
@@ -102,18 +101,19 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle) -> int:
 
     return json_response[MODEL_INSTANCE_VERSION_FIELD]
 
+
 def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> tuple[list[str], bool]:
     json_response = api_client.get(_build_list_model_instance_version_files_url_path(h), h)
     if "files" not in json_response:
-        msg = f"Invalid ListModelInstanceVersionFiles API response. Expected to include a 'files' field"
-        raise ValueError(msg) 
-    
+        msg = "Invalid ListModelInstanceVersionFiles API response. Expected to include a 'files' field"
+        raise ValueError(msg)
+
     files = []
-    for f in json_response['files']:
-        files.append(f['name'])
-    
+    for f in json_response["files"]:
+        files.append(f["name"])
+
     has_more = "nextPageToken" in json_response and json_response["nextPageToken"] != ""
-    
+
     return (files, has_more)
 
 
@@ -124,5 +124,7 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
 def _build_download_url_path(h: ModelHandle) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
 
-def _build_list_model_instance_version_files_url_path(h: ModelHandle):
-    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
+
+def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
+    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files \
+        ?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"

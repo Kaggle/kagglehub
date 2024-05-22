@@ -11,6 +11,8 @@ from tests.utils import get_test_file_path
 
 app = Flask(__name__)
 
+INVALID_ARCHIVE_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
+TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE = "testorg/testmodel/jax/too-many-files/1"
 
 # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
 GCS_HASH_HEADER = "x-goog-hash"
@@ -34,7 +36,10 @@ def model_get_instance(org_slug: str, model_slug: str, framework: str, variation
 def model_download_instance_version(
     org_slug: str, model_slug: str, framework: str, variation: str, version: int
 ) -> ResponseReturnValue:
-    _ = f"{org_slug}/{model_slug}/{framework}/{variation}/{version}"
+    handle = f"{org_slug}/{model_slug}/{framework}/{variation}/{version}"
+    if handle == INVALID_ARCHIVE_HANDLE:
+        return "bad archive", 200
+
     test_file_path = get_test_file_path("archive.tar.gz")
     with open(test_file_path, "rb") as f:
         content = f.read()
@@ -78,12 +83,25 @@ def model_download_instance_version_path(
         )
 
 
-@app.route(
-    "/api/v1/models/<org_slug>/<model_slug>/<framework>/bad-archive-variation/<version>/download", methods=["GET"]
-)
-def model_download_bad_archive(org_slug: str, model_slug: str, framework: str, version: int) -> ResponseReturnValue:
-    _ = f"{org_slug}/{model_slug}/{framework}/bad-archive-variation/{version}"
-    return "bad archive", 200
+@app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/<version>/files", methods=["GET"])
+def model_list_files(
+    org_slug: str, model_slug: str, framework: str, variation: str, version: int
+) -> ResponseReturnValue:
+    handle = f"{org_slug}/{model_slug}/{framework}/{variation}/{version}"
+    if handle in (INVALID_ARCHIVE_HANDLE, TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE):
+        data = {
+            "files": [{"name": f"{i}.txt"} for i in range(1, 51)],
+            "nextPageToken": "more",
+        }
+    else:
+        data = {
+            "files": [
+                {"name": "config.json"},
+                {"name": "model.keras"},
+            ],
+            "nextPageToken": "",
+        }
+    return jsonify(data), 200
 
 
 @app.errorhandler(404)

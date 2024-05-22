@@ -10,7 +10,6 @@ from tests.fixtures import BaseTestCase
 from .server_stubs import colab_stub as stub
 from .server_stubs import serv
 
-INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
 VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/1"
 LATEST_MODEL_VERSION = 2
 UNVERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b"
