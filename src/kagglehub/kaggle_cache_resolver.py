@@ -11,6 +11,7 @@ from kagglehub.config import is_kaggle_cache_disabled
 from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import ModelHandle
+from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.resolver import Resolver
 
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
@@ -39,9 +40,11 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
             logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
 
         if path:
-            logger.info(f"Attaching '{path}' from model '{h}' to your Kaggle notebook...")
+            logger.info(
+                f"Attaching '{path}' from model '{h}' to your Kaggle notebook...", extra={**EXTRA_CONSOLE_BLOCK}
+            )
         else:
-            logger.info(f"Attaching model '{h}' to your Kaggle notebook...")
+            logger.info(f"Attaching model '{h}' to your Kaggle notebook...", extra={**EXTRA_CONSOLE_BLOCK})
         client = KaggleJwtClient()
         model_ref = {
             "OwnerSlug": h.owner,
