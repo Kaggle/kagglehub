@@ -5,12 +5,9 @@ from typing import Optional
 
 from kagglehub.config import get_cache_folder
 from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
-<<<<<<< HEAD
 
 DATASETS_CACHE_SUBFOLDER = "datasets"
 DATASETS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
-=======
->>>>>>> 66db1ff (add helpers/other files  and modify tests)
 
 MODELS_CACHE_SUBFOLDER = "models"
 MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
@@ -111,9 +108,10 @@ def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
         get_cache_folder(),
         DATASETS_CACHE_SUBFOLDER,
         handle.owner,
-        handle.dataset,
-        str(handle.version)
-    )
+        handle.dataset)
+    if handle.is_versioned():
+        base_path = os.path.join(base_path, "versions", str(handle.version))
+    
 
     return os.path.join(base_path, path) if path else base_path
 

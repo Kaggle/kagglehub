@@ -16,16 +16,24 @@ from kagglehub.cache import (
 )
 from kagglehub.clients import KaggleApiV1Client
 <<<<<<< HEAD
+<<<<<<< HEAD
 from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
 =======
 from kagglehub.handle import DatasetHandle, ModelHandle
 >>>>>>> 66db1ff (add helpers/other files  and modify tests)
+=======
+from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
+>>>>>>> 527b4a9 (Remove data file and add suggestion to stub and modify tests)
 from kagglehub.resolver import Resolver
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
 
+<<<<<<< HEAD
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
+=======
+DATASET_VERSION_FIELD = "versions"
+>>>>>>> 527b4a9 (Remove data file and add suggestion to stub and modify tests)
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +45,9 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
     def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
+
+        if not h.is_versioned():
+            h.version = _get_current_version(api_client, h)
 
         dataset_path = load_from_cache(h, path)
         if dataset_path and not force_download:
@@ -217,11 +228,24 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
 
     elif isinstance(h, DatasetHandle):
         json_response = api_client.get(_build_get_dataset_url_path(h), h)
+<<<<<<< HEAD
         if DATASET_CURRENT_VERSION_FIELD not in json_response:
             msg = f"Invalid GetDataset API response. Expected to include a {DATASET_CURRENT_VERSION_FIELD} field"
             raise ValueError(msg)
         
         return json_response[DATASET_CURRENT_VERSION_FIELD]
+=======
+        if DATASET_VERSION_FIELD not in json_response:
+            msg = f"Invalid GetDataset API response. Expected to include a {DATASET_VERSION_FIELD} field"
+            raise ValueError(msg)
+        
+        versions = []
+        for v in json_response[DATASET_VERSION_FIELD]:
+            versions.append(v['versionNumber'])
+
+        current_version = max(versions) # getting the highest version as a placeholder
+        return current_version
+>>>>>>> 527b4a9 (Remove data file and add suggestion to stub and modify tests)
 
 
 def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> Tuple[List[str], bool]:
@@ -245,6 +269,9 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 527b4a9 (Remove data file and add suggestion to stub and modify tests)
 def _build_get_dataset_url_path(h: DatasetHandle) -> str:
     return f"datasets/view/{h.owner}/{h.dataset}"
 
