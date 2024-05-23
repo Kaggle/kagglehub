@@ -63,4 +63,4 @@ docker build -f Dockerfile \
     .
 
 set -x
-docker run --rm -v $PWD:/working -w /working ${DOCKER_IMAGE} "$@"
+docker run --rm -v $PWD:/working -v ~/.kaggle:/root/.kaggle -w /working ${DOCKER_IMAGE} "$@"
