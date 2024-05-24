@@ -1,7 +1,7 @@
 import logging
 import os
 import tarfile
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from tqdm.contrib.concurrent import thread_map
 
@@ -102,7 +102,7 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle) -> int:
     return json_response[MODEL_INSTANCE_VERSION_FIELD]
 
 
-def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> tuple[list[str], bool]:
+def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> Tuple[List[str], bool]:
     json_response = api_client.get(_build_list_model_instance_version_files_url_path(h), h)
     if "files" not in json_response:
         msg = "Invalid ListModelInstanceVersionFiles API response. Expected to include a 'files' field"
