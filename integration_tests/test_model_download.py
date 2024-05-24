@@ -78,6 +78,16 @@ class TestModelDownload(unittest.TestCase):
 
         self.assert_files(actual_path, expected_files)
 
+    def test_download_archive_model_many_files_succeeds(self) -> None:
+        # If the model has > 25 files, we download the archive and uncompress it locally.
+        actual_path = model_download("integrationtester/test-private-model/keras/many-files-with-subdirectories/1")
+
+        expected_files = [f"assets/{i}.txt" for i in range(1,26) ] + [
+            "./config.json",
+            "./model.keras",
+        ]
+        self.assert_files(actual_path, expected_files)
+
     def test_download_multiple_files(self) -> None:
         file_paths = ["tokenizer.json", "config.json"]
         for p in file_paths:
