@@ -126,5 +126,5 @@ def _build_download_url_path(h: ModelHandle) -> str:
 
 
 def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
-    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files \
-        ?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
+    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files\
+?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
