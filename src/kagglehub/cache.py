@@ -108,10 +108,9 @@ def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
         get_cache_folder(),
         DATASETS_CACHE_SUBFOLDER,
         handle.owner,
-        handle.dataset)
-    if handle.is_versioned():
-        base_path = os.path.join(base_path, "versions", str(handle.version))
-    
+        handle.dataset,
+        str(handle.version)
+    )
 
     return os.path.join(base_path, path) if path else base_path
 

@@ -24,7 +24,7 @@ EXPECTED_DATASET_SUBPATH = os.path.join(
     TEST_FILEPATH,
 )
 
-class TestHttpDatasetDownload(BaseTestCase):
+class TestHttpDatasetsDownload(BaseTestCase):
     @classmethod
     def setUpClass(cls):  # noqa: ANN102
         serv.start_server(stub.app)

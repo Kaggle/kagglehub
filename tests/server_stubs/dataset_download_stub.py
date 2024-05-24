@@ -5,6 +5,7 @@ from typing import Any, Generator
 from flask import Flask, jsonify, Response
 from flask.typing import ResponseReturnValue
 
+from kagglehub.http_resolver import DATASET_CURRENT_VERSION_FIELD
 from kagglehub.integrity import to_b64_digest
 from tests.utils import get_test_file_path
 
@@ -18,9 +19,12 @@ def head() -> ResponseReturnValue:
     return "", 200
 
 
-@app.route("/api/v1/datsets/view/<owner_slug>/<dataset_slug>", methods=["GET"])
+@app.route("/api/v1/datasets/view/<owner_slug>/<dataset_slug>", methods=["GET"])
 def dataset_get(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
-    data = {"message": f"Dataset exists {owner_slug}/{dataset_slug} !"}
+    data = {
+        "message": f"Dataset exists {owner_slug}/{dataset_slug} !",
+        DATASET_CURRENT_VERSION_FIELD: 2,
+    }
     return jsonify(data), 200
 
 

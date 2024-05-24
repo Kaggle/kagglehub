@@ -16,7 +16,7 @@ from kagglehub.resolver import Resolver
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 
-DATASET_VERSION_FIELD = "versions"
+DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
 
 logger = logging.getLogger(__name__)
 
@@ -138,16 +138,11 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
 
     elif isinstance(h, DatasetHandle):
         json_response = api_client.get(_build_get_dataset_url_path(h), h)
-        if DATASET_VERSION_FIELD not in json_response:
-            msg = f"Invalid GetDataset API response. Expected to include a {DATASET_VERSION_FIELD} field"
+        if DATASET_CURRENT_VERSION_FIELD not in json_response:
+            msg = f"Invalid GetDataset API response. Expected to include a {DATASET_CURRENT_VERSION_FIELD} field"
             raise ValueError(msg)
         
-        versions = []
-        for v in json_response[DATASET_VERSION_FIELD]:
-            versions.append(v['versionNumber'])
-
-        current_version = max(versions) # getting the highest version as a placeholder
-        return current_version
+        return json_response[DATASET_CURRENT_VERSION_FIELD]
 
 
 def _build_get_instance_url_path(h: ModelHandle) -> str:
