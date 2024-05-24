@@ -82,7 +82,7 @@ class TestModelDownload(unittest.TestCase):
         # If the model has > 25 files, we download the archive and uncompress it locally.
         actual_path = model_download("integrationtester/test-private-model/keras/many-files-with-subdirectories/1")
 
-        expected_files = [f"assets/{i}.txt" for i in range(1,26) ] + [
+        expected_files = [f"assets/{i}.txt" for i in range(1, 26)] + [
             "./config.json",
             "./model.keras",
         ]
