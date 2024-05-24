@@ -20,13 +20,13 @@ UNAVAILABLE_MODEL_HANDLE = "unavailable/model/handle/colab/1"
 
 class TestColabCacheModelDownload(BaseTestCase):
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         # TODO: b/337257114 - the colab environment variable has flaky behavior if set in `tests/__init__.py`.
         os.environ[TBE_RUNTIME_ADDR_ENV_VAR_NAME] = "http://localhost:7779"
         serv.start_server(stub.app, TBE_RUNTIME_ADDR_ENV_VAR_NAME)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         serv.stop_server()
         del os.environ[TBE_RUNTIME_ADDR_ENV_VAR_NAME]
 
