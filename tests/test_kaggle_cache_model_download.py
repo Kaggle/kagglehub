@@ -76,11 +76,11 @@ class KaggleJwtHandler(BaseHTTPRequestHandler):
 # Test cases for the ModelKaggleCacheResolver.
 class TestKaggleCacheModelDownload(BaseTestCase):
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         serv.start_server(stub.app, KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         serv.stop_server()
 
     def test_unversioned_model_download(self) -> None:

@@ -32,11 +32,11 @@ EXPECTED_MODEL_SUBPATH = os.path.join(
 # Test cases for the ModelHttpResolver.
 class TestHttpModelDownload(BaseTestCase):
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         serv.start_server(stub.app)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         serv.stop_server()
 
     def _download_model_and_assert_downloaded(

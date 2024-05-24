@@ -19,11 +19,11 @@ class TestModelUpload(BaseTestCase):
         stub.reset()
 
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         serv.start_server(stub.app)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         serv.stop_server()
 
     def test_model_upload_with_invalid_handle(self) -> None:
