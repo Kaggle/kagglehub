@@ -4,8 +4,9 @@ from typing import List
 
 from requests import HTTPError
 
-from integration_tests.utils import create_test_cache
 from kagglehub import model_download
+
+from .utils import create_test_cache
 
 HANDLE = "keras/bert/keras/bert_tiny_en_uncased/2"
 
