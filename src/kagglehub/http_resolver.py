@@ -1,6 +1,8 @@
 import logging
 import os
 import tarfile
+import zipfile
+import gzip
 from typing import Optional
 
 from kagglehub.cache import (
@@ -57,13 +59,13 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             # Create the directory to extract the archive to.
             os.makedirs(out_path, exist_ok=True)
 
-            if not tarfile.is_tarfile(archive_path):
-                msg = "Unsupported archive type."
-                raise ValueError(msg)
+            if not zipfile.is_zipfile(archive_path):
+                msg = "Unsupported archive type"
+                return ValueError(msg)
 
             # Extract all files to this directory.
             logger.info("Extracting dataset files...")
-            with tarfile.open(archive_path) as f:
+            with zipfile.ZipFile(archive_path, 'r') as f:
                 # Dataset archives are created by Kaggle via the Databundle Worker.
                 f.extractall(out_path)
 
@@ -158,4 +160,4 @@ def _build_download_url_path(h: ModelHandle) -> str:
 
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
-    return f"datasets/download/{h.owner}/{h.dataset}"
+    return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"

@@ -31,7 +31,7 @@ def dataset_get(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
 @app.route("/api/v1/datasets/download/<owner_slug>/<dataset_slug>", methods=["GET"])
 def dataset_download(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
     _ = f"{owner_slug}/{dataset_slug}"
-    test_file_path = get_test_file_path("foo.txt")
+    test_file_path = get_test_file_path("foo.txt.zip")
     with open(test_file_path, "rb") as f:
         content = f.read()
         file_hash = hashlib.md5()

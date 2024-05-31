@@ -42,7 +42,7 @@ def get_cached_archive_path(handle: ResourceHandle) -> str:
     if isinstance(handle, ModelHandle):
         return _get_model_archive_path(handle)
     elif isinstance(handle, DatasetHandle):
-        return _get_dataset_path(handle)
+        return _get_dataset_archive_path(handle)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
@@ -137,6 +137,15 @@ def _get_model_archive_path(handle: ModelHandle) -> str:
         handle.model,
         handle.framework,
         handle.variation,
+        f"{handle.version!s}.archive",
+    )
+
+def _get_dataset_archive_path(handle: DatasetHandle) -> str:
+    return os.path.join(
+        get_cache_folder(),
+        DATASETS_CACHE_SUBFOLDER,
+        handle.owner,
+        handle.dataset,
         f"{handle.version!s}.archive",
     )
 

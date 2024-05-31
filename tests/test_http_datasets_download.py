@@ -15,12 +15,12 @@ UNVERSIONED_DATASET_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with
 TEST_FILEPATH = "foo.txt"
 TEST_CONTENTS = "foo"
 
-EXPECTED_DATASET_SUBDIR = os.path.join(DATASETS_CACHE_SUBFOLDER, "sarahjeffreson", "featured-spotify-artiststracks-with-metadata", "1")
+EXPECTED_DATASET_SUBDIR = os.path.join(DATASETS_CACHE_SUBFOLDER, "sarahjeffreson", "featured-spotify-artiststracks-with-metadata", "2")
 EXPECTED_DATASET_SUBPATH = os.path.join(
     DATASETS_CACHE_SUBFOLDER,
     "sarahjeffreson",
     "featured-spotify-artiststracks-with-metadata",
-    "1",
+    "2",
     TEST_FILEPATH,
 )
 
@@ -44,7 +44,7 @@ class TestHttpDatasetsDownload(BaseTestCase):
         dataset_path = kagglehub.dataset_download(dataset_handle, **kwargs)
 
         self.assertEqual(os.path.join(d, expected_subdir_or_subpath), dataset_path)
-        self.assertEqual(["foo.txt", "dataset"], sorted(os.listdir(dataset_path)))
+        self.assertEqual(["foo.txt"], sorted(os.listdir(dataset_path)))
 
         # Assert that the archive file has been deleted
         archive_path = get_cached_archive_path(parse_dataset_handle(dataset_handle))
