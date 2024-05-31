@@ -6,6 +6,8 @@ import zipfile
 from typing import List, Optional, Tuple
 
 from tqdm.contrib.concurrent import thread_map
+import zipfile
+import gzip
 
 from kagglehub.cache import (
     delete_from_cache,
@@ -58,13 +60,13 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             # Create the directory to extract the archive to.
             os.makedirs(out_path, exist_ok=True)
 
-            if not tarfile.is_tarfile(archive_path):
-                msg = "Unsupported archive type."
-                raise ValueError(msg)
+            if not zipfile.is_zipfile(archive_path):
+                msg = "Unsupported archive type"
+                return ValueError(msg)
 
             # Extract all files to this directory.
             logger.info("Extracting dataset files...")
-            with tarfile.open(archive_path) as f:
+            with zipfile.ZipFile(archive_path, 'r') as f:
                 # Dataset archives are created by Kaggle via the Databundle Worker.
                 f.extractall(out_path)
 
@@ -252,5 +254,5 @@ def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
 ?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
 
 
-def _build_dataset_download_url_path(h: DatasetHandle ) -> str:
-    return f"datasets/{h.owner}/{h.dataset_name}/download"
+def _build_dataset_download_url_path(h: DatasetHandle) -> str:
+    return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
