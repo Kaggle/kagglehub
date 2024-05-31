@@ -11,6 +11,7 @@ from kagglehub.config import is_kaggle_cache_disabled
 from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import ModelHandle
+from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.resolver import Resolver
 
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
@@ -37,11 +38,6 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
     def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
             logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
-
-        if path:
-            logger.info(f"Attaching '{path}' from model '{h}' to your Kaggle notebook...")
-        else:
-            logger.info(f"Attaching model '{h}' to your Kaggle notebook...")
         client = KaggleJwtClient()
         model_ref = {
             "OwnerSlug": h.owner,
@@ -68,7 +64,9 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
 
         if not os.path.exists(cached_path):
             # Only print this if the model is not already mounted.
-            logger.info(f"Mounting files to {cached_path}...")
+            logger.info(f"Mounting files to {cached_path}...", extra={**EXTRA_CONSOLE_BLOCK})
+        else:
+            logger.info(f"Attaching '{path}' from model '{h}' to your Kaggle notebook...")
 
         while not os.path.exists(cached_path):
             time.sleep(5)
