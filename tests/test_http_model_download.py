@@ -1,4 +1,5 @@
 import os
+from typing import List, Optional
 
 import requests
 
@@ -11,7 +12,6 @@ from .server_stubs import model_download_stub as stub
 from .server_stubs import serv
 from .utils import create_test_cache
 
-INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
 VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/3"
 UNVERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b"
 TEST_FILEPATH = "config.json"
@@ -44,12 +44,15 @@ class TestHttpModelDownload(BaseTestCase):
         d: str,
         model_handle: str,
         expected_subdir_or_subpath: str,
+        expected_files: Optional[List[str]] = None,
         **kwargs,  # noqa: ANN003
     ) -> None:
         # Download the full model and ensure all files are there.
         model_path = kagglehub.model_download(model_handle, **kwargs)
         self.assertEqual(os.path.join(d, expected_subdir_or_subpath), model_path)
-        self.assertEqual(["config.json", "model.keras"], sorted(os.listdir(model_path)))
+        if not expected_files:
+            expected_files = ["config.json", "model.keras"]
+        self.assertEqual(sorted(expected_files), sorted(os.listdir(model_path)))
 
         # Assert that the archive file has been deleted.
         archive_path = get_cached_archive_path(parse_model_handle(model_handle))
@@ -68,6 +71,15 @@ class TestHttpModelDownload(BaseTestCase):
     def test_versioned_model_download(self) -> None:
         with create_test_cache() as d:
             self._download_model_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR)
+
+    def test_model_archive_download(self) -> None:
+        with create_test_cache() as d:
+            self._download_model_and_assert_downloaded(
+                d,
+                stub.TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE,
+                f"{MODELS_CACHE_SUBFOLDER}/{stub.TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE}",
+                expected_files=[f"{i}.txt" for i in range(1, 51)],
+            )
 
     def test_versioned_model_full_download_with_file_already_cached(self) -> None:
         with create_test_cache() as d:
@@ -112,7 +124,7 @@ class TestHttpModelDownload(BaseTestCase):
     def test_versioned_model_download_bad_archive(self) -> None:
         with create_test_cache():
             with self.assertRaises(ValueError):
-                kagglehub.model_download(INVALID_ARCHIVE_MODEL_HANDLE)
+                kagglehub.model_download(stub.INVALID_ARCHIVE_HANDLE)
 
     def test_versioned_model_download_with_path(self) -> None:
         with create_test_cache() as d:

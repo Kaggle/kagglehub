@@ -155,6 +155,7 @@ ban-relative-imports = "all"
 [tool.ruff.lint.per-file-ignores]
 # Tests can use magic values, assertions, and relative imports
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
+"integration_tests/**/*" = ["PLR2004", "S101", "TID252"]
 # Ignore unused imports in __init__.py
 "src/kagglehub/**/__init__.py" = ["F401"]
 
