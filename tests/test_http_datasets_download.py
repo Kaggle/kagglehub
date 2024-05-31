@@ -1,6 +1,7 @@
 import os
 
 import kagglehub
+import zipfile
 from kagglehub.cache import DATASETS_CACHE_SUBFOLDER, get_cached_archive_path
 from kagglehub.handle import parse_dataset_handle
 from tests.fixtures import BaseTestCase
@@ -13,7 +14,7 @@ INVALID_ARCHIVE_DATASET_HANDLE = "invalid/invalid/invalid/invalid/invalid"
 VERSIONED_DATASET_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with-metadata/versions/2"
 UNVERSIONED_DATASET_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with-metadata"
 TEST_FILEPATH = "foo.txt"
-TEST_CONTENTS = "foo"
+TEST_CONTENTS = "foo\n"
 
 EXPECTED_DATASET_SUBDIR = os.path.join(DATASETS_CACHE_SUBFOLDER, "sarahjeffreson", "featured-spotify-artiststracks-with-metadata", "2")
 EXPECTED_DATASET_SUBPATH = os.path.join(
@@ -53,10 +54,18 @@ class TestHttpDatasetsDownload(BaseTestCase):
     def _download_test_file_and_assert_downloaded(self, d: str, dataset_handle: str, **kwargs) -> None:  # noqa: ANN003
         dataset_path = kagglehub.dataset_download(dataset_handle, path=TEST_FILEPATH, **kwargs)
         self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH), dataset_path)
-        print(dataset_path)
-        with open(dataset_path) as dataset_file:
-            print(dataset_file.read())
-            self.assertEqual(TEST_CONTENTS, dataset_file.read())
+
+        print(f"IS ZIPFILE: {zipfile.is_zipfile(dataset_path)}")
+
+        with zipfile.ZipFile(dataset_path, 'r') as zip_ref:
+            if TEST_FILEPATH in zip_ref.namelist():
+                with zip_ref.open(TEST_FILEPATH) as extracted_file:
+                    contents = extracted_file.read().decode()
+
+        print(f"PATH: {dataset_path}")
+        print(f"CONTENTS: {contents}")
+    
+        self.assertEqual(TEST_CONTENTS, contents)
 
     def test_unversioned_dataset_download(self) -> None:
         with create_test_cache() as d:
