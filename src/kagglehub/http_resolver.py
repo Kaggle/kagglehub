@@ -47,7 +47,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         if path:
             # Downloading a single file.
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "/" + path, out_path, h)
+            api_client.download_file(url_path + "&file_name=" + path, out_path, h)
         else:
             # Downloading the full archived bundle.
             archive_path = get_cached_archive_path(h)
