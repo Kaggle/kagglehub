@@ -1,13 +1,11 @@
 import logging
 import os
 import tempfile
-import time
 import unittest
 import uuid
-from functools import wraps
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable, Type, TypeVar
+from typing import TypeVar
 
 from kagglehub import model_upload, models_helpers
 from kagglehub.config import get_kaggle_credentials
@@ -18,31 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 ReturnType = TypeVar("ReturnType")
-
-
-def retry(
-    times: int = 5, delay_seconds: int = 5, exception_to_check: Type[Exception] = Exception
-) -> Callable[[Callable[..., ReturnType]], Callable[..., ReturnType]]:
-    def decorator(func: Callable[..., ReturnType]) -> Callable[..., ReturnType]:
-        @wraps(func)
-        def wrapper(*args: object, **kwargs: object) -> ReturnType:
-            attempts = 0
-            while attempts < times:
-                try:
-                    return func(*args, **kwargs)
-                except exception_to_check as e:
-                    attempts += 1
-                    if attempts == times:
-                        time_out_message = "Maximum retries reached without success."
-                        raise TimeoutError(time_out_message) from e
-                    logger.info(f"Attempt {attempts} failed: {e}. Retrying in {delay_seconds} seconds...")
-                    time.sleep(delay_seconds)
-            runtime_error_message = "Unexpected exit from retry loop. This should not happen."
-            raise RuntimeError(runtime_error_message)
-
-        return wrapper
-
-    return decorator
 
 
 class TestModelUpload(unittest.TestCase):
