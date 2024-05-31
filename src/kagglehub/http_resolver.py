@@ -2,8 +2,10 @@ import logging
 import os
 import tarfile
 import zipfile
-import gzip
-from typing import Optional
+
+from typing import List, Optional, Tuple
+
+from tqdm.contrib.concurrent import thread_map
 
 from kagglehub.cache import (
     delete_from_cache,
@@ -17,6 +19,7 @@ from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
 from kagglehub.resolver import Resolver
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
+MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
 
@@ -102,28 +105,46 @@ class ModelHttpResolver(Resolver[ModelHandle]):
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
             api_client.download_file(url_path + "/" + path, out_path, h)
         else:
-            # Downloading the full archived bundle.
-            archive_path = get_cached_archive_path(h)
-            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+            # List the files and decide how to download them:
+            # - <= 25 files: Download files in parallel
+            # > 25 files: Download the archive and uncompress
+            (files, has_more) = _list_files(api_client, h)
+            if has_more:
+                # Downloading the full archived bundle.
+                archive_path = get_cached_archive_path(h)
+                os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
-            # First, we download the archive.
-            api_client.download_file(url_path, archive_path, h)
+                # First, we download the archive.
+                api_client.download_file(url_path, archive_path, h)
 
-            # Create the directory to extract the archive to.
-            os.makedirs(out_path, exist_ok=True)
+                # Create the directory to extract the archive to.
+                os.makedirs(out_path, exist_ok=True)
 
-            if not tarfile.is_tarfile(archive_path):
-                msg = "Unsupported archive type."
-                raise ValueError(msg)
+                if not tarfile.is_tarfile(archive_path):
+                    msg = "Unsupported archive type."
+                    raise ValueError(msg)
 
-            # Extract all files to this directory.
-            logger.info("Extracting model files...")
-            with tarfile.open(archive_path) as f:
-                # Model archives are created by Kaggle via the Databundle Worker.
-                f.extractall(out_path)
+                # Extract all files to this directory.
+                logger.info("Extracting model files...")
+                with tarfile.open(archive_path) as f:
+                    # Model archives are created by Kaggle via the Databundle Worker.
+                    f.extractall(out_path)
 
-            # Delete the archive
-            os.remove(archive_path)
+                # Delete the archive
+                os.remove(archive_path)
+            else:
+                # Download files individually in parallel
+                def _inner_download_file(file: str) -> None:
+                    file_out_path = out_path + "/" + file
+                    os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
+                    api_client.download_file(url_path + "/" + file, file_out_path, h)
+
+                thread_map(
+                    _inner_download_file,
+                    files,
+                    desc=f"Downloading {len(files)} files",
+                    max_workers=8,  # Never use more than 8 threads in parallel to download files.
+                )
 
         mark_as_complete(h, path)
         return out_path
@@ -147,6 +168,21 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
         return json_response[DATASET_CURRENT_VERSION_FIELD]
 
 
+def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> Tuple[List[str], bool]:
+    json_response = api_client.get(_build_list_model_instance_version_files_url_path(h), h)
+    if "files" not in json_response:
+        msg = "Invalid ListModelInstanceVersionFiles API response. Expected to include a 'files' field"
+        raise ValueError(msg)
+
+    files = []
+    for f in json_response["files"]:
+        files.append(f["name"])
+
+    has_more = "nextPageToken" in json_response and json_response["nextPageToken"] != ""
+
+    return (files, has_more)
+
+
 def _build_get_instance_url_path(h: ModelHandle) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/get"
 
@@ -161,3 +197,8 @@ def _build_download_url_path(h: ModelHandle) -> str:
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
     return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+
+
+def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
+    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files\
+?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"

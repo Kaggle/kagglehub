@@ -125,7 +125,6 @@ class KaggleApiV1Client:
 
     def download_file(self, path: str, out_file: str, resource_handle: Optional[ResourceHandle] = None) -> None:
         url = self._build_url(path)
-        logger.info(f"Downloading from {url}...")
         with requests.get(
             url,
             headers={"User-Agent": get_user_agent()},
@@ -158,8 +157,10 @@ class KaggleApiV1Client:
                     timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
                     headers={"Range": f"bytes={size_read}-"},
                 ) as resumed_response:
+                    logger.info(f"Resuming download from {url} ({size_read}/{total_size}) bytes left.")
                     _download_file(resumed_response, out_file, size_read, total_size, hash_object)
             else:
+                logger.info(f"Downloading from {url}...")
                 _download_file(response, out_file, size_read, total_size, hash_object)
 
             if hash_object:

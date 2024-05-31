@@ -11,11 +11,11 @@ from .server_stubs import serv
 
 class TestKaggleApiV1Client(BaseTestCase):
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         serv.start_server(stub.app)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         serv.stop_server()
 
     def test_download_with_integrity_check(self) -> None:

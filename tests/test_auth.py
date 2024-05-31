@@ -15,11 +15,11 @@ from .server_stubs import serv
 
 class TestAuth(BaseTestCase):
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         serv.start_server(stub.app)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         serv.stop_server()
 
     def test_login_updates_global_credentials(self) -> None:

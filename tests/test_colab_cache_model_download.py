@@ -10,7 +10,6 @@ from tests.fixtures import BaseTestCase
 from .server_stubs import colab_stub as stub
 from .server_stubs import serv
 
-INVALID_ARCHIVE_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
 VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/1"
 LATEST_MODEL_VERSION = 2
 UNVERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b"
@@ -20,13 +19,13 @@ UNAVAILABLE_MODEL_HANDLE = "unavailable/model/handle/colab/1"
 
 class TestColabCacheModelDownload(BaseTestCase):
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         # TODO: b/337257114 - the colab environment variable has flaky behavior if set in `tests/__init__.py`.
         os.environ[TBE_RUNTIME_ADDR_ENV_VAR_NAME] = "http://localhost:7779"
         serv.start_server(stub.app, TBE_RUNTIME_ADDR_ENV_VAR_NAME)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         serv.stop_server()
         del os.environ[TBE_RUNTIME_ADDR_ENV_VAR_NAME]
 
