@@ -27,7 +27,7 @@ def start_server(
     app: Flask,
     endpoint_env_var_name: str = "KAGGLE_API_ENDPOINT",
     endpoint_env_var_value: str = "http://localhost:7777",
-) -> None:
+) -> ServerThread:
     env_var_patch = mock.patch.dict(os.environ, {endpoint_env_var_name: endpoint_env_var_value})
     env_var_patch.start()
 
