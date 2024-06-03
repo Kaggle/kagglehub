@@ -20,11 +20,11 @@ class TestModelUpload(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
-        serv.start_server(stub.app)
+        cls.server = serv.start_server(stub.app)
 
     @classmethod
     def tearDownClass(cls):
-        serv.stop_server()
+        cls.server.shutdown()
 
     def test_model_upload_with_invalid_handle(self) -> None:
         with self.assertRaises(ValueError):

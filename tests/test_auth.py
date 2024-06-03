@@ -16,11 +16,11 @@ from .server_stubs import serv
 class TestAuth(BaseTestCase):
     @classmethod
     def setUpClass(cls):
-        serv.start_server(stub.app)
+        cls.server = serv.start_server(stub.app)
 
     @classmethod
     def tearDownClass(cls):
-        serv.stop_server()
+        cls.server.shutdown()
 
     def test_login_updates_global_credentials(self) -> None:
         with mock.patch("builtins.input") as mock_input:

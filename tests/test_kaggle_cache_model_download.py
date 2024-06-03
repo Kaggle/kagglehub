@@ -77,11 +77,11 @@ class KaggleJwtHandler(BaseHTTPRequestHandler):
 class TestKaggleCacheModelDownload(BaseTestCase):
     @classmethod
     def setUpClass(cls):
-        serv.start_server(stub.app, KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME)
+        cls.server = serv.start_server(stub.app, KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME, "http://localhost:7778")
 
     @classmethod
     def tearDownClass(cls):
-        serv.stop_server()
+        cls.server.shutdown()
 
     def test_unversioned_model_download(self) -> None:
         with stub.create_env():
