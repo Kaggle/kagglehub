@@ -2,7 +2,7 @@ import hashlib
 import os
 from typing import Any, Generator
 
-from flask import Flask, jsonify, Response
+from flask import Flask, Response, jsonify
 from flask.typing import ResponseReturnValue
 
 from kagglehub.http_resolver import DATASET_CURRENT_VERSION_FIELD
@@ -13,6 +13,7 @@ app = Flask(__name__)
 
 # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
 GCS_HASH_HEADER = "x-goog-hash"
+
 
 @app.route("/", methods=["HEAD"])
 def head() -> ResponseReturnValue:
@@ -42,7 +43,8 @@ def dataset_download(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
         resp.content_length = os.path.getsize(test_file_path)
         resp.data = content
         return resp, 200
-    
+
+
 @app.route("/api/v1/datasets/download/<owner_slug>/<dataset_slug>/<file_name>", methods=["GET"])
 def dataset_download_file(owner_slug: str, dataset_slug: str, file_name: str) -> ResponseReturnValue:
     _ = f"{owner_slug}/{dataset_slug}"
@@ -67,7 +69,8 @@ def dataset_download_file(owner_slug: str, dataset_slug: str, file_name: str) ->
             ),
             200,
         )
-    
+
+
 @app.errorhandler(404)
 def error(e: Exception):  # noqa: ANN201
     data = {"message": "Some response data", "error": str(e)}

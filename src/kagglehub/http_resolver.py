@@ -2,7 +2,6 @@ import logging
 import os
 import tarfile
 import zipfile
-
 from typing import List, Optional, Tuple
 
 from tqdm.contrib.concurrent import thread_map
@@ -25,8 +24,9 @@ MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
 
 logger = logging.getLogger(__name__)
 
+
 class DatasetHttpResolver(Resolver[DatasetHandle]):
-    def is_supported(self, *_, **__) -> bool: # noqa: ANN002, ANN003
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
@@ -38,7 +38,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
         dataset_path = load_from_cache(h, path)
         if dataset_path and not force_download:
-            return dataset_path # Already cached
+            return dataset_path  # Already cached
         elif dataset_path and force_download:
             delete_from_cache(h, path)
 
@@ -67,7 +67,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
             # Extract all files to this directory.
             logger.info("Extracting dataset files...")
-            with zipfile.ZipFile(archive_path, 'r') as f:
+            with zipfile.ZipFile(archive_path, "r") as f:
                 # Dataset archives are created by Kaggle via the Databundle Worker.
                 f.extractall(out_path)
 
@@ -76,6 +76,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
         mark_as_complete(h, path)
         return out_path
+
 
 class ModelHttpResolver(Resolver[ModelHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
@@ -156,7 +157,7 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
             raise ValueError(msg)
 
         return json_response[MODEL_INSTANCE_VERSION_FIELD]
-    
+
     elif isinstance(h, DatasetHandle):
         json_response = api_client.get(_build_get_dataset_url_path(h), h)
         if DATASET_CURRENT_VERSION_FIELD not in json_response:

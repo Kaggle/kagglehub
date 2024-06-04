@@ -71,6 +71,7 @@ class DatasetHandle(ResourceHandle):
             return f"{base_url}/versions/{self.version}"
         return base_url
 
+
 def parse_dataset_handle(handle: str) -> DatasetHandle:
     parts = handle.split("/")
 

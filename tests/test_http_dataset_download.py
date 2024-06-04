@@ -1,7 +1,7 @@
 import os
+import zipfile
 
 import kagglehub
-import zipfile
 from kagglehub.cache import DATASETS_CACHE_SUBFOLDER, get_cached_archive_path
 from kagglehub.handle import parse_dataset_handle
 from tests.fixtures import BaseTestCase
@@ -16,7 +16,9 @@ UNVERSIONED_DATASET_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with
 TEST_FILEPATH = "foo.txt"
 TEST_CONTENTS = "foo\n"
 
-EXPECTED_DATASET_SUBDIR = os.path.join(DATASETS_CACHE_SUBFOLDER, "sarahjeffreson", "featured-spotify-artiststracks-with-metadata", "versions", "2")
+EXPECTED_DATASET_SUBDIR = os.path.join(
+    DATASETS_CACHE_SUBFOLDER, "sarahjeffreson", "featured-spotify-artiststracks-with-metadata", "versions", "2"
+)
 EXPECTED_DATASET_SUBPATH = os.path.join(
     DATASETS_CACHE_SUBFOLDER,
     "sarahjeffreson",
@@ -26,13 +28,14 @@ EXPECTED_DATASET_SUBPATH = os.path.join(
     TEST_FILEPATH,
 )
 
+
 class TestHttpDatasetDownload(BaseTestCase):
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
-       cls.server = serv.start_server(stub.app)
+    def setUpClass(cls):
+        cls.server = serv.start_server(stub.app)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         cls.server.shutdown()
 
     def _download_dataset_and_assert_downloaded(
@@ -42,7 +45,7 @@ class TestHttpDatasetDownload(BaseTestCase):
         expected_subdir_or_subpath: str,
         **kwargs,  # noqa: ANN003
     ) -> None:
-        # Download the full datasets and ensure all files are there.        
+        # Download the full datasets and ensure all files are there.
         dataset_path = kagglehub.dataset_download(dataset_handle, **kwargs)
 
         self.assertEqual(os.path.join(d, expected_subdir_or_subpath), dataset_path)
@@ -56,11 +59,11 @@ class TestHttpDatasetDownload(BaseTestCase):
         dataset_path = kagglehub.dataset_download(dataset_handle, path=TEST_FILEPATH, **kwargs)
         self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH), dataset_path)
 
-        with zipfile.ZipFile(dataset_path, 'r') as zip_ref:
+        with zipfile.ZipFile(dataset_path, "r") as zip_ref:
             if TEST_FILEPATH in zip_ref.namelist():
                 with zip_ref.open(TEST_FILEPATH) as extracted_file:
                     contents = extracted_file.read().decode()
-    
+
         self.assertEqual(TEST_CONTENTS, contents)
 
     def test_unversioned_dataset_download(self) -> None:

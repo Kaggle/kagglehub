@@ -106,12 +106,7 @@ def _get_completion_marker_filepath(handle: ResourceHandle, path: Optional[str] 
 
 
 def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
-    base_path = os.path.join(
-        get_cache_folder(),
-        DATASETS_CACHE_SUBFOLDER,
-        handle.owner,
-        handle.dataset
-    )
+    base_path = os.path.join(get_cache_folder(), DATASETS_CACHE_SUBFOLDER, handle.owner, handle.dataset)
     if handle.is_versioned():
         base_path = os.path.join(base_path, "versions", str(handle.version))
 
