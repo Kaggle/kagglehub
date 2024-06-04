@@ -33,11 +33,11 @@ EXPECTED_MODEL_SUBPATH = os.path.join(
 class TestHttpModelDownload(BaseTestCase):
     @classmethod
     def setUpClass(cls):
-        serv.start_server(stub.app)
+        cls.server = serv.start_server(stub.app)
 
     @classmethod
     def tearDownClass(cls):
-        serv.stop_server()
+        cls.server.shutdown()
 
     def _download_model_and_assert_downloaded(
         self,
@@ -183,9 +183,9 @@ class TestHttpModelDownload(BaseTestCase):
 class TestHttpNoInternet(BaseTestCase):
     def test_versioned_model_download_already_cached_with_force_download(self) -> None:
         with create_test_cache():
-            serv.start_server(stub.app)
+            server = serv.start_server(stub.app)
             kagglehub.model_download(VERSIONED_MODEL_HANDLE)
-            serv.stop_server()
+            server.shutdown()
 
             # No internet should throw an error.
             with self.assertRaises(requests.exceptions.ConnectionError):
@@ -193,9 +193,9 @@ class TestHttpNoInternet(BaseTestCase):
 
     def test_versioned_model_download_with_path_already_cached_with_force_download(self) -> None:
         with create_test_cache():
-            serv.start_server(stub.app)
+            server = serv.start_server(stub.app)
             kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
-            serv.stop_server()
+            server.shutdown()
 
             # No internet should throw an error.
             with self.assertRaises(requests.exceptions.ConnectionError):

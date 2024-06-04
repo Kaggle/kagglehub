@@ -12,7 +12,6 @@ from kagglehub.clients import (
     ColabClient,
 )
 from kagglehub.colab_cache_resolver import COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
-from kagglehub.config import TBE_RUNTIME_ADDR_ENV_VAR_NAME
 
 app = Flask(__name__)
 
@@ -71,7 +70,6 @@ def create_env() -> Generator[Any, Any, Any]:
         with mock.patch.dict(
             os.environ,
             {
-                TBE_RUNTIME_ADDR_ENV_VAR_NAME: "localhost:7779",
                 COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME: cache_mount_folder,
             },
         ):
