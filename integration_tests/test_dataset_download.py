@@ -73,11 +73,10 @@ class TestDatasetDownload(unittest.TestCase):
 
     def test_download_private_dataset_succeeds(self) -> None:
         with create_test_cache():
-            actual_path = dataset_download("jeward/testing")
+            actual_path = dataset_download("integrationtester/hello-world-dataset")
 
             expected_files = [
-                "./almighty_push.jpeg",
-                "./foo.txt",
+                "./hello.txt",
             ]
 
             self.assert_files(actual_path, expected_files)
