@@ -31,6 +31,10 @@ def dataset_upload(handle: str, local_dataset_dir: str, version_notes: str = "")
         version_notes: (string) Optional to write dataset versions.
     """
     h = parse_dataset_handle(handle)
+    logger.info(f"Uploading Dataset {h.to_url()} ...")
+    if h.is_versioned():
+        is_versioned_exception = "The dataset handle should not include the version"
+        raise ValueError(is_versioned_exception)
 
     # Upload the dataset files to GCS
     tokens = upload_files_and_directories(local_dataset_dir, "dataset")

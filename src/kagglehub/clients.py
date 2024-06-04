@@ -117,6 +117,7 @@ class KaggleApiV1Client:
             auth=self._get_http_basic_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
+            print(f"RESPONSE {response}")
             response.raise_for_status()
             response_dict = response.json()
             process_post_response(response_dict)
