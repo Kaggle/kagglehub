@@ -74,7 +74,7 @@ def dataset_create() -> ResponseReturnValue:
 def dataset_create_version(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
     data = {
         "status": "success",
-        "message": f"Model Version {owner_slug}/{dataset_slug} created successfully",
+        "message": f"Dataset Version {owner_slug}/{dataset_slug} created successfully",
     }
     return jsonify(data), 200
 

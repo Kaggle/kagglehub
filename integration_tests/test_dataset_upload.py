@@ -33,12 +33,12 @@ class TestDatasetUpload(unittest.TestCase):
         self.dataset_slug = f"dataset_{self.dataset_uuid}"
         self.handle = f"{self.owner_slug}/{self.dataset_slug}"
 
-    def test_model_upload_and_versioning(self) -> None:
+    def test_dataset_upload_and_versioning(self) -> None:
         # Create Instance
         dataset_upload(self.handle, self.temp_dir)
 
         # Create Version
-        # dataset_upload(self.handle, self.temp_dir, "new version")
+        dataset_upload(self.handle, self.temp_dir, "new version")
 
         # If delete model does not raise an error, then the upload was successful.
 
