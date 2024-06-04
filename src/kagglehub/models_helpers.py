@@ -60,7 +60,7 @@ def create_model_instance_or_version(
     try:
         _create_model_instance(model_handle, files, license_name)
     except BackendError as e:
-        if e.error_code == HTTPStatus.CONFLICT:
+        if e.error_code == HTTPStatus.CONFLICT or "already used by another model instance" in str(e):
             # Instance already exist, creating a new version instead.
             _create_model_instance_version(model_handle, files, version_notes)
         else:
