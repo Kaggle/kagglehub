@@ -12,11 +12,11 @@ from .server_stubs import serv
 class TestKaggleApiV1Client(BaseTestCase):
     @classmethod
     def setUpClass(cls):
-        serv.start_server(stub.app)
+        cls.server = serv.start_server(stub.app)
 
     @classmethod
     def tearDownClass(cls):
-        serv.stop_server()
+        cls.server.shutdown()
 
     def test_download_with_integrity_check(self) -> None:
         with TemporaryDirectory() as d:
