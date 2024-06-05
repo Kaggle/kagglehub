@@ -1,12 +1,10 @@
-import os
 import unittest
-from typing import List
 
 from requests import HTTPError
 
 from kagglehub import model_download
 
-from .utils import create_test_cache, assert_files
+from .utils import assert_files, create_test_cache
 
 HANDLE = "keras/bert/keras/bert_tiny_en_uncased/2"
 
