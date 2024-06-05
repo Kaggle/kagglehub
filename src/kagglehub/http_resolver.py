@@ -63,7 +63,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
             if not zipfile.is_zipfile(archive_path):
                 msg = "Unsupported archive type"
-                return ValueError(msg)
+                raise ValueError(msg)
 
             # Extract all files to this directory.
             logger.info("Extracting dataset files...")
@@ -165,6 +165,10 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
             raise ValueError(msg)
 
         return json_response[DATASET_CURRENT_VERSION_FIELD]
+
+    else:
+        msg = f"Invalid ResourceHandle type {h}"
+        raise ValueError(msg)
 
 
 def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> Tuple[List[str], bool]:
