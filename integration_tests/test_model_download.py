@@ -21,7 +21,7 @@ class TestModelDownload(unittest.TestCase):
                 "model.weights.h5",
                 "tokenizer.json",
             ]
-            self.assertTrue(assert_files(actual_path, expected_files))
+            assert_files(self, actual_path, expected_files)
 
     def test_model_unversioned_succeeds(self) -> None:
         with create_test_cache():
@@ -35,7 +35,7 @@ class TestModelDownload(unittest.TestCase):
                 "model.weights.h5",
                 "tokenizer.json",
             ]
-            self.assertTrue(assert_files(actual_path, expected_files))
+            assert_files(self, actual_path, expected_files)
 
     def test_public_model_as_unauthenticated_succeeds(self) -> None:
         with create_test_cache():
@@ -50,7 +50,7 @@ class TestModelDownload(unittest.TestCase):
                     "model.weights.h5",
                     "tokenizer.json",
                 ]
-                self.assertTrue(assert_files(actual_path, expected_files))
+                assert_files(self, actual_path, expected_files)
 
     def test_download_private_model_succeeds(self) -> None:
         with create_test_cache():
@@ -60,7 +60,7 @@ class TestModelDownload(unittest.TestCase):
                 "efficientnet-b0.pth",
             ]
 
-            self.assertTrue(assert_files(actual_path, expected_files))
+            assert_files(self, actual_path, expected_files)
 
     def test_download_archive_model_many_files_succeeds(self) -> None:
         with create_test_cache():
@@ -71,14 +71,14 @@ class TestModelDownload(unittest.TestCase):
                 "config.json",
                 "model.keras",
             ]
-            self.assertTrue(assert_files(actual_path, expected_files))
+            assert_files(self, actual_path, expected_files)
 
     def test_download_multiple_files(self) -> None:
         with create_test_cache():
             file_paths = ["tokenizer.json", "config.json"]
             for p in file_paths:
                 actual_path = model_download(HANDLE, path=p)
-                self.assertTrue(assert_files(actual_path, [p]))
+                assert_files(self, actual_path, [p])
 
     def test_download_with_incorrect_file_path(self) -> None:
         incorrect_path = "nonexistent/file/path"

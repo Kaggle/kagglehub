@@ -29,7 +29,7 @@ class TestDatasetDownload(unittest.TestCase):
                 "songs.csv",
                 "spotify.csv",
             ]
-            self.assertTrue(assert_files(actual_path, expected_files))
+            assert_files(self, actual_path, expected_files)
 
     def test_dataset_unversioned_succeeds(self) -> None:
         with create_test_cache():
@@ -51,7 +51,7 @@ class TestDatasetDownload(unittest.TestCase):
                 "songs.csv",
                 "spotify.csv",
             ]
-            self.assertTrue(assert_files(actual_path, expected_files))
+            assert_files(self, actual_path, expected_files)
 
     def test_download_private_dataset_succeeds(self) -> None:
         with create_test_cache():
@@ -61,14 +61,14 @@ class TestDatasetDownload(unittest.TestCase):
                 "private.txt",
             ]
 
-            self.assertTrue(assert_files(actual_path, expected_files))
+            assert_files(self, actual_path, expected_files)
 
     def test_download_multiple_files(self) -> None:
         with create_test_cache():
             file_paths = ["abalone.csv", "diamonds.csv", "red-wine.csv"]
             for p in file_paths:
                 actual_path = dataset_download(HANDLE, path=p)
-                self.assertTrue(assert_files(actual_path, [p]))
+                assert_files(self, actual_path, [p])
 
     def test_download_with_incorrect_file_path(self) -> None:
         incorrect_path = "nonexistent/file/path"

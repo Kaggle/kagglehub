@@ -61,6 +61,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             # Create the directory to extract the archive to.
             os.makedirs(out_path, exist_ok=True)
 
+            # TODO(b/345285947)
             if not zipfile.is_zipfile(archive_path):
                 msg = "Unsupported archive type"
                 raise ValueError(msg)
