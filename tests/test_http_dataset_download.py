@@ -83,6 +83,19 @@ class TestHttpDatasetDownload(BaseTestCase):
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE)
 
+    def test_unversioned_dataset_download_with_force_download(self) -> None:
+        with create_test_cache() as d:
+            self._download_dataset_and_assert_downloaded(
+                d, UNVERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR, force_download=True
+            )
+
+    def test_versioned_dataset_download_with_force_download(self) -> None:
+        with create_test_cache() as d:
+            self._download_dataset_and_assert_downloaded(
+                d, VERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR, force_download=True
+            )
+
+
     def test_versioned_dataset_full_download_with_file_already_cached(self) -> None:
         with create_test_cache() as d:
             # Download a single file first

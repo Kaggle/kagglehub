@@ -7,10 +7,8 @@ from kagglehub.config import get_cache_folder
 from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
 
 DATASETS_CACHE_SUBFOLDER = "datasets"
-DATASETS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
-
 MODELS_CACHE_SUBFOLDER = "models"
-MODELS_FILE_COMPLETION_MARKER_FOLDER = ".complete"
+FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
 
 def load_from_cache(handle: ResourceHandle, path: Optional[str] = None) -> Optional[str]:
@@ -158,7 +156,7 @@ def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[s
             handle.model,
             handle.framework,
             handle.variation,
-            MODELS_FILE_COMPLETION_MARKER_FOLDER,
+            FILE_COMPLETION_MARKER_FOLDER,
             str(handle.version),
             f"{path}.complete",
         )
@@ -181,6 +179,7 @@ def _get_datasets_completion_marker_filepath(handle: DatasetHandle, path: Option
             DATASETS_CACHE_SUBFOLDER,
             handle.owner,
             handle.dataset,
+            FILE_COMPLETION_MARKER_FOLDER,
             str(handle.version),
             f"{path}.complete",
         )
