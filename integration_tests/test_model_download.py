@@ -6,7 +6,7 @@ from requests import HTTPError
 
 from kagglehub import model_download
 
-from .utils import create_test_cache
+from .utils import create_test_cache, unauthenticated
 
 HANDLE = "keras/bert/keras/bert_tiny_en_uncased/2"
 
@@ -72,6 +72,21 @@ class TestModelDownload(unittest.TestCase):
                 "./tokenizer.json",
             ]
             self.assert_files(actual_path, expected_files)
+
+    def test_public_model_as_unauthenticated_succeeds(self) -> None:
+        with create_test_cache():
+            with unauthenticated():
+                unversioned_handle = "keras/bert/keras/bert_tiny_en_uncased"
+                actual_path = model_download(unversioned_handle)
+
+                expected_files = [
+                    "assets/tokenizer/vocabulary.txt",
+                    "./config.json",
+                    "./metadata.json",
+                    "./model.weights.h5",
+                    "./tokenizer.json",
+                ]
+                self.assert_files(actual_path, expected_files)
 
     def test_download_private_model_succeeds(self) -> None:
         with create_test_cache():
