@@ -45,12 +45,12 @@ class TestModelDownload(unittest.TestCase):
 
                 expected_files = [
                     "assets/tokenizer/vocabulary.txt",
-                    "./config.json",
-                    "./metadata.json",
-                    "./model.weights.h5",
-                    "./tokenizer.json",
+                    "config.json",
+                    "metadata.json",
+                    "model.weights.h5",
+                    "tokenizer.json",
                 ]
-                self.assert_files(actual_path, expected_files)
+                self.assertTrue(assert_files(actual_path, expected_files))
 
     def test_download_private_model_succeeds(self) -> None:
         with create_test_cache():
