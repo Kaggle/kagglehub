@@ -1,4 +1,5 @@
 import logging
+import sys
 from logging import LogRecord
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -47,7 +48,7 @@ def _configure_logger(log_dir: Optional[Path] = None) -> None:
     file_handler.setLevel(logging.DEBUG)
     library_logger.addHandler(file_handler)
 
-    sh = logging.StreamHandler()
+    sh = logging.StreamHandler(sys.stdout)
     sh.addFilter(_block_logrecord_factory([_CONSOLE_BLOCK_KEY]))
     sh.setLevel(get_log_verbosity())
     library_logger.addHandler(sh)
