@@ -1,6 +1,7 @@
 import logging
 import os
 import tarfile
+import zipfile
 from typing import List, Optional, Tuple
 
 from tqdm.contrib.concurrent import thread_map
@@ -13,13 +14,69 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.handle import ModelHandle
+from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
 from kagglehub.resolver import Resolver
+
+DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
 
 logger = logging.getLogger(__name__)
+
+
+class DatasetHttpResolver(Resolver[DatasetHandle]):
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
+        # Downloading files over HTTP is supported in all environments for all handles / paths.
+        return True
+
+    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+        api_client = KaggleApiV1Client()
+
+        if not h.is_versioned():
+            h.version = _get_current_version(api_client, h)
+
+        dataset_path = load_from_cache(h, path)
+        if dataset_path and not force_download:
+            return dataset_path  # Already cached
+        elif dataset_path and force_download:
+            delete_from_cache(h, path)
+
+        url_path = _build_dataset_download_url_path(h)
+        out_path = get_cached_path(h, path)
+
+        # Create the intermediary directories
+        if path:
+            # Downloading a single file.
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            api_client.download_file(url_path + "&file_name=" + path, out_path, h)
+        else:
+            # Downloading the full archived bundle.
+            archive_path = get_cached_archive_path(h)
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+            # First, we download the archive.
+            api_client.download_file(url_path, archive_path, h)
+
+            # Create the directory to extract the archive to.
+            os.makedirs(out_path, exist_ok=True)
+
+            # TODO(b/345285947)
+            if not zipfile.is_zipfile(archive_path):
+                msg = "Unsupported archive type"
+                raise ValueError(msg)
+
+            # Extract all files to this directory.
+            logger.info("Extracting dataset files...")
+            with zipfile.ZipFile(archive_path, "r") as f:
+                # Dataset archives are created by Kaggle via the Databundle Worker.
+                f.extractall(out_path)
+
+            # Delete the archive
+            os.remove(archive_path)
+
+        mark_as_complete(h, path)
+        return out_path
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
@@ -93,13 +150,26 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return out_path
 
 
-def _get_current_version(api_client: KaggleApiV1Client, h: ModelHandle) -> int:
-    json_response = api_client.get(_build_get_instance_url_path(h), h)
-    if MODEL_INSTANCE_VERSION_FIELD not in json_response:
-        msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"
-        raise ValueError(msg)
+def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> int:
+    if isinstance(h, ModelHandle):
+        json_response = api_client.get(_build_get_instance_url_path(h), h)
+        if MODEL_INSTANCE_VERSION_FIELD not in json_response:
+            msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"
+            raise ValueError(msg)
 
-    return json_response[MODEL_INSTANCE_VERSION_FIELD]
+        return json_response[MODEL_INSTANCE_VERSION_FIELD]
+
+    elif isinstance(h, DatasetHandle):
+        json_response = api_client.get(_build_get_dataset_url_path(h), h)
+        if DATASET_CURRENT_VERSION_FIELD not in json_response:
+            msg = f"Invalid GetDataset API response. Expected to include a {DATASET_CURRENT_VERSION_FIELD} field"
+            raise ValueError(msg)
+
+        return json_response[DATASET_CURRENT_VERSION_FIELD]
+
+    else:
+        msg = f"Invalid ResourceHandle type {h}"
+        raise ValueError(msg)
 
 
 def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> Tuple[List[str], bool]:
@@ -128,3 +198,11 @@ def _build_download_url_path(h: ModelHandle) -> str:
 def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files\
 ?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
+
+
+def _build_get_dataset_url_path(h: DatasetHandle) -> str:
+    return f"datasets/view/{h.owner}/{h.dataset}"
+
+
+def _build_dataset_download_url_path(h: DatasetHandle) -> str:
+    return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
