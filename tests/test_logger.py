@@ -1,6 +1,6 @@
 import logging
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -43,7 +43,7 @@ class TestLoggerConfigurations(unittest.TestCase):
             log_path = Path(f) / "test-log"
             logger = logging.getLogger("kagglehub")
             stream = StringIO()
-            with redirect_stderr(stream):
+            with redirect_stdout(stream):
                 # reconfigure logger, otherwise streamhandler doesnt use the modified stderr
                 _configure_logger(log_path)
                 logger.info("HIDE", extra={**EXTRA_CONSOLE_BLOCK})
@@ -53,10 +53,9 @@ class TestLoggerConfigurations(unittest.TestCase):
     def test_kagglehub_child_console_filter_discards_logrecord(self) -> None:
         with TemporaryDirectory() as f:
             log_path = Path(f) / "test-log"
-            # parent = logging.getLogger("kagglehub")
             logger = logging.getLogger("kagglehub.models")
             stream = StringIO()
-            with redirect_stderr(stream):
+            with redirect_stdout(stream):
                 # reconfigure logger, otherwise streamhandler doesnt use the modified stderr
                 _configure_logger(log_path)
                 logger.info("HIDE", extra={**EXTRA_CONSOLE_BLOCK})
