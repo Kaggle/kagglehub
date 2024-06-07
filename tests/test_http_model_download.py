@@ -72,13 +72,22 @@ class TestHttpModelDownload(BaseTestCase):
         with create_test_cache() as d:
             self._download_model_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE, EXPECTED_MODEL_SUBDIR)
 
-    def test_model_archive_download(self) -> None:
+    def test_model_archive_targz_download(self) -> None:
         with create_test_cache() as d:
             self._download_model_and_assert_downloaded(
                 d,
                 stub.TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE,
                 f"{MODELS_CACHE_SUBFOLDER}/{stub.TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE}",
                 expected_files=[f"{i}.txt" for i in range(1, 51)],
+            )
+
+    def test_model_archive_zip_download(self) -> None:
+        with create_test_cache() as d:
+            self._download_model_and_assert_downloaded(
+                d,
+                stub.ZIP_ARCHIVE_HANDLE,
+                f"{MODELS_CACHE_SUBFOLDER}/{stub.ZIP_ARCHIVE_HANDLE}",
+                expected_files=[f"model-{i}.txt" for i in range(1, 27)],
             )
 
     def test_versioned_model_full_download_with_file_already_cached(self) -> None:

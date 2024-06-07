@@ -1,5 +1,6 @@
 import os
 import zipfile
+from typing import List, Optional
 
 import kagglehub
 from kagglehub.cache import DATASETS_CACHE_SUBFOLDER, get_cached_archive_path
@@ -43,13 +44,17 @@ class TestHttpDatasetDownload(BaseTestCase):
         d: str,
         dataset_handle: str,
         expected_subdir_or_subpath: str,
+        expected_files: Optional[List[str]] = None,
         **kwargs,  # noqa: ANN003
     ) -> None:
         # Download the full datasets and ensure all files are there.
         dataset_path = kagglehub.dataset_download(dataset_handle, **kwargs)
 
         self.assertEqual(os.path.join(d, expected_subdir_or_subpath), dataset_path)
-        self.assertEqual(["foo.txt"], sorted(os.listdir(dataset_path)))
+
+        if not expected_files:
+            expected_files = ["foo.txt"]
+        self.assertEqual(sorted(expected_files), sorted(os.listdir(dataset_path)))
 
         # Assert that the archive file has been deleted
         archive_path = get_cached_archive_path(parse_dataset_handle(dataset_handle))
@@ -73,6 +78,15 @@ class TestHttpDatasetDownload(BaseTestCase):
     def test_versioned_dataset_download(self) -> None:
         with create_test_cache() as d:
             self._download_dataset_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
+
+    def test_versioned_dataset_targz_archive_download(self) -> None:
+        with create_test_cache() as d:
+            self._download_dataset_and_assert_downloaded(
+                d,
+                stub.TARGZ_ARCHIVE_HANDLE,
+                f"{DATASETS_CACHE_SUBFOLDER}/{stub.TARGZ_ARCHIVE_HANDLE}",
+                expected_files=[f"{i}.txt" for i in range(1, 51)],
+            )
 
     def test_versioned_dataset_download_bad_archive(self) -> None:
         with create_test_cache():
