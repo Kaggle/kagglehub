@@ -51,6 +51,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
             api_client.download_file(url_path + "&file_name=" + path, out_path, h)
         else:
+            # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
             # Downloading the full archived bundle.
             archive_path = get_cached_archive_path(h)
             os.makedirs(os.path.dirname(archive_path), exist_ok=True)
@@ -61,16 +62,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             # Create the directory to extract the archive to.
             os.makedirs(out_path, exist_ok=True)
 
-            # TODO(b/345285947)
-            if not zipfile.is_zipfile(archive_path):
-                msg = "Unsupported archive type"
-                raise ValueError(msg)
-
-            # Extract all files to this directory.
-            logger.info("Extracting dataset files...")
-            with zipfile.ZipFile(archive_path, "r") as f:
-                # Dataset archives are created by Kaggle via the Databundle Worker.
-                f.extractall(out_path)
+            _extract_archive(archive_path, out_path)
 
             # Delete the archive
             os.remove(archive_path)
@@ -120,15 +112,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 # Create the directory to extract the archive to.
                 os.makedirs(out_path, exist_ok=True)
 
-                if not tarfile.is_tarfile(archive_path):
-                    msg = "Unsupported archive type."
-                    raise ValueError(msg)
-
-                # Extract all files to this directory.
-                logger.info("Extracting model files...")
-                with tarfile.open(archive_path) as f:
-                    # Model archives are created by Kaggle via the Databundle Worker.
-                    f.extractall(out_path)
+                _extract_archive(archive_path, out_path)
 
                 # Delete the archive
                 os.remove(archive_path)
@@ -148,6 +132,19 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
         mark_as_complete(h, path)
         return out_path
+
+
+def _extract_archive(archive_path: str, out_path: str) -> None:
+    logger.info("Extracting model files...")
+    if tarfile.is_tarfile(archive_path):
+        with tarfile.open(archive_path) as f:
+            f.extractall(out_path)
+    elif zipfile.is_zipfile(archive_path):
+        with zipfile.ZipFile(archive_path, "r") as f:
+            f.extractall(out_path)
+    else:
+        msg = "Unsupported archive type."
+        raise ValueError(msg)
 
 
 def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> int:

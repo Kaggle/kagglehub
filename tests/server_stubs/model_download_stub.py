@@ -12,6 +12,7 @@ from tests.utils import get_test_file_path
 app = Flask(__name__)
 
 INVALID_ARCHIVE_HANDLE = "metaresearch/llama-2/pyTorch/bad-archive-variation/1"
+ZIP_ARCHIVE_HANDLE = "testorg/testmodel/jax/zip/3"
 TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE = "testorg/testmodel/jax/too-many-files/1"
 
 # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
@@ -41,13 +42,18 @@ def model_download_instance_version(
         return "bad archive", 200
 
     test_file_path = get_test_file_path("archive.tar.gz")
+    content_type = "application/x-gzip"
+    if handle == ZIP_ARCHIVE_HANDLE:
+        test_file_path = get_test_file_path("archive.zip")
+        content_type = "application/zip"
+
     with open(test_file_path, "rb") as f:
         content = f.read()
         file_hash = hashlib.md5()
         file_hash.update(content)
         resp = Response()
         resp.headers[GCS_HASH_HEADER] = f"md5={to_b64_digest(file_hash)}"
-        resp.content_type = "application/x-gzip"
+        resp.content_type = content_type
         resp.content_length = os.path.getsize(test_file_path)
         resp.data = content
         return resp, 200
@@ -91,6 +97,11 @@ def model_list_files(
     if handle in (INVALID_ARCHIVE_HANDLE, TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE):
         data = {
             "files": [{"name": f"{i}.txt"} for i in range(1, 51)],
+            "nextPageToken": "more",
+        }
+    elif handle == ZIP_ARCHIVE_HANDLE:
+        data = {
+            "files": [{"name": f"model-{i}.txt"} for i in range(1, 27)],
             "nextPageToken": "more",
         }
     else:
