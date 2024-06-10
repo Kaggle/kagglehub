@@ -1,4 +1,4 @@
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 
 import kagglehub.logger  # configures the library logger.
 from kagglehub import colab_cache_resolver, http_resolver, kaggle_cache_resolver, registry
