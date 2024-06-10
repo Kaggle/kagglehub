@@ -2,16 +2,22 @@
 
 ## Next (Unreleased)
 
+## v.0.2.6 (June 10th, 2024)
+
+* Add support for `.zip` archive ([#135](https://github.com/Kaggle/kagglehub/pull/135))
+* Reduce spammy logging ([#124](https://github.com/Kaggle/kagglehub/pull/124))
+* Download model files in parallel ([#122](https://github.com/Kaggle/kagglehub/pull/122))
+
 ## v0.2.5 (May 2nd, 2024)
 
-* Add missing packaging dependencies ([#115]((https://github.com/Kaggle/kagglehub/pull/115))) 
-* Create whoami method ([#114]((https://github.com/Kaggle/kagglehub/pull/114)))
-* Migrate all tests to use Flask ([#111]((https://github.com/Kaggle/kagglehub/pull/111)))
+* Add missing packaging dependencies ([#115](https://github.com/Kaggle/kagglehub/pull/115))
+* Create whoami method ([#114](https://github.com/Kaggle/kagglehub/pull/114))
+* Migrate all tests to use Flask ([#111](https://github.com/Kaggle/kagglehub/pull/111))
 
 ## v0.2.4 (April 26th, 2024)
 
-* Create a new version when model instance exist but no versions are ready yet ([#108]((https://github.com/Kaggle/kagglehub/pull/108)))
-* Remove zipping in upload ([#105]((https://github.com/Kaggle/kagglehub/pull/105)))
+* Create a new version when model instance exist but no versions are ready yet ([#108](https://github.com/Kaggle/kagglehub/pull/108))
+* Remove zipping in upload ([#105](https://github.com/Kaggle/kagglehub/pull/105))
 
 ## v0.2.3 (April 16th, 2024)
 
