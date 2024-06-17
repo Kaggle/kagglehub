@@ -10,8 +10,6 @@ from typing import TypeVar
 from kagglehub import dataset_upload
 from kagglehub.config import get_kaggle_credentials
 
-LICENSE_NAME = "MIT"
-
 logger = logging.getLogger(__name__)
 
 

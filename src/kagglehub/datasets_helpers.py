@@ -11,12 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 def _create_dataset(dataset_handle: DatasetHandle, files_and_directories: UploadDirectoryInfo) -> None:
-    serialized_data = files_and_directories.serialize()
     data = {
         "ownerSlug": dataset_handle.owner,
-        "datasetSlug": dataset_handle.dataset,
+        "title": dataset_handle.dataset,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
-        "directories": serialized_data["directories"],
     }
 
     api_client = KaggleApiV1Client()
