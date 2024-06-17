@@ -117,19 +117,19 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str) -> str:
+def _upload_blob(file_path: str, item_type: str) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Args:
         file_path: The path to the file to be uploaded.
-        model_type : The type of the model associated with the file.
+        item_type : The type of the item associated with the file.
 
     Returns:
         A str token of uploaded blob.
     """
     file_size = os.path.getsize(file_path)
     data = {
-        "type": model_type,
+        "type": item_type,
         "name": os.path.basename(file_path),
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
@@ -191,7 +191,7 @@ def upload_files_and_directories(
     folder: str,
     *,
     ignore_patterns: Sequence[str],
-    model_type: str,
+    item_type: str,
     quiet: bool = False,
 ) -> UploadDirectoryInfo:
     # Count the total number of files
@@ -213,7 +213,7 @@ def upload_files_and_directories(
 
             tokens = [
                 token
-                for token in [_upload_file(file_path=zip_path, model_type=model_type, quiet=quiet)]
+                for token in [_upload_file(file_path=zip_path, item_type=item_type, quiet=quiet)]
                 if token is not None
             ]
             return UploadDirectoryInfo(name="archive", files=tokens)
@@ -221,7 +221,7 @@ def upload_files_and_directories(
     root_dict = UploadDirectoryInfo(name="root")
     if os.path.isfile(folder):
         # Directly upload the file if the path is a file
-        token = _upload_file(file_path=folder, model_type=model_type, quiet=quiet)
+        token = _upload_file(file_path=folder, item_type=item_type, quiet=quiet)
         if token:
             root_dict.files.append(token)
     else:
@@ -246,20 +246,20 @@ def upload_files_and_directories(
 
             # Add file tokens to the current directory in the dictionary
             for file in files:
-                token = _upload_file(file_path=os.path.join(root, file), model_type=model_type, quiet=quiet)
+                token = _upload_file(file_path=os.path.join(root, file), item_type=item_type, quiet=quiet)
                 if token:
                     current_dict.files.append(token)
 
     return root_dict
 
 
-def _upload_file(file_path: str, *, quiet: bool, model_type: str) -> Optional[str]:
+def _upload_file(file_path: str, *, quiet: bool, item_type: str) -> Optional[str]:
     """Helper function to upload a single file.
 
     Args:
         full_path: path to the file to upload
         quiet: suppress verbose output
-        model_type: Type of the model that is being uploaded.
+        item_type: Type of the item that is being uploaded.
 
     Returns:
         A str token of uploaded file if successful, otherwise None.
@@ -273,7 +273,7 @@ def _upload_file(file_path: str, *, quiet: bool, model_type: str) -> Optional[st
         return None
 
     content_length = os.path.getsize(file_path)
-    token = _upload_blob(file_path, model_type)
+    token = _upload_blob(file_path, item_type)
     if not quiet:
         logger.info("Upload successful: " + file_path + " (" + File.get_size(content_length) + ")")
     return token
