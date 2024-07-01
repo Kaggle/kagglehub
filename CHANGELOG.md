@@ -2,6 +2,9 @@
 
 ## Next (Unreleased)
 
+## v.0.2.7 (July 1st, 2024)
+* Fix model downloading bug
+
 ## v.0.2.6 (June 10th, 2024)
 
 * Add support for `.zip` archive ([#135](https://github.com/Kaggle/kagglehub/pull/135))
