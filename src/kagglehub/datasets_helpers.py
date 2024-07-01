@@ -39,14 +39,14 @@ def create_dataset_or_version(dataset_handle: DatasetHandle, files: UploadDirect
     try:
         _create_dataset(dataset_handle, files)
     except BackendError as e:
-        if e.error_code == None:  # There is no CONFLICT error for datasets AFAIK
+        if e.error_code == None or e.error_code == HTTPStatus.CONFLICT:
             # Dataset already exists, creating a new version instead.
             _create_dataset_version(dataset_handle, files, version_notes)
         else:
             raise (e)
 
 
-def delete_dataset(owner_slug: str, dataset_slug: str) -> None:
+def dataset_delete(owner_slug: str, dataset_slug: str) -> None:
     try:
         api_client = KaggleApiV1Client()
         api_client.post(

@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TypeVar
 
-from kagglehub import dataset_upload
+from kagglehub import dataset_upload, datasets_helpers
 from kagglehub.config import get_kaggle_credentials
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,83 @@ class TestDatasetUpload(unittest.TestCase):
         self.handle = f"{self.owner_slug}/{self.dataset_slug}"
 
     def test_dataset_upload_and_versioning(self) -> None:
-        # Create Instance
+        # Create Dataset
         dataset_upload(self.handle, self.temp_dir)
 
         # Create Version
         dataset_upload(self.handle, self.temp_dir, "new version")
+
+         # If delete dataset does not raise an error, then the upload was successful.
+
+    def test_dataset_upload_and_versioning_zip(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            for i in range(60):
+                test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
+                test_filepath.touch()
+        
+            # Create Dataset
+            dataset_upload(self.handle, self.temp_dir)
+
+            # Create Version
+            dataset_upload(self.handle, self.temp_dir, "new version")
+
+    def test_dataset_upload_directory(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            # Create new folder within temp_dir
+            inner_folder_path = Path(temp_dir) / "inner_folder"
+            inner_folder_path.touch()
+
+            for i in range(60):
+                # Create a file in the temp_dir
+                test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
+                test_filepath.touch()
+
+                # Create the same file in the inner_folder
+                test_filepath_inner = inner_folder_path / f"temp_test_file_{i}"
+                test_filepath_inner.touch()
+
+            # Create Dataset
+            dataset_upload(self.handle, self.temp_dir)
+
+            # Create Version
+            dataset_upload(self.handle, self.temp_dir, "new version")
+
+    def test_dataset_upload_directory_structure(self) -> None:
+        nested_dir = Path(self.temp_dir) / "nested"
+        nested_dir.mkdir()
+
+        with open(Path(self.temp_dir) / "file1.txt", "w") as f:
+            f.write("dummy content in nested file")
+
+        # Create dummy files in the nested directory
+        nested_dummy_files = ["nested_dataset.txt", "nested_csv.csv"]
+        for file in nested_dummy_files:
+            with open(nested_dir / file, "w") as f:
+                f.write("dummy content in nested file")
+
+        # Call the dataset upload function with the base directory
+        dataset_upload(self.handle, self.temp_dir)
+
+    def test_dataset_upload_nested_dir(self) -> None:
+        # Create a nested directory within self.temp_dir
+        nested_dir = Path(self.temp_dir) / "nested"
+        nested_dir.mkdir()
+
+        # Create dummy files in the nested directory
+        nested_dummy_files = ["nested_dataset.txt", "nested_csv.csv"]
+        for file in nested_dummy_files:
+            with open(nested_dir / file, "w") as f:
+                f.write("dummy content in nested file")
+
+        # Call the dataset upload function with the base directory
+        dataset_upload(self.handle, self.temp_dir)
+
+    def test_single_file_upload(self) -> None:
+        single_file_path = Path(self.temp_dir) / "dummy_file.txt"
+        with open(single_file_path, "wb") as f:
+            f.write(os.urandom(100))
+
+        dataset_upload(self.handle, str(single_file_path))
+
+    def tearDown(self) -> None:
+        datasets_helpers.dataset_delete(self.owner_slug, self.dataset_slug)
