@@ -91,17 +91,17 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str) -> str:
+def _upload_blob(file_path: str, item_type: str) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Parameters
     ==========
     file_path: The path to the file to be uploaded.
-    model_type : The type of the model associated with the file.
+    item_type : The type of the item associated with the file.
     """
     file_size = os.path.getsize(file_path)
     data = {
-        "type": model_type,
+        "type": item_type,
         "name": os.path.basename(file_path),
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
@@ -156,7 +156,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
 
 def upload_files_and_directories(
     folder: str,
-    model_type: str,
+    item_type: str,
     quiet: bool = False,  # noqa: FBT002, FBT001
 ) -> UploadDirectoryInfo:
     # Count the total number of files
@@ -178,7 +178,7 @@ def upload_files_and_directories(
 
             tokens = [
                 token
-                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
+                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, item_type, quiet)]
                 if token is not None
             ]
             return UploadDirectoryInfo(name="archive", files=tokens)
@@ -187,7 +187,7 @@ def upload_files_and_directories(
     if os.path.isfile(folder):
         # Directly upload the file if the path is a file
         file_name = os.path.basename(folder)
-        token = _upload_file_or_folder(os.path.dirname(folder), file_name, model_type, quiet)
+        token = _upload_file_or_folder(os.path.dirname(folder), file_name, item_type, quiet)
         if token:
             root_dict.files.append(token)
     else:
@@ -212,7 +212,7 @@ def upload_files_and_directories(
 
             # Add file tokens to the current directory in the dictionary
             for file in files:
-                token = _upload_file_or_folder(root, file, model_type, quiet)
+                token = _upload_file_or_folder(root, file, item_type, quiet)
                 if token:
                     current_dict.files.append(token)
 
@@ -222,7 +222,7 @@ def upload_files_and_directories(
 def _upload_file_or_folder(
     parent_path: str,
     file_or_folder_name: str,
-    model_type: str,
+    item_type: str,
     quiet: bool = False,  # noqa: FBT002, FBT001
 ) -> Optional[str]:
     """
@@ -232,23 +232,23 @@ def _upload_file_or_folder(
     parent_path: The parent directory path from where the file or folder is to be uploaded.
     file_or_folder_name: The name of the file or folder to be uploaded.
     dir_mode: The mode to handle directories. Accepts 'zip', 'tar', or other values for skipping.
-    model_type: Type of the model that is being uploaded.
+    item_type: Type of the item that is being uploaded.
     quiet: suppress verbose output (default is False)
     :return: A token if the upload is successful, or None if the file is skipped or the upload fails.
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
-        return _upload_file(full_path, quiet, model_type)
+        return _upload_file(full_path, quiet, item_type)
     return None
 
 
-def _upload_file(full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+def _upload_file(full_path: str, quiet: bool, item_type: str) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========
     full_path: path to the file to upload
     quiet: suppress verbose output
-    model_type: Type of the model that is being uploaded.
+    item_type: Type of the model that is being uploaded.
     :return: None - upload unsuccessful; instance of UploadFile - upload successful
     """
 
@@ -256,7 +256,7 @@ def _upload_file(full_path: str, quiet: bool, model_type: str) -> Optional[str]:
         logger.info("Starting upload for file " + full_path)
 
     content_length = os.path.getsize(full_path)
-    token = _upload_blob(full_path, model_type)
+    token = _upload_blob(full_path, item_type)
     if not quiet:
         logger.info("Upload successful: " + full_path + " (" + File.get_size(content_length) + ")")
     return token
