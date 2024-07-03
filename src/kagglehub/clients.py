@@ -2,10 +2,12 @@ import hashlib
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Optional, Tuple
 from urllib.parse import urljoin
 
 import requests
+import requests.auth
 from packaging.version import parse
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
@@ -14,6 +16,7 @@ import kagglehub
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
+    KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME,
     is_in_colab_notebook,
     is_in_kaggle_notebook,
     read_kaggle_build_date,
@@ -101,7 +104,7 @@ class KaggleApiV1Client:
         with requests.get(
             url,
             headers={"User-Agent": get_user_agent()},
-            auth=self._get_http_basic_auth(),
+            auth=self._get_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response, resource_handle)
@@ -114,7 +117,7 @@ class KaggleApiV1Client:
             url,
             headers={"User-Agent": get_user_agent()},
             json=data,
-            auth=self._get_http_basic_auth(),
+            auth=self._get_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             response.raise_for_status()
@@ -129,7 +132,7 @@ class KaggleApiV1Client:
             url,
             headers={"User-Agent": get_user_agent()},
             stream=True,
-            auth=self._get_http_basic_auth(),
+            auth=self._get_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response, resource_handle)
@@ -153,7 +156,7 @@ class KaggleApiV1Client:
                 with requests.get(
                     response.url,  # URL after redirection
                     stream=True,
-                    auth=self._get_http_basic_auth(),
+                    auth=self._get_auth(),
                     timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
                     headers={"Range": f"bytes={size_read}-"},
                 ) as resumed_response:
@@ -171,7 +174,9 @@ class KaggleApiV1Client:
                         _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(expected_md5_hash, actual_md5_hash)
                     )
 
-    def _get_http_basic_auth(self) -> Optional[HTTPBasicAuth]:
+    def _get_auth(self) -> Optional[requests.auth.AuthBase]:
+        if is_in_kaggle_notebook():
+            return KaggleTokenAuth()
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         return None
@@ -300,3 +305,16 @@ class ColabClient:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         return None
+
+
+class KaggleTokenAuth(requests.auth.AuthBase):
+    def __call__(self, r: requests.PreparedRequest):
+        token_dir = os.environ.get(KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME)
+        if token_dir:
+            token_path = Path(token_dir)
+            if token_path.exists():
+                token = token_path.read_text()
+                r.headers["Authorization"] = f"Bearer {token}"
+            return r
+        err = "Expected Token in notebook environment."
+        raise ValueError(err)

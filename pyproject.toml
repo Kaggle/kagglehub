@@ -38,6 +38,7 @@ dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
   "flask",
+  "flask-jwt-extended",
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -60,6 +61,7 @@ python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
 detached = true
 dependencies = [
   "flask",
+  "flask-jwt-extended",
   "pytest",
   "black>=23.1.0",
   "mypy>=1.0.0",
