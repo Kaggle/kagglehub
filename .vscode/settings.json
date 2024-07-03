@@ -6,14 +6,13 @@
         "-p",
         "*test*.py"
     ],
-    "python.testing.cwd": "${workspaceFolder}",
-    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
     "editor.defaultFormatter": "charliermarsh.ruff",
     "[python]": {
         "editor.formatOnSave": true,
     },
     "python.testing.pytestArgs": [
         "tests"
-    ],
-    "python.testing.pytestEnabled": false
+    ]
 }

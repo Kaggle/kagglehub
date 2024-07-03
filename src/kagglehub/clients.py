@@ -175,10 +175,10 @@ class KaggleApiV1Client:
                     )
 
     def _get_auth(self) -> Optional[requests.auth.AuthBase]:
-        if is_in_kaggle_notebook():
-            return KaggleTokenAuth()
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
+        elif is_in_kaggle_notebook():
+            return KaggleTokenAuth()
         return None
 
     def _build_url(self, path: str) -> str:
@@ -301,9 +301,11 @@ class ColabClient:
                 return response.json()
         return None
 
-    def _get_http_basic_auth(self) -> Optional[HTTPBasicAuth]:
+    def _get_http_basic_auth(self) -> Optional[requests.auth.AuthBase]:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
+        elif is_in_kaggle_notebook():
+            return KaggleTokenAuth()
         return None
 
 
@@ -313,8 +315,11 @@ class KaggleTokenAuth(requests.auth.AuthBase):
         if token_dir:
             token_path = Path(token_dir)
             if token_path.exists():
-                token = token_path.read_text()
+                token = token_path.read_text().replace("\n", "")
                 r.headers["Authorization"] = f"Bearer {token}"
             return r
-        err = "Expected Token in notebook environment."
-        raise ValueError(err)
+        logger.warning(
+            "Expected Token in notebook environment. Skipping token assignment."
+            "Notebook auth might not function properly."
+        )
+        return r

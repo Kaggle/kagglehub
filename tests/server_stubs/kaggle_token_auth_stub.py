@@ -10,13 +10,18 @@ app.config["JWT_SECRET_KEY"] = "super-secret"
 jwt = JWTManager(app)
 
 
-@app.route("/setup/<path>", methods=["POST"])
-def setup(path: str) -> ResponseReturnValue:
+@app.route("/setup/<path:text>", methods=["POST"])
+def setup(text: str) -> ResponseReturnValue:
+    """
+    Workaround to setup token at a temp directory to simulate production.
+    """
     token = create_access_token(identity="lastplacelarry")
-    with (Path(path) / "/etc/secrets/kaggle/api-v1-token").open("w") as f:
+    p = Path("/" + text.removesuffix("/"))
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("w") as f:
         f.write(token)
         f.write("\n")
-        return jsonify({"token" : token}, 200)
+        return jsonify({"token": token}, 200)
 
 
 @app.route("/", methods=["HEAD"])
