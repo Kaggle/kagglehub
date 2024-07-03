@@ -8,7 +8,7 @@ from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 logger = logging.getLogger(__name__)
 
 
-def dataset_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+async def dataset_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
     """Download dataset files
     Args:
         handle: (string) the dataset handle
@@ -20,4 +20,4 @@ def dataset_download(handle: str, path: Optional[str] = None, *, force_download:
 
     h = parse_dataset_handle(handle)
     logger.info(f"Downloading Dataset: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    return registry.dataset_resolver(h, path, force_download=force_download)
+    return await registry.dataset_resolver(h, path, force_download=force_download)

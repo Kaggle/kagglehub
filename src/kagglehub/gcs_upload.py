@@ -7,9 +7,11 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List, Optional, Union
 
 import requests
+from aiohttp import ClientSession
 from requests.exceptions import ConnectionError, Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
+import asyncio
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import BackendError
@@ -91,7 +93,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
     return 0  # Return 0 if all retries fail
 
 
-def _upload_blob(file_path: str, model_type: str) -> str:
+async def _upload_blob(session: ClientSession, file_path: str, model_type: str) -> str:
     """Uploads a file to a remote server as a blob and returns an upload token.
 
     Parameters
@@ -106,8 +108,8 @@ def _upload_blob(file_path: str, model_type: str) -> str:
         "contentLength": file_size,
         "lastModifiedEpochSeconds": int(os.path.getmtime(file_path)),
     }
-    api_client = KaggleApiV1Client()
-    response = api_client.post("/blobs/upload", data=data)
+    api_client = KaggleApiV1Client(session)
+    response = await api_client.post("/blobs/upload", data=data)
 
     # Validate response content
     if "createUrl" not in response:
@@ -154,7 +156,8 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     return response["token"]
 
 
-def upload_files_and_directories(
+async def upload_files_and_directories(
+    session: ClientSession,
     folder: str,
     model_type: str,
     quiet: bool = False,  # noqa: FBT002, FBT001
@@ -176,18 +179,14 @@ def upload_files_and_directories(
                         file_path = os.path.join(root, file)
                         zipf.write(file_path, os.path.relpath(file_path, folder))
 
-            tokens = [
-                token
-                for token in [_upload_file_or_folder(temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)]
-                if token is not None
-            ]
-            return UploadDirectoryInfo(name="archive", files=tokens)
+            token = await _upload_file_or_folder(session, temp_dir, TEMP_ARCHIVE_FILE, model_type, quiet)
+            return UploadDirectoryInfo(name="archive", files=[token] if token else None)
 
     root_dict = UploadDirectoryInfo(name="root")
     if os.path.isfile(folder):
         # Directly upload the file if the path is a file
         file_name = os.path.basename(folder)
-        token = _upload_file_or_folder(os.path.dirname(folder), file_name, model_type, quiet)
+        token = await _upload_file_or_folder(session, os.path.dirname(folder), file_name, model_type, quiet)
         if token:
             root_dict.files.append(token)
     else:
@@ -212,14 +211,15 @@ def upload_files_and_directories(
 
             # Add file tokens to the current directory in the dictionary
             for file in files:
-                token = _upload_file_or_folder(root, file, model_type, quiet)
+                token = await _upload_file_or_folder(session, root, file, model_type, quiet)
                 if token:
                     current_dict.files.append(token)
 
     return root_dict
 
 
-def _upload_file_or_folder(
+async def _upload_file_or_folder(
+    session: ClientSession,
     parent_path: str,
     file_or_folder_name: str,
     model_type: str,
@@ -238,11 +238,11 @@ def _upload_file_or_folder(
     """
     full_path = os.path.join(parent_path, file_or_folder_name)
     if os.path.isfile(full_path):
-        return _upload_file(full_path, quiet, model_type)
+        return await _upload_file(session, full_path, quiet, model_type)
     return None
 
 
-def _upload_file(full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
+async def _upload_file(session: ClientSession, full_path: str, quiet: bool, model_type: str) -> Optional[str]:  # noqa: FBT001
     """Helper function to upload a single file
     Parameters
     ==========
@@ -256,7 +256,7 @@ def _upload_file(full_path: str, quiet: bool, model_type: str) -> Optional[str]:
         logger.info("Starting upload for file " + full_path)
 
     content_length = os.path.getsize(full_path)
-    token = _upload_blob(full_path, model_type)
+    token = await _upload_blob(session, full_path, model_type)
     if not quiet:
         logger.info("Upload successful: " + full_path + " (" + File.get_size(content_length) + ")")
     return token

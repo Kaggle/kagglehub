@@ -4,6 +4,7 @@ import tarfile
 import zipfile
 from typing import List, Optional, Tuple
 
+from aiohttp import ClientSession
 from tqdm.contrib.concurrent import thread_map
 
 from kagglehub.cache import (
@@ -26,82 +27,39 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetHttpResolver(Resolver[DatasetHandle]):
-    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
+    async def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
-    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
-        api_client = KaggleApiV1Client()
+    async def __call__(
+        self,
+        h: DatasetHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+    ) -> str:
+        async with ClientSession() as session:
+            api_client = KaggleApiV1Client(session)
 
-        if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
+            if not h.is_versioned():
+                h.version = await _get_current_version(api_client, h)
 
-        dataset_path = load_from_cache(h, path)
-        if dataset_path and not force_download:
-            return dataset_path  # Already cached
-        elif dataset_path and force_download:
-            delete_from_cache(h, path)
+            dataset_path = load_from_cache(h, path)
+            if dataset_path and not force_download:
+                return dataset_path  # Already cached
+            elif dataset_path and force_download:
+                delete_from_cache(h, path)
 
-        url_path = _build_dataset_download_url_path(h)
-        out_path = get_cached_path(h, path)
+            url_path = _build_dataset_download_url_path(h)
+            out_path = get_cached_path(h, path)
 
-        # Create the intermediary directories
-        if path:
-            # Downloading a single file.
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "&file_name=" + path, out_path, h)
-        else:
-            # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
-            # Downloading the full archived bundle.
-            archive_path = get_cached_archive_path(h)
-            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
-
-            # First, we download the archive.
-            api_client.download_file(url_path, archive_path, h)
-
-            # Create the directory to extract the archive to.
-            os.makedirs(out_path, exist_ok=True)
-
-            _extract_archive(archive_path, out_path)
-
-            # Delete the archive
-            os.remove(archive_path)
-
-        mark_as_complete(h, path)
-        return out_path
-
-
-class ModelHttpResolver(Resolver[ModelHandle]):
-    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
-        # Downloading files over HTTP is supported in all environments for all handles / path.
-        return True
-
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
-        api_client = KaggleApiV1Client()
-
-        if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
-
-        model_path = load_from_cache(h, path)
-        if model_path and not force_download:
-            return model_path  # Already cached
-        elif model_path and force_download:
-            delete_from_cache(h, path)
-
-        url_path = _build_download_url_path(h)
-        out_path = get_cached_path(h, path)
-
-        # Create the intermediary directories
-        if path:
-            # Downloading a single file.
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "/" + path, out_path, h)
-        else:
-            # List the files and decide how to download them:
-            # - <= 25 files: Download files in parallel
-            # > 25 files: Download the archive and uncompress
-            (files, has_more) = _list_files(api_client, h)
-            if has_more:
+            # Create the intermediary directories
+            if path:
+                # Downloading a single file.
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                api_client.download_file(url_path + "&file_name=" + path, out_path, h)
+            else:
+                # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
                 # Downloading the full archived bundle.
                 archive_path = get_cached_archive_path(h)
                 os.makedirs(os.path.dirname(archive_path), exist_ok=True)
@@ -116,22 +74,79 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
                 # Delete the archive
                 os.remove(archive_path)
+
+            mark_as_complete(h, path)
+            return out_path
+
+
+class ModelHttpResolver(Resolver[ModelHandle]):
+    async def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
+        # Downloading files over HTTP is supported in all environments for all handles / path.
+        return True
+
+    async def __call__(
+        self,
+        h: ModelHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+    ) -> str:
+        async with ClientSession() as session:
+            api_client = KaggleApiV1Client(session)
+
+            if not h.is_versioned():
+                h.version = await _get_current_version(api_client, h)
+
+            model_path = load_from_cache(h, path)
+            if model_path and not force_download:
+                return model_path  # Already cached
+            elif model_path and force_download:
+                delete_from_cache(h, path)
+
+            url_path = _build_download_url_path(h)
+            out_path = get_cached_path(h, path)
+
+            # Create the intermediary directories
+            if path:
+                # Downloading a single file.
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                api_client.download_file(url_path + "/" + path, out_path, h)
             else:
-                # Download files individually in parallel
-                def _inner_download_file(file: str) -> None:
-                    file_out_path = out_path + "/" + file
-                    os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
-                    api_client.download_file(url_path + "/" + file, file_out_path, h)
+                # List the files and decide how to download them:
+                # - <= 25 files: Download files in parallel
+                # > 25 files: Download the archive and uncompress
+                (files, has_more) = await _list_files(api_client, h)
+                if has_more:
+                    # Downloading the full archived bundle.
+                    archive_path = get_cached_archive_path(h)
+                    os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
-                thread_map(
-                    _inner_download_file,
-                    files,
-                    desc=f"Downloading {len(files)} files",
-                    max_workers=8,  # Never use more than 8 threads in parallel to download files.
-                )
+                    # First, we download the archive.
+                    api_client.download_file(url_path, archive_path, h)
 
-        mark_as_complete(h, path)
-        return out_path
+                    # Create the directory to extract the archive to.
+                    os.makedirs(out_path, exist_ok=True)
+
+                    _extract_archive(archive_path, out_path)
+
+                    # Delete the archive
+                    os.remove(archive_path)
+                else:
+                    # Download files individually in parallel
+                    def _inner_download_file(file: str) -> None:
+                        file_out_path = out_path + "/" + file
+                        os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
+                        api_client.download_file(url_path + "/" + file, file_out_path, h)
+
+                    thread_map(
+                        _inner_download_file,
+                        files,
+                        desc=f"Downloading {len(files)} files",
+                        max_workers=8,  # Never use more than 8 threads in parallel to download files.
+                    )
+
+            mark_as_complete(h, path)
+            return out_path
 
 
 def _extract_archive(archive_path: str, out_path: str) -> None:
@@ -147,9 +162,9 @@ def _extract_archive(archive_path: str, out_path: str) -> None:
         raise ValueError(msg)
 
 
-def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> int:
+async def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> int:
     if isinstance(h, ModelHandle):
-        json_response = api_client.get(_build_get_instance_url_path(h), h)
+        json_response = await api_client.get(_build_get_instance_url_path(h), h)
         if MODEL_INSTANCE_VERSION_FIELD not in json_response:
             msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"
             raise ValueError(msg)
@@ -157,7 +172,7 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
         return json_response[MODEL_INSTANCE_VERSION_FIELD]
 
     elif isinstance(h, DatasetHandle):
-        json_response = api_client.get(_build_get_dataset_url_path(h), h)
+        json_response = await api_client.get(_build_get_dataset_url_path(h), h)
         if DATASET_CURRENT_VERSION_FIELD not in json_response:
             msg = f"Invalid GetDataset API response. Expected to include a {DATASET_CURRENT_VERSION_FIELD} field"
             raise ValueError(msg)
@@ -169,8 +184,8 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
         raise ValueError(msg)
 
 
-def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> Tuple[List[str], bool]:
-    json_response = api_client.get(_build_list_model_instance_version_files_url_path(h), h)
+async def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> Tuple[List[str], bool]:
+    json_response = await api_client.get(_build_list_model_instance_version_files_url_path(h), h)
     if "files" not in json_response:
         msg = "Invalid ListModelInstanceVersionFiles API response. Expected to include a 'files' field"
         raise ValueError(msg)
