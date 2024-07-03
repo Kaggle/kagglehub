@@ -16,11 +16,11 @@ class MultiImplRegistry:
     def add_implementation(self, impl: Callable) -> None:
         self._impls += [impl]
 
-    def __call__(self, *args, **kwargs):  # noqa: ANN002, ANN003
+    async def __call__(self, *args, **kwargs):  # noqa: ANN002, ANN003
         fails = []
         for impl in reversed(self._impls):
             if impl.is_supported(*args, **kwargs):
-                return impl(*args, **kwargs)
+                return await impl(*args, **kwargs)
             else:
                 fails.append(type(impl).__name__)
 

@@ -6,6 +6,7 @@ from typing import Optional, Tuple
 from urllib.parse import urljoin
 
 import requests
+from aiohttp import ClientResponse, ClientSession
 from packaging.version import parse
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
@@ -81,11 +82,12 @@ logger = logging.getLogger(__name__)
 class KaggleApiV1Client:
     BASE_PATH = "api/v1"
 
-    def __init__(self) -> None:
+    def __init__(self, session: ClientSession) -> None:
         self.credentials = get_kaggle_credentials()
         self.endpoint = get_kaggle_api_endpoint()
+        self.session = session
 
-    def _check_for_version_update(self, response: requests.Response) -> None:
+    def _check_for_version_update(self, response: ClientResponse) -> None:
         latest_version_str = response.headers.get("X-Kaggle-HubVersion")
         if latest_version_str:
             current_version = parse(kagglehub.__version__)
@@ -96,26 +98,26 @@ class KaggleApiV1Client:
                     f"version, please consider updating (latest version: {latest_version})"
                 )
 
-    def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
+    async def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
         url = self._build_url(path)
-        with requests.get(
+        async with self.session.get(
             url,
             headers={"User-Agent": get_user_agent()},
-            auth=self._get_http_basic_auth(),
-            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
-        ) as response:
-            kaggle_api_raise_for_status(response, resource_handle)
-            self._check_for_version_update(response)
-            return response.json()
+            read_timeout=DEFAULT_READ_TIMEOUT,
+            conn_timeout=DEFAULT_CONNECT_TIMEOUT,
+        ) as resp:
+            kaggle_api_raise_for_status(resp, resource_handle)
+            self._check_for_version_update(resp)
+            return resp.json()
 
-    def post(self, path: str, data: dict) -> dict:
+    async def post(self, path: str, data: dict) -> dict:
         url = self._build_url(path)
-        with requests.post(
+        async with self.session.post(
             url,
             headers={"User-Agent": get_user_agent()},
+            read_timeout=DEFAULT_READ_TIMEOUT,
+            conn_timeout=DEFAULT_CONNECT_TIMEOUT,
             json=data,
-            auth=self._get_http_basic_auth(),
-            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             response.raise_for_status()
             response_dict = response.json()
@@ -210,7 +212,7 @@ KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_TOKEN"
 class KaggleJwtClient:
     BASE_PATH = "/kaggle-jwt-handler/"
 
-    def __init__(self) -> None:
+    def __init__(self, session: ClientSession) -> None:
         self.endpoint = os.getenv(KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME)
         if self.endpoint is None:
             msg = f"The {KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME} should be set."
@@ -236,20 +238,16 @@ class KaggleJwtClient:
             "X-Kaggle-Authorization": f"Bearer {jwt_token}",
             "X-KAGGLE-PROXY-DATA": data_proxy_token,
         }
+        self.session = session
 
-    def post(
+    async def post(
         self,
         request_name: str,
         data: dict,
         timeout: Tuple[float, float] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
     ) -> dict:
         url = f"{self.endpoint}{KaggleJwtClient.BASE_PATH}{request_name}"
-        with requests.post(
-            url,
-            headers=self.headers,
-            data=bytes(json.dumps(data), "utf-8"),
-            timeout=timeout,
-        ) as response:
+        async with self.session.post(url, headers=self.headers, json=data, timeout=timeout) as response:
             response.raise_for_status()
             json_response = response.json()
             if "wasSuccessful" not in json_response:
@@ -271,7 +269,7 @@ class ColabClient:
     # of ModelColabCacheResolver.
     TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 
-    def __init__(self) -> None:
+    def __init__(self, session: ClientSession) -> None:
         self.endpoint = os.getenv(self.TBE_RUNTIME_ADDR_ENV_VAR_NAME)
         if self.endpoint is None:
             msg = f"The {self.TBE_RUNTIME_ADDR_ENV_VAR_NAME} should be set."
@@ -279,17 +277,20 @@ class ColabClient:
 
         self.credentials = get_kaggle_credentials()
         self.headers = {"Content-type": "application/json"}
+        self.session = session
 
-    def post(self, data: dict, handle_path: str, resource_handle: Optional[ResourceHandle] = None) -> Optional[dict]:
+    async def post(
+        self, data: dict, handle_path: str, resource_handle: Optional[ResourceHandle] = None
+    ) -> Optional[dict]:
         url = f"http://{self.endpoint}{handle_path}"
-        with requests.post(
+        with self.session.post(
             url,
             data=json.dumps(data),
-            auth=self._get_http_basic_auth(),
             headers=self.headers,
-            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+            read_timeout=DEFAULT_READ_TIMEOUT,
+            connect_timeout=DEFAULT_CONNECT_TIMEOUT,
         ) as response:
-            if response.status_code == HTTP_STATUS_404:
+            if response.staus == HTTP_STATUS_404:
                 raise NotFoundError()
             colab_raise_for_status(response, resource_handle)
             if response.text:

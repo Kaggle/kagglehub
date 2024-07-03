@@ -6,13 +6,9 @@
         "-p",
         "*test*.py"
     ],
-    "python.testing.pytestEnabled": true,
-    "python.testing.unittestEnabled": false,
+    "python.testing.unittestEnabled": true,
     "editor.defaultFormatter": "charliermarsh.ruff",
     "[python]": {
         "editor.formatOnSave": true,
     },
-    "python.testing.pytestArgs": [
-        "tests"
-    ]
 }

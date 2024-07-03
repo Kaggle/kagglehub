@@ -39,7 +39,7 @@ class TestHttpDatasetDownload(BaseTestCase):
     def tearDownClass(cls):
         cls.server.shutdown()
 
-    def _download_dataset_and_assert_downloaded(
+    async def _download_dataset_and_assert_downloaded(
         self,
         d: str,
         dataset_handle: str,
@@ -48,7 +48,7 @@ class TestHttpDatasetDownload(BaseTestCase):
         **kwargs,  # noqa: ANN003
     ) -> None:
         # Download the full datasets and ensure all files are there.
-        dataset_path = kagglehub.dataset_download(dataset_handle, **kwargs)
+        dataset_path = await kagglehub.dataset_download(dataset_handle, **kwargs)
 
         self.assertEqual(os.path.join(d, expected_subdir_or_subpath), dataset_path)
 
@@ -60,8 +60,8 @@ class TestHttpDatasetDownload(BaseTestCase):
         archive_path = get_cached_archive_path(parse_dataset_handle(dataset_handle))
         self.assertFalse(os.path.exists(archive_path))
 
-    def _download_test_file_and_assert_downloaded(self, d: str, dataset_handle: str, **kwargs) -> None:  # noqa: ANN003
-        dataset_path = kagglehub.dataset_download(dataset_handle, path=TEST_FILEPATH, **kwargs)
+    async def _download_test_file_and_assert_downloaded(self, d: str, dataset_handle: str, **kwargs) -> None:  # noqa: ANN003
+        dataset_path = await kagglehub.dataset_download(dataset_handle, path=TEST_FILEPATH, **kwargs)
         self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH), dataset_path)
 
         with zipfile.ZipFile(dataset_path, "r") as zip_ref:
@@ -71,52 +71,52 @@ class TestHttpDatasetDownload(BaseTestCase):
 
         self.assertEqual(TEST_CONTENTS, contents)
 
-    def test_unversioned_dataset_download(self) -> None:
+    async def test_unversioned_dataset_download(self) -> None:
         with create_test_cache() as d:
-            self._download_dataset_and_assert_downloaded(d, UNVERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
+            await self._download_dataset_and_assert_downloaded(d, UNVERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
 
-    def test_versioned_dataset_download(self) -> None:
+    async def test_versioned_dataset_download(self) -> None:
         with create_test_cache() as d:
-            self._download_dataset_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
+            await self._download_dataset_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
 
-    def test_versioned_dataset_targz_archive_download(self) -> None:
+    async def test_versioned_dataset_targz_archive_download(self) -> None:
         with create_test_cache() as d:
-            self._download_dataset_and_assert_downloaded(
+            await self._download_dataset_and_assert_downloaded(
                 d,
                 stub.TARGZ_ARCHIVE_HANDLE,
                 f"{DATASETS_CACHE_SUBFOLDER}/{stub.TARGZ_ARCHIVE_HANDLE}",
                 expected_files=[f"{i}.txt" for i in range(1, 51)],
             )
 
-    def test_versioned_dataset_download_bad_archive(self) -> None:
+    async def test_versioned_dataset_download_bad_archive(self) -> None:
         with create_test_cache():
             with self.assertRaises(ValueError):
-                kagglehub.dataset_download(INVALID_ARCHIVE_DATASET_HANDLE)
+                await kagglehub.dataset_download(INVALID_ARCHIVE_DATASET_HANDLE)
 
-    def test_versioned_dataset_download_with_path(self) -> None:
+    async def test_versioned_dataset_download_with_path(self) -> None:
         with create_test_cache() as d:
-            self._download_test_file_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE)
+            await self._download_test_file_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE)
 
-    def test_unversioned_dataset_download_with_force_download(self) -> None:
+    async def test_unversioned_dataset_download_with_force_download(self) -> None:
         with create_test_cache() as d:
-            self._download_dataset_and_assert_downloaded(
+            await self._download_dataset_and_assert_downloaded(
                 d, UNVERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR, force_download=True
             )
 
-    def test_versioned_dataset_download_with_force_download(self) -> None:
+    async def test_versioned_dataset_download_with_force_download(self) -> None:
         with create_test_cache() as d:
-            self._download_dataset_and_assert_downloaded(
+            await self._download_dataset_and_assert_downloaded(
                 d, VERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR, force_download=True
             )
 
-    def test_versioned_dataset_full_download_with_file_already_cached(self) -> None:
+    async def test_versioned_dataset_full_download_with_file_already_cached(self) -> None:
         with create_test_cache() as d:
             # Download a single file first
-            kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH)
-            self._download_dataset_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
+            await kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH)
+            await self._download_dataset_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
 
-    def test_unversioned_dataset_full_download_with_file_already_cached(self) -> None:
+    async def test_unversioned_dataset_full_download_with_file_already_cached(self) -> None:
         with create_test_cache() as d:
             # Download a single file first
-            kagglehub.dataset_download(UNVERSIONED_DATASET_HANDLE, path=TEST_FILEPATH)
-            self._download_dataset_and_assert_downloaded(d, UNVERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
+            await kagglehub.dataset_download(UNVERSIONED_DATASET_HANDLE, path=TEST_FILEPATH)
+            await self._download_dataset_and_assert_downloaded(d, UNVERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)

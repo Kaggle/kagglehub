@@ -7,6 +7,8 @@ from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials
 from kagglehub.exceptions import UnauthenticatedError
 
+from aiohttp import ClientSession
+
 _logger = logging.getLogger(__name__)
 
 INVALID_CREDENTIALS_ERROR = 401
@@ -60,7 +62,7 @@ def _is_in_notebook() -> bool:
         return False  # Probably standard Python interpreter
 
 
-def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
+async def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     """Prompt the user for their Kaggle token and save it in a widget (Jupyter or Colab)."""
     library_error = "You need the `ipywidgets` module: `pip install ipywidgets`."
     try:
@@ -87,7 +89,7 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     )
     display(login_token_widget)
 
-    def on_click_login_button(_: str) -> None:
+    async def on_click_login_button(_: str) -> None:
         username = username_widget.value
         token = token_widget.value
         # Erase token and clear value to make sure it's not saved in the notebook.
@@ -102,7 +104,8 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
 
                 # Validate credentials if necessary
                 if validate_credentials is True:
-                    _validate_credentials_helper()
+                    async with ClientSession() as session:
+                        await _validate_credentials_helper(session)
             message = captured.getvalue()
         except Exception as error:
             message = str(error)
@@ -112,9 +115,9 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     login_button.on_click(on_click_login_button)
 
 
-def _validate_credentials_helper() -> None:
-    api_client = KaggleApiV1Client()
-    response = api_client.get("/hello")
+async def _validate_credentials_helper(session: ClientSession) -> None:
+    api_client = KaggleApiV1Client(session)
+    response = await api_client.get("/hello")
     if "code" not in response:
         _logger.info("Kaggle credentials successfully validated.")
     elif response["code"] == INVALID_CREDENTIALS_ERROR:
@@ -125,11 +128,11 @@ def _validate_credentials_helper() -> None:
         _logger.warning("Unable to validate Kaggle credentials at this time.")
 
 
-def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
+async def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
     """Prompt the user for their Kaggle username and API key and save them globally."""
 
     if _is_in_notebook():
-        _notebook_login(validate_credentials)
+        await _notebook_login(validate_credentials)
         return
     else:
         username = input("Enter your Kaggle username: ")
@@ -140,7 +143,8 @@ def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
     if not validate_credentials:
         return
 
-    _validate_credentials_helper()
+    with ClientSession() as session:
+        await _validate_credentials_helper(session)
 
 
 def whoami() -> dict:
