@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from flask import Flask, jsonify
@@ -16,7 +17,7 @@ def setup(text: str) -> ResponseReturnValue:
     Workaround to setup token at a temp directory to simulate production.
     """
     token = create_access_token(identity="lastplacelarry")
-    p = Path("/" + text.removesuffix("/"))
+    p = Path("/" + re.sub("^/", "", text))
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("w") as f:
         f.write(token)

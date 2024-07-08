@@ -1,5 +1,5 @@
-import datetime
 import os
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from tempfile import TemporaryDirectory
 from unittest import mock
@@ -17,7 +17,7 @@ from .server_stubs import serv
 
 class MockInvalidTokenAuth(requests.auth.AuthBase):
     def __init__(self):
-        payload = {"user_id": "lastplacelarry", "exp": datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)}
+        payload = {"user_id": "lastplacelarry", "exp": datetime.now(timezone.utc) + timedelta(days=1)}
         self.token = jwt.encode(payload, "super secret key", algorithm="HS256")
 
     def __call__(self, r: requests.PreparedRequest):
