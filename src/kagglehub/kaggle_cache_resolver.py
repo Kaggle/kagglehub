@@ -65,8 +65,6 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         if not os.path.exists(cached_path):
             # Only print this if the model is not already mounted.
             logger.info(f"Mounting files to {cached_path}...", extra={**EXTRA_CONSOLE_BLOCK})
-        else:
-            logger.info(f"Attaching '{path}' from model '{h}' to your Kaggle notebook...")
 
         while not os.path.exists(cached_path):
             time.sleep(5)
