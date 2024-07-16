@@ -2,6 +2,10 @@
 
 ## Next (Unreleased)
 
+## v.0.2.7 (July 16th, 2024)
+
+* Added support for implicit token auth in kaggle notebooks. ([#141](https://github.com/Kaggle/kagglehub/pull/141))
+
 ## v.0.2.6 (June 10th, 2024)
 
 * Add support for `.zip` archive ([#135](https://github.com/Kaggle/kagglehub/pull/135))
