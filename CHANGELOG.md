@@ -4,7 +4,9 @@
 
 ## v.0.2.8 (July 16th, 2024)
 
-* Added support for implicit token auth in kaggle notebooks. ([#141](https://github.com/Kaggle/kagglehub/pull/141))
+* Added support for implicit token auth in kaggle notebooks ([#141](https://github.com/Kaggle/kagglehub/pull/141))
+* Improve logging for cached models in Kaggle & Colab environments ([#142](https://github.com/Kaggle/kagglehub/pull/142))
+
 ## v.0.2.7 (July 1st, 2024)
 * Fix model downloading bug
 
