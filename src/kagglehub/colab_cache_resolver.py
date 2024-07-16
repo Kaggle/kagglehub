@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import Optional
 
 from kagglehub.clients import ColabClient
@@ -41,11 +42,6 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
         if force_download:
             logger.warning("Ignoring invalid input: force_download flag cannot be used in a Colab notebook")
 
-        if path:
-            logger.info(f"Attaching '{path}' from model '{h}' to your Colab notebook...")
-        else:
-            logger.info(f"Attaching model '{h}' to your Colab notebook...")
-
         api_client = ColabClient()
         data = {
             "owner": h.owner,
@@ -59,24 +55,31 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
 
         response = api_client.post(data, ColabClient.MOUNT_PATH, h)
 
-        if response is not None:
-            if "slug" not in response:
-                msg = "'slug' field missing from response"
-                raise BackendError(msg)
-
-            base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
-            cached_path = f"{base_mount_path}/{response['slug']}"
-
-            if path:
-                cached_filepath = f"{cached_path}/{path}"
-                if not os.path.exists(cached_filepath):
-                    msg = (
-                        f"'{path}' is not present in the model files. "
-                        f"You can access the other files of the attached model at '{cached_path}'"
-                    )
-                    raise ValueError(msg)
-                return cached_filepath
-            return cached_path
-        else:
+        if response is None:
             no_response = "No response received or response was empty."
             raise ValueError(no_response)
+
+        if "slug" not in response:
+            msg = "'slug' field missing from response"
+            raise BackendError(msg)
+
+        base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
+        cached_path = f"{base_mount_path}/{response['slug']}"
+
+        if not os.path.exists(cached_path):
+            # Only print this if the model is not already mounted.
+            logger.info(f"Mounting files to {cached_path}...")
+
+        while not os.path.exists(cached_path):
+            time.sleep(5)
+
+        if path:
+            cached_filepath = f"{cached_path}/{path}"
+            if not os.path.exists(cached_filepath):
+                msg = (
+                    f"'{path}' is not present in the model files. "
+                    f"You can access the other files of the attached model at '{cached_path}'"
+                )
+                raise ValueError(msg)
+            return cached_filepath
+        return cached_path
