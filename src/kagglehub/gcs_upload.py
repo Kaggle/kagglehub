@@ -131,16 +131,14 @@ def _upload_blob(file_path: str, model_type: str) -> str:
                 # Special case for empty files.
                 if file_size == 0:
                     headers["Content-Length"] = "0"
-                    data = None
+                    upload_data = None
                 # Resumable upload for non-empty files.
                 else:
                     f.seek(uploaded_bytes)
                     headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
-                    data = CallbackIOWrapper(pbar.update, f, "read")
+                    upload_data = CallbackIOWrapper(pbar.update, f, "read")
 
-                upload_response = requests.put(
-                    session_uri, headers=headers, data=data, timeout=REQUEST_TIMEOUT
-                )
+                upload_response = requests.put(session_uri, headers=headers, data=upload_data, timeout=REQUEST_TIMEOUT)
 
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
@@ -159,7 +157,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
                 uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 pbar.n = uploaded_bytes  # Update progress bar to reflect actual uploaded bytes
             finally:
-                upload_finished = (uploaded_bytes >= file_size or retry_count >= MAX_RETRIES)
+                upload_finished = uploaded_bytes >= file_size or retry_count >= MAX_RETRIES
 
     return response["token"]
 
