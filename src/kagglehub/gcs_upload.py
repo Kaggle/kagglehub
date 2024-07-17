@@ -157,7 +157,10 @@ def _upload_blob(file_path: str, model_type: str) -> str:
                 uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 pbar.n = uploaded_bytes  # Update progress bar to reflect actual uploaded bytes
             finally:
-                upload_finished = uploaded_bytes >= file_size or retry_count >= MAX_RETRIES
+                if file_size == 0:
+                    upload_finished = retry_count >= MAX_RETRIES
+                else:
+                    upload_finished = uploaded_bytes >= file_size or retry_count >= MAX_RETRIES
 
     return response["token"]
 
