@@ -118,21 +118,26 @@ def _upload_blob(file_path: str, model_type: str) -> str:
         raise BackendError(token_exception)
 
     session_uri = response["createUrl"]
-    headers = {"Content-Type": "application/octet-stream", "Content-Range": f"bytes 0-{file_size - 1}/{file_size}"}
+    headers = {"Content-Type": "application/octet-stream"}
 
     retry_count = 0
     uploaded_bytes = 0
     backoff_factor = 1  # Initial backoff duration in seconds
 
     with open(file_path, "rb") as f, tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True) as pbar:
-        while uploaded_bytes < file_size and retry_count < MAX_RETRIES:
+        while retry_count < MAX_RETRIES and (file_size == 0 or uploaded_bytes < file_size):
             try:
-                f.seek(uploaded_bytes)
-                reader_wrapper = CallbackIOWrapper(pbar.update, f, "read")
-                headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
-                upload_response = requests.put(
-                    session_uri, headers=headers, data=reader_wrapper, timeout=REQUEST_TIMEOUT
-                )
+                # Special case for empty files.
+                if file_size == 0:
+                    headers["Content-Length"] = "0"
+                    upload_data = None
+                # Resumable upload for non-empty files.
+                else:
+                    f.seek(uploaded_bytes)
+                    headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
+                    upload_data = CallbackIOWrapper(pbar.update, f, "read")
+
+                upload_response = requests.put(session_uri, headers=headers, data=upload_data, timeout=REQUEST_TIMEOUT)
 
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
