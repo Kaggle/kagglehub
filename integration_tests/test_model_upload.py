@@ -111,6 +111,15 @@ class TestModelUpload(unittest.TestCase):
             f.write(os.urandom(100))
 
         model_upload(self.handle, str(single_file_path), LICENSE_NAME)
+    
+    def test_model_upload_empty_files(self) -> None:
+        # Create a temp file with empty and non-empty files.
+        test_empty_dir = Path(self.temp_dir) / "test_empty"
+        test_empty_dir.mkdir()
+        (test_empty_dir / "empty.json").touch()
+        (test_empty_dir / "non_empty.json").write_bytes(b"hello")
+
+        model_upload(self.handle, test_empty_dir)
 
     def tearDown(self) -> None:
         models_helpers.delete_model(self.owner_slug, self.model_slug)
