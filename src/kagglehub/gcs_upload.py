@@ -125,8 +125,7 @@ def _upload_blob(file_path: str, model_type: str) -> str:
     backoff_factor = 1  # Initial backoff duration in seconds
 
     with open(file_path, "rb") as f, tqdm(total=file_size, desc="Uploading", unit="B", unit_scale=True) as pbar:
-        upload_finished = False
-        while not upload_finished:
+        while retry_count < MAX_RETRIES and (file_size == 0 or uploaded_bytes < file_size):
             try:
                 # Special case for empty files.
                 if file_size == 0:
@@ -156,11 +155,6 @@ def _upload_blob(file_path: str, model_type: str) -> str:
                 retry_count += 1
                 uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 pbar.n = uploaded_bytes  # Update progress bar to reflect actual uploaded bytes
-            finally:
-                if file_size == 0:
-                    upload_finished = retry_count >= MAX_RETRIES
-                else:
-                    upload_finished = uploaded_bytes >= file_size or retry_count >= MAX_RETRIES
 
     return response["token"]
 
