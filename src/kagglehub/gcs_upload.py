@@ -44,8 +44,7 @@ class UploadDirectoryInfo:
 
 
 def parse_datetime_string(string: str) -> Union[datetime, str]:
-    time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ",
-                    "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
+    time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
         try:
             return datetime.strptime(string[:26], t).replace(microsecond=0)  # noqa: DTZ007
@@ -56,8 +55,7 @@ def parse_datetime_string(string: str) -> Union[datetime, str]:
 
 class File(object):  # noqa: UP004
     def __init__(self, init_dict: dict) -> None:
-        parsed_dict = {k: parse_datetime_string(
-            v) for k, v in init_dict.items()}
+        parsed_dict = {k: parse_datetime_string(v) for k, v in init_dict.items()}
         self.__dict__.update(parsed_dict)
 
     @staticmethod
@@ -81,7 +79,7 @@ def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str]) -> Iterable[
             The patterns for ignored files. These are standard wildcards relative to base_dir.
 
     Yields:
-        Generator[str]: (base_dir_path, List[dir_names], List[file_names])
+        Iterable[tuple[str, list[str], list[str]]]: (base_dir_path, List[dir_names], List[filtered_file_names])
     """
     for dir_path, dir_names, file_names in os.walk(base_dir):
         dir_p = pathlib.Path(dir_path)
@@ -101,8 +99,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
 
     while retry_count < MAX_RETRIES:
         try:
-            response = requests.put(
-                session_uri, headers=headers, timeout=REQUEST_TIMEOUT)
+            response = requests.put(session_uri, headers=headers, timeout=REQUEST_TIMEOUT)
             if response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
                 range_header = response.headers.get("Range")
                 if range_header:
@@ -112,8 +109,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
             else:
                 return file_size
         except (ConnectionError, Timeout):
-            logger.info(
-                f"Network issue while checking uploaded size, retrying in {backoff_factor} seconds...")
+            logger.info(f"Network issue while checking uploaded size, retrying in {backoff_factor} seconds...")
             time.sleep(backoff_factor)
             backoff_factor = min(backoff_factor * 2, 60)
             retry_count += 1
@@ -169,22 +165,19 @@ def _upload_blob(file_path: str, model_type: str) -> str:
                     headers["Content-Range"] = f"bytes {uploaded_bytes}-{file_size - 1}/{file_size}"
                     upload_data = CallbackIOWrapper(pbar.update, f, "read")
 
-                upload_response = requests.put(
-                    session_uri, headers=headers, data=upload_data, timeout=REQUEST_TIMEOUT)
+                upload_response = requests.put(session_uri, headers=headers, data=upload_data, timeout=REQUEST_TIMEOUT)
 
                 if upload_response.status_code in [200, 201]:
                     return response["token"]
                 elif upload_response.status_code == 308:  # Resume Incomplete # noqa: PLR2004
-                    uploaded_bytes = _check_uploaded_size(
-                        session_uri, file_size)
+                    uploaded_bytes = _check_uploaded_size(session_uri, file_size)
                 else:
                     upload_failed_exception = (
                         f"Upload failed with status code {upload_response.status_code}: {upload_response.text}"
                     )
                     raise BackendError(upload_failed_exception)
             except (requests.ConnectionError, requests.Timeout) as e:
-                logger.info(
-                    f"Network issue: {e}, retrying in {backoff_factor} seconds...")
+                logger.info(f"Network issue: {e}, retrying in {backoff_factor} seconds...")
                 time.sleep(backoff_factor)
                 backoff_factor = min(backoff_factor * 2, 60)
                 retry_count += 1
@@ -208,8 +201,7 @@ def upload_files_and_directories(
 
     if file_count > MAX_FILES_TO_UPLOAD:
         if not quiet:
-            logger.info(
-                f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
+            logger.info(f"More than {MAX_FILES_TO_UPLOAD} files detected, creating a zip archive...")
 
         with TemporaryDirectory() as temp_dir:
             zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
@@ -217,8 +209,7 @@ def upload_files_and_directories(
                 for root, _, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns):
                     for file in files:
                         file_path = os.path.join(root, file)
-                        zipf.write(file_path, os.path.relpath(
-                            file_path, folder))
+                        zipf.write(file_path, os.path.relpath(file_path, folder))
 
             tokens = [
                 token
@@ -230,8 +221,7 @@ def upload_files_and_directories(
     root_dict = UploadDirectoryInfo(name="root")
     if os.path.isfile(folder):
         # Directly upload the file if the path is a file
-        token = _upload_file(
-            file_path=folder, model_type=model_type, quiet=quiet)
+        token = _upload_file(file_path=folder, model_type=model_type, quiet=quiet)
         if token:
             root_dict.files.append(token)
     else:
@@ -256,8 +246,7 @@ def upload_files_and_directories(
 
             # Add file tokens to the current directory in the dictionary
             for file in files:
-                token = _upload_file(file_path=os.path.join(
-                    root, file), model_type=model_type, quiet=quiet)
+                token = _upload_file(file_path=os.path.join(root, file), model_type=model_type, quiet=quiet)
                 if token:
                     current_dict.files.append(token)
 
@@ -286,6 +275,5 @@ def _upload_file(file_path: str, *, quiet: bool, model_type: str) -> Optional[st
     content_length = os.path.getsize(file_path)
     token = _upload_blob(file_path, model_type)
     if not quiet:
-        logger.info("Upload successful: " + file_path +
-                    " (" + File.get_size(content_length) + ")")
+        logger.info("Upload successful: " + file_path + " (" + File.get_size(content_length) + ")")
     return token

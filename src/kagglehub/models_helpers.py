@@ -99,7 +99,7 @@ def delete_model(owner_slug: str, model_slug: str) -> None:
 
 
 def _normalize_patterns(*, default: List[str], additional: Union[List[str], str] | None) -> list[str]:
-    """Merge additional patterns to the default, and normalize the dir pattern with wildcard."""
+    """Merges additional patterns with the default, and normalize the dir pattern with wildcard."""
 
     def add_wildcard_to_dir(pattern: str) -> str:
         return pattern + "*" if pattern.endswith("/") else pattern
