@@ -33,7 +33,7 @@ def model_download(handle: str, path: Optional[str] = None, *, force_download: O
 def model_upload(
     handle: str,
     local_model_dir: str,
-    license_name: str | None = None,
+    license_name: Optional[str] = None,
     version_notes: str = "",
     ignore_patterns: Optional[Union[List[str], str]] = None,
 ) -> None:

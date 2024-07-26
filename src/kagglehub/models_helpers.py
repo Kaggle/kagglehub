@@ -98,7 +98,7 @@ def delete_model(owner_slug: str, model_slug: str) -> None:
             raise (e)
 
 
-def _normalize_patterns(*, default: List[str], additional: Optional[Union[List[str], str]]) -> list[str]:
+def _normalize_patterns(*, default: List[str], additional: Optional[Union[List[str], str]]) -> List[str]:
     """Merges additional patterns with the default, and normalize the dir pattern with wildcard."""
 
     def add_wildcard_to_dir(pattern: str) -> str:

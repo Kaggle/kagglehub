@@ -6,7 +6,7 @@ import time
 import zipfile
 from datetime import datetime
 from tempfile import TemporaryDirectory
-from typing import Dict, Iterable, List, Optional, Sequence, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -68,7 +68,7 @@ class File(object):  # noqa: UP004
         return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
 
-def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str]) -> Iterable[tuple[str, list[str], list[str]]]:
+def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str]) -> Iterable[Tuple[str, List[str], List[str]]]:
     """An `os.walk` like directory tree generator with filtering.
 
     This method filters out files matching any ignore pattern.
