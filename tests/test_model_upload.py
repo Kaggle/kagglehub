@@ -165,6 +165,10 @@ class TestModelUpload(BaseTestCase):
             (tmp_dir_p / ".git" / "file").write_text("hidden git file")
             (tmp_dir_p / ".gitignore").write_text("none")
 
+            (tmp_dir_p / "a" / ".git").mkdir(parents=True)
+            (tmp_dir_p / "a" / "b" / ".git").mkdir(parents=True)
+            (tmp_dir_p / "a" / "b" / ".git" / "abgit.txt").write_text("abgit")
+
             (tmp_dir_p / "a" / "b" / ".hidden").touch()
 
             (tmp_dir_p / "original" / "fp8").mkdir(parents=True)

@@ -9,7 +9,6 @@ from tests.fixtures import BaseTestCase
 
 
 class TesModelsHelpers(BaseTestCase):
-
     def test_normalize_patterns(self) -> None:
         default_patterns = [".git/", ".cache/", ".gitignore"]
         self.assertEqual(
@@ -45,6 +44,10 @@ class TesModelsHelpers(BaseTestCase):
             (tmp_dir_p / ".git" / "file").write_text("hidden git file")
             (tmp_dir_p / ".gitignore").write_text("none")
 
+            (tmp_dir_p / "a" / ".git").mkdir(parents=True)
+            (tmp_dir_p / "a" / "b" / ".git").mkdir(parents=True)
+            (tmp_dir_p / "a" / "b" / ".git" / "abgit.txt").write_text("abgit")
+
             (tmp_dir_p / "a" / "b" / ".hidden").touch()
 
             (tmp_dir_p / "original" / "fp8").mkdir(parents=True)
@@ -54,7 +57,7 @@ class TesModelsHelpers(BaseTestCase):
 
             # filtered walk
             ignore_patterns = models_helpers._normalize_patterns(
-                default=[".git/", ".gitignore", "*/.hidden", "original/"], additional=None
+                default=[".git/", "*/.git/", ".gitignore", "*/.hidden", "original/"], additional=None
             )
             walked_files = []
             for dir_path, _, file_names in gcs_upload.filtered_walk(base_dir=tmp_dir, ignore_patterns=ignore_patterns):

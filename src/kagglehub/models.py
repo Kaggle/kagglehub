@@ -10,7 +10,7 @@ from kagglehub.models_helpers import _normalize_patterns, create_model_if_missin
 logger = logging.getLogger(__name__)
 
 # Patterns that are always ignored for model uploading.
-DEFAULT_IGNORE_PATTERNS = [".git/", ".cache/", ".huggingface/"]
+DEFAULT_IGNORE_PATTERNS = [".git/", "*/.git/", ".cache/", ".huggingface/"]
 
 
 def model_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
@@ -35,7 +35,7 @@ def model_upload(
     local_model_dir: str,
     license_name: str | None = None,
     version_notes: str = "",
-    ignore_patterns: Union[List[str], str] | None = None,
+    ignore_patterns: Optional[Union[List[str], str]] = None,
 ) -> None:
     """Upload model files.
 
