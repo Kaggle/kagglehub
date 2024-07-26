@@ -1,13 +1,16 @@
 import logging
-from typing import Optional
+from typing import List, Optional, Union
 
 from kagglehub import registry
 from kagglehub.gcs_upload import upload_files_and_directories
 from kagglehub.handle import parse_model_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
-from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version
+from kagglehub.models_helpers import _normalize_patterns, create_model_if_missing, create_model_instance_or_version
 
 logger = logging.getLogger(__name__)
+
+# Patterns that are always ignored for model uploading.
+DEFAULT_IGNORE_PATTERNS = [".git/", ".cache/", ".huggingface/"]
 
 
 def model_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
@@ -28,15 +31,26 @@ def model_download(handle: str, path: Optional[str] = None, *, force_download: O
 
 
 def model_upload(
-    handle: str, local_model_dir: str, license_name: Optional[str] = None, version_notes: str = ""
+    handle: str,
+    local_model_dir: str,
+    license_name: str | None = None,
+    version_notes: str = "",
+    ignore_patterns: Union[List[str], str] | None = None,
 ) -> None:
     """Upload model files.
 
     Args:
-        handle: (string) the model handle.
-        local_model_dir: (string) path to a file in a local directory.
-        license_name: (string) model license.
-        version_notes: (string) Optional to write to model versions.
+        handle: (str) the model handle.
+        local_model_dir: (str) path to a file in a local directory.
+        license_name: (str) model license.
+        version_notes: (str, optional) model versions.
+        ignore_patterns (str or List[str], optional):
+            Additional ignore patterns to DEFAULT_IGNORE_PATTERNS.
+            Files matching any of the patterns are not uploaded.
+            Patterns are standard wildcards that can be matched by
+            https://docs.python.org/3/library/fnmatch.html.
+            Use a pattern ending with "/" to ignore the whole dir,
+            e.g., ".git/" is equivalent to ".git/*".
     """
     # parse slug
     h = parse_model_handle(handle)
@@ -49,7 +63,12 @@ def model_upload(
     create_model_if_missing(h.owner, h.model)
 
     # Upload the model files to GCS
-    tokens = upload_files_and_directories(local_model_dir, "model")
+
+    tokens = upload_files_and_directories(
+        local_model_dir,
+        model_type="model",
+        ignore_patterns=_normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
+    )
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists
     create_model_instance_or_version(h, tokens, license_name, version_notes)
