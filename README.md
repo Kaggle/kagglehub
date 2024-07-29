@@ -87,6 +87,12 @@ kagglehub.model_upload(handle, local_model_dir, version_notes='improved accuracy
 
 # You can also specify a license (optional)
 kagglehub.model_upload(handle, local_model_dir, license_name='Apache 2.0')
+
+# You can also specify a list of patterns for files/dirs to ignore.
+# These patterns are combined with `kagglehub.models.DEFAULT_IGNORE_PATTERNS` 
+# to determine which files and directories to exclude. 
+# To ignore entire directories, include a trailing slash (/) in the pattern.
+kagglehub.model_upload(handle, local_model_dir, ignore_patterns=["original/", "*.tmp"])
 ```
 
 ## Development

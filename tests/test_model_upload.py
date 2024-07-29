@@ -72,7 +72,8 @@ class TestModelUpload(BaseTestCase):
             self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
     def test_model_upload_resumable(self) -> None:
-        stub.simulate_308(state=True)  # Enable simulation of 308 response for this test
+        # Enable simulation of 308 response for this test
+        stub.simulate_308(state=True)
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()
@@ -142,3 +143,45 @@ class TestModelUpload(BaseTestCase):
             # TODO: Add assertions on CreateModelInstanceRequest.Directories and
             # CreateModelInstanceRequest.Files to verify the expected structure
             # is sent.
+
+    def test_model_upload_with_ignore_patterns(self) -> None:
+        with TemporaryDirectory() as tmp_dir:
+            tmp_dir_p = Path(tmp_dir)
+            # files to upload
+            (tmp_dir_p / "a" / "b").mkdir(parents=True)
+            (tmp_dir_p / "weights.txt").touch()
+            (tmp_dir_p / "a" / "a.txt").touch()
+            (tmp_dir_p / "a" / "b" / "b.txt").touch()
+            (tmp_dir_p / "a" / "b" / ".bb").touch()
+            expected_files = {
+                "weights.txt",
+                "a.txt",
+                "b.txt",
+                ".bb",
+            }
+
+            # files to ignore
+            (tmp_dir_p / ".git").mkdir(parents=True)
+            (tmp_dir_p / ".git" / "file").write_text("hidden git file")
+            (tmp_dir_p / ".gitignore").write_text("none")
+
+            (tmp_dir_p / "a" / ".git").mkdir(parents=True)
+            (tmp_dir_p / "a" / "b" / ".git").mkdir(parents=True)
+            (tmp_dir_p / "a" / "b" / ".git" / "abgit.txt").write_text("abgit")
+
+            (tmp_dir_p / "a" / "b" / ".hidden").touch()
+
+            (tmp_dir_p / "original" / "fp8").mkdir(parents=True)
+            (tmp_dir_p / "original" / "fp8" / "weights").touch()
+            (tmp_dir_p / "original" / "fp16").mkdir(parents=True)
+            (tmp_dir_p / "original" / "fp16" / "weights").touch()
+
+            # .git is already ignored by default
+            ignore_patterns = [".gitignore", "*/.hidden", "original/"]
+            model_upload(
+                handle="metaresearch/testmodel/pytorch/withignore",
+                local_model_dir=tmp_dir,
+                ignore_patterns=ignore_patterns,
+            )
+            self.assertEqual(len(stub.shared_data.files), len(expected_files))
+            self.assertEqual(set(stub.shared_data.files), expected_files)
