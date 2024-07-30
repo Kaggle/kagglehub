@@ -77,6 +77,8 @@ def attach_datasource_using_jwt_request() -> ResponseReturnValue:
             },
         }
         return jsonify(data), 200
+    else:
+        return jsonify(data), 500
 
 
 @contextmanager
