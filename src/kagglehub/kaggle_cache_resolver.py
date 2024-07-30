@@ -46,13 +46,17 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
         if h.is_versioned():
             dataset_ref["VersionNumber"] = str(h.version)
 
-        result = client.post(ATTACH_DATASOURCE_REQUEST_NAME, {
-            "datasetRef": dataset_ref,
-        }, timeout=(DEFAULT_CONNECT_TIMEOUT, ATTACH_DATASOURCE_READ_TIMEOUT))
+        result = client.post(
+            ATTACH_DATASOURCE_REQUEST_NAME,
+            {
+                "datasetRef": dataset_ref,
+            },
+            timeout=(DEFAULT_CONNECT_TIMEOUT, ATTACH_DATASOURCE_READ_TIMEOUT),
+        )
         if "mountSlug" not in result:
             msg = "'result.mountSlug' field missing from response"
             raise BackendError(msg)
-        
+
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
 
@@ -64,12 +68,12 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
                 f"Attaching '{path}' from dataset '{h}' to your Kaggle notebook...",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
-        
+
         while not os.path.exists(cached_path):
             time.sleep(5)
 
         if path:
-            cached_filepath = f"{cached_path/{path}}"
+            cached_filepath = f"{cached_path}/{path}"
             if not os.path.exists(cached_filepath):
                 msg = (
                     f"'{path}' is not present in the dataset files."

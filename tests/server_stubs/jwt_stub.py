@@ -18,6 +18,7 @@ from kagglehub.kaggle_cache_resolver import KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NA
 app = Flask(__name__)
 
 LATEST_MODEL_VERSION = 2
+LATEST_DATASET_VERSION = 2
 
 
 @app.route("/", methods=["HEAD"])
@@ -32,7 +33,32 @@ def error(e: Exception):  # noqa: ANN201
 
 
 @app.route("/kaggle-jwt-handler/AttachDatasourceUsingJwtRequest", methods=["POST"])
-def attach_datasource_using_jwt_request() -> ResponseReturnValue:
+def attach_dataset_datasource_using_jwt_request() -> ResponseReturnValue:
+    data = request.get_json()
+    dataset_ref = data["datasetRef"]
+    version_number = LATEST_DATASET_VERSION
+    if "VersionNumber" in dataset_ref:
+        version_number = dataset_ref["VersionNumber"]
+    mount_slug = f"{dataset_ref['DatasetSlug']}"
+    # # Load the files
+    cache_mount_folder = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
+    base_path = f"{cache_mount_folder}/{mount_slug}"
+    os.makedirs(base_path, exist_ok=True)
+    Path(f"{base_path}/foo.txt").touch()
+    if version_number == LATEST_DATASET_VERSION:
+        # The latest version has an extra file.
+        Path(f"{base_path}/bar.csv").touch()
+    data = {
+        "wasSuccessful": True,
+        "result": {
+            "mountSlug": mount_slug,
+        },
+    }
+    return jsonify(data), 200
+
+
+@app.route("/kaggle-jwt-handler/AttachDatasourceUsingJwtRequest", methods=["POST"])
+def attach_model_datasource_using_jwt_request() -> ResponseReturnValue:
     data = request.get_json()
     model_ref = data["modelRef"]
     version_number = LATEST_MODEL_VERSION
