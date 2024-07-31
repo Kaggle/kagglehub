@@ -4,21 +4,19 @@
 import pathlib
 import tempfile
 
-from kagglehub import gcs_upload, models_helpers
+from kagglehub.gcs_upload import filtered_walk, normalize_patterns
 from tests.fixtures import BaseTestCase
 
 
 class TesModelsHelpers(BaseTestCase):
-    def test_normalize_patterns(self) -> None:
+    def testnormalize_patterns(self) -> None:
         default_patterns = [".git/", ".cache/", ".gitignore"]
         self.assertEqual(
-            models_helpers._normalize_patterns(default=default_patterns, additional=None),
+            normalize_patterns(default=default_patterns, additional=None),
             [".git/*", ".cache/*", ".gitignore"],
         )
         self.assertEqual(
-            models_helpers._normalize_patterns(
-                default=default_patterns, additional=["original/", "*/*.txt", "doc/readme.txt"]
-            ),
+            normalize_patterns(default=default_patterns, additional=["original/", "*/*.txt", "doc/readme.txt"]),
             [".git/*", ".cache/*", ".gitignore", "original/*", "*/*.txt", "doc/readme.txt"],
         )
 
@@ -56,11 +54,11 @@ class TesModelsHelpers(BaseTestCase):
             (tmp_dir_p / "original" / "fp16" / "weights").touch()
 
             # filtered walk
-            ignore_patterns = models_helpers._normalize_patterns(
+            ignore_patterns = normalize_patterns(
                 default=[".git/", "*/.git/", ".gitignore", "*/.hidden", "original/"], additional=None
             )
             walked_files = []
-            for dir_path, _, file_names in gcs_upload.filtered_walk(base_dir=tmp_dir, ignore_patterns=ignore_patterns):
+            for dir_path, _, file_names in filtered_walk(base_dir=tmp_dir, ignore_patterns=ignore_patterns):
                 for file_name in file_names:
                     walked_files.append(pathlib.Path(dir_path) / file_name)
             self.assertEqual(set(walked_files), expected_files)
