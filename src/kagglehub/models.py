@@ -66,7 +66,7 @@ def model_upload(
 
     tokens = upload_files_and_directories(
         local_model_dir,
-        model_type="model",
+        item_type="model",
         ignore_patterns=_normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
     )
 
