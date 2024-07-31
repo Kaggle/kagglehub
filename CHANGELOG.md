@@ -2,6 +2,14 @@
 
 ## Next (Unreleased)
 
+## v.0.2.9 (July 31st, 2024)
+
+* Improve upload by ignoring patterns ([#147](https://github.com/Kaggle/kagglehub/pull/147))
+* Upload with empty files ([#145](https://github.com/Kaggle/kagglehub/pull/145))
+* Attach dataset in Kaggle notebook environment ([#134](https://github.com/Kaggle/kagglehub/pull/134))
+* Upload datasets using `kagglehub.dataset_upload(...)` ([#149](https://github.com/Kaggle/kagglehub/pull/149))
+* Download datasets using `kagglehub.dataset_download(...)` ([#131](https://github.com/Kaggle/kagglehub/pull/131))
+
 ## v.0.2.8 (July 16th, 2024)
 
 * Added support for implicit token auth in kaggle notebooks ([#141](https://github.com/Kaggle/kagglehub/pull/141))
