@@ -1,7 +1,7 @@
 import logging
 import os
-import time
 import tempfile
+import time
 import unittest
 import uuid
 from pathlib import Path
@@ -112,5 +112,5 @@ class TestDatasetUpload(unittest.TestCase):
         dataset_upload(self.handle, str(single_file_path))
 
     def tearDown(self) -> None:
-        time.sleep(5) # hacky. Need to wait until a dataset is ready to be deleted.
+        time.sleep(5)  # hacky. Need to wait until a dataset is ready to be deleted.
         datasets_helpers.dataset_delete(self.owner_slug, self.dataset_slug)
