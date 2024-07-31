@@ -53,7 +53,7 @@ def dataset_delete(owner_slug: str, dataset_slug: str) -> None:
     try:
         api_client = KaggleApiV1Client()
         api_client.post(
-            f"/datasets/{owner_slug}/{dataset_slug}/delete",
+            f"/dataset/{owner_slug}/{dataset_slug}/delete",
             {},
         )
     except KaggleApiHTTPError as e:

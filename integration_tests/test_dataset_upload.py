@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 import tempfile
 import unittest
 import uuid
@@ -28,7 +29,7 @@ class TestDatasetUpload(unittest.TestCase):
         if not credentials:
             self.fail("Make sure to set your Kaggle credentials before running the tests")
         self.owner_slug = credentials.username
-        self.dataset_slug = f"dataset_{self.dataset_uuid}"
+        self.dataset_slug = f"dataset-{self.dataset_uuid}"
         self.handle = f"{self.owner_slug}/{self.dataset_slug}"
 
     def test_dataset_upload_and_versioning(self) -> None:
@@ -56,7 +57,7 @@ class TestDatasetUpload(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             # Create new folder within temp_dir
             inner_folder_path = Path(temp_dir) / "inner_folder"
-            inner_folder_path.touch()
+            inner_folder_path.mkdir()
 
             for i in range(60):
                 # Create a file in the temp_dir
@@ -111,4 +112,5 @@ class TestDatasetUpload(unittest.TestCase):
         dataset_upload(self.handle, str(single_file_path))
 
     def tearDown(self) -> None:
+        time.sleep(5) # hacky. Need to wait until a dataset is ready to be deleted.
         datasets_helpers.dataset_delete(self.owner_slug, self.dataset_slug)
