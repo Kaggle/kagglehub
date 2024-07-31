@@ -122,7 +122,7 @@ Uploads a new dataset (or a new version if it already exists).
 ```python
 import kagglehub
 
-# For example, to upload a new dataset (0r version) at:
+# For example, to upload a new dataset (or version) at:
 # - https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
 # 
 # You would use the following handle: `bricevergnou/spotify-recommendation`
