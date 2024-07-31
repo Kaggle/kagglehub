@@ -17,11 +17,11 @@ class TestDatasetUpload(BaseTestCase):
         stub.reset()
 
     @classmethod
-    def setUpClass(cls):  # noqa: ANN102
+    def setUpClass(cls):
         cls.server = serv.start_server(stub.app)
 
     @classmethod
-    def tearDownClass(cls):  # noqa: ANN102
+    def tearDownClass(cls):
         cls.server.shutdown()
 
     def test_dataset_upload_with_invalid_handle(self) -> None:
@@ -31,9 +31,8 @@ class TestDatasetUpload(BaseTestCase):
                 test_filepath.touch()  # Create a temporary file in the temporary directory
                 dataset_upload("invalid/invalid/invalid", temp_dir)
 
-
     def test_dataset_upload_with_valid_handle(self) -> None:
-         with TemporaryDirectory() as temp_dir:
+        with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
             dataset_upload("jeward/newDataset", temp_dir, "dataset-type")

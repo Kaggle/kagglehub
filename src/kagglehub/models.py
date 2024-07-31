@@ -2,10 +2,10 @@ import logging
 from typing import List, Optional, Union
 
 from kagglehub import registry
-from kagglehub.gcs_upload import upload_files_and_directories
+from kagglehub.gcs_upload import normalize_patterns, upload_files_and_directories
 from kagglehub.handle import parse_model_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
-from kagglehub.models_helpers import _normalize_patterns, create_model_if_missing, create_model_instance_or_version
+from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def model_upload(
     tokens = upload_files_and_directories(
         local_model_dir,
         item_type="model",
-        ignore_patterns=_normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
+        ignore_patterns=normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
     )
 
     # Create a model instance if it doesn't exist, and create a new instance version if an instance exists

@@ -277,3 +277,17 @@ def _upload_file(file_path: str, *, quiet: bool, item_type: str) -> Optional[str
     if not quiet:
         logger.info("Upload successful: " + file_path + " (" + File.get_size(content_length) + ")")
     return token
+
+
+def normalize_patterns(*, default: List[str], additional: Optional[Union[List[str], str]]) -> List[str]:
+    """Merges additional patterns with the default, and normalize the dir pattern with wildcard."""
+
+    def add_wildcard_to_dir(pattern: str) -> str:
+        return pattern + "*" if pattern.endswith("/") else pattern
+
+    if additional is None:
+        additional = []
+    elif isinstance(additional, str):
+        additional = [additional]
+
+    return [add_wildcard_to_dir(pattern) for pattern in default + additional]

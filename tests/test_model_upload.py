@@ -113,9 +113,7 @@ class TestModelUpload(BaseTestCase):
             with open(test_filepath, "wb") as f:
                 f.write(os.urandom(100))
 
-            model_upload(
-                "metaresearch/new-model/pyTorch/new-variation", str(test_filepath), APACHE_LICENSE
-            )
+            model_upload("metaresearch/new-model/pyTorch/new-variation", str(test_filepath), APACHE_LICENSE)
 
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn("single_dummy_file.txt", stub.shared_data.files)

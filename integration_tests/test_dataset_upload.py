@@ -38,14 +38,14 @@ class TestDatasetUpload(unittest.TestCase):
         # Create Version
         dataset_upload(self.handle, self.temp_dir, "new version")
 
-         # If delete dataset does not raise an error, then the upload was successful.
+        # If delete dataset does not raise an error, then the upload was successful.
 
     def test_dataset_upload_and_versioning_zip(self) -> None:
         with TemporaryDirectory() as temp_dir:
             for i in range(60):
                 test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
                 test_filepath.touch()
-        
+
             # Create Dataset
             dataset_upload(self.handle, self.temp_dir)
 

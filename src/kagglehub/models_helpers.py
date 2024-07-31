@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import List, Optional, Union
+from typing import Optional
 
 from kagglehub.clients import BackendError, KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
@@ -96,17 +96,3 @@ def delete_model(owner_slug: str, model_slug: str) -> None:
             logger.info(f"Could not delete Model '{model_slug}' for user '{owner_slug}'...")
         else:
             raise (e)
-
-
-def _normalize_patterns(*, default: List[str], additional: Optional[Union[List[str], str]]) -> List[str]:
-    """Merges additional patterns with the default, and normalize the dir pattern with wildcard."""
-
-    def add_wildcard_to_dir(pattern: str) -> str:
-        return pattern + "*" if pattern.endswith("/") else pattern
-
-    if additional is None:
-        additional = []
-    elif isinstance(additional, str):
-        additional = [additional]
-
-    return [add_wildcard_to_dir(pattern) for pattern in default + additional]

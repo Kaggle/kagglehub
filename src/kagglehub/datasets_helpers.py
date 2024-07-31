@@ -1,6 +1,5 @@
 import logging
 from http import HTTPStatus
-from typing import List
 
 from kagglehub.clients import BackendError, KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
@@ -15,7 +14,7 @@ def _create_dataset(dataset_handle: DatasetHandle, files_and_directories: Upload
         "ownerSlug": dataset_handle.owner,
         "title": dataset_handle.dataset,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
-        "isPrivate": True
+        "isPrivate": True,
     }
 
     api_client = KaggleApiV1Client()
@@ -25,7 +24,9 @@ def _create_dataset(dataset_handle: DatasetHandle, files_and_directories: Upload
     )
 
 
-def _create_dataset_version(dataset_handle: DatasetHandle, files_and_directories: UploadDirectoryInfo, version_notes: str = "") -> None:
+def _create_dataset_version(
+    dataset_handle: DatasetHandle, files_and_directories: UploadDirectoryInfo, version_notes: str = ""
+) -> None:
     data = {
         "versionNotes": version_notes,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
@@ -35,11 +36,13 @@ def _create_dataset_version(dataset_handle: DatasetHandle, files_and_directories
     logger.info(f"Your dataset has been created.\nFiles are being processed...\nSee at: {dataset_handle.to_url()}")
 
 
-def create_dataset_or_version(dataset_handle: DatasetHandle, files: UploadDirectoryInfo, version_notes: str = "") -> None:
+def create_dataset_or_version(
+    dataset_handle: DatasetHandle, files: UploadDirectoryInfo, version_notes: str = ""
+) -> None:
     try:
         _create_dataset(dataset_handle, files)
     except BackendError as e:
-        if e.error_code == None or e.error_code == HTTPStatus.CONFLICT:
+        if e.error_code in (None, HTTPStatus.CONFLICT):
             # Dataset already exists, creating a new version instead.
             _create_dataset_version(dataset_handle, files, version_notes)
         else:

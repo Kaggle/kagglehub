@@ -20,6 +20,7 @@ class SharedData:
 shared_data: SharedData = SharedData()
 lock = threading.Lock()
 
+
 def _increment_blob_request() -> None:
     lock.acquire()
     shared_data.blob_request_count += 1
@@ -49,6 +50,7 @@ def simulate_308(*, state: bool) -> None:
 @app.route("/", methods=["HEAD"])
 def head() -> ResponseReturnValue:
     return "", 200
+
 
 @app.route("/api/v1/datsets/view/<owner_slug>/<dataset_slug>", methods=["GET"])
 def dataset_get(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
