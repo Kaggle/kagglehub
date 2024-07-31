@@ -31,13 +31,13 @@ class TestModelUpload(BaseTestCase):
             with TemporaryDirectory() as temp_dir:
                 test_filepath = Path(temp_dir) / TEMP_TEST_FILE
                 test_filepath.touch()  # Create a temporary file in the temporary directory
-                model_upload("invalid/invalid/invalid", temp_dir, APACHE_LICENSE, "model_type")
+                model_upload("invalid/invalid/invalid", temp_dir, APACHE_LICENSE)
 
     def test_model_upload_instance_with_valid_handle(self) -> None:
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
-            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
@@ -49,7 +49,7 @@ class TestModelUpload(BaseTestCase):
             # Create a temporary file in the nested directory
             test_filepath = nested_dir / TEMP_TEST_FILE
             test_filepath.touch()
-            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
@@ -57,7 +57,7 @@ class TestModelUpload(BaseTestCase):
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
-            model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, APACHE_LICENSE, "model_type")
+            model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, APACHE_LICENSE)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
@@ -67,7 +67,7 @@ class TestModelUpload(BaseTestCase):
             for i in range(MAX_FILES_TO_UPLOAD + 1):
                 test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
                 test_filepath.touch()
-            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
@@ -79,7 +79,7 @@ class TestModelUpload(BaseTestCase):
             test_filepath.touch()
             with open(test_filepath, "wb") as f:
                 f.write(os.urandom(1000))
-            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE)
             self.assertGreaterEqual(stub.shared_data.blob_request_count, 1)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
@@ -88,7 +88,7 @@ class TestModelUpload(BaseTestCase):
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
-            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, None, "model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, None)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
@@ -96,7 +96,7 @@ class TestModelUpload(BaseTestCase):
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
-            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, version_notes="model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, version_notes="some notes")
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
@@ -114,7 +114,7 @@ class TestModelUpload(BaseTestCase):
                 f.write(os.urandom(100))
 
             model_upload(
-                "metaresearch/new-model/pyTorch/new-variation", str(test_filepath), APACHE_LICENSE, "model_type"
+                "metaresearch/new-model/pyTorch/new-variation", str(test_filepath), APACHE_LICENSE
             )
 
             self.assertEqual(len(stub.shared_data.files), 1)
@@ -134,7 +134,7 @@ class TestModelUpload(BaseTestCase):
             (base_path / "dir1" / "subdir1").mkdir()
             (base_path / "dir1" / "subdir1" / "file4.txt").touch()
 
-            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE, "model_type")
+            model_upload("metaresearch/new-model/pyTorch/new-variation", temp_dir, APACHE_LICENSE)
 
             self.assertEqual(len(stub.shared_data.files), 4)
             expected_files = {"file1.txt", "file2.txt", "file3.txt", "file4.txt"}
