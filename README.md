@@ -97,7 +97,7 @@ kagglehub.model_upload(handle, local_model_dir, ignore_patterns=["original/", "*
 
 ### Download Dataset
 
-The following examples download the `Spotify Recommendation` dataset of this Kaggle dataset: https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
+The following examples download the `Spotify Recommendation` Kaggle dataset: https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
 
 ```python
 import kagglehub
@@ -117,21 +117,22 @@ kagglehub.dataset_download('bricevergnou/spotify-recommendation', force_download
 
 ### Upload Dataset
 
-Uploads a new dataset (or a new version if it alreadt exists).
+Uploads a new dataset (or a new version if it already exists).
 
 ```python
 import kagglehub
 
-# For example, to upload a new version to this dataset:
+# For example, to upload a new dataset (0r version) at:
 # - https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
 # 
 # You would use the following handle: `bricevergnou/spotify-recommendation`
 handle = '<KAGGLE_USERNAME>/<DATASET>
 local_dataset_dir = 'path/to/local/dataset/dir'
 
+# Create a new dataset
 kagglehub.dataset_upload(handle, local_dataset_dir)
 
-# You can also specify some version notes (optional)
+# You can then create a new version of this existing dataset and include version notes (optional).
 kagglehub.dataset_upload(handle, local_dataset_dir, version_notes='improved data')
 
 # You can also specify a list of patterns for files/dirs to ignore.
