@@ -11,3 +11,4 @@ registry.model_resolver.add_implementation(kaggle_cache_resolver.ModelKaggleCach
 registry.model_resolver.add_implementation(colab_cache_resolver.ModelColabCacheResolver())
 
 registry.dataset_resolver.add_implementation(http_resolver.DatasetHttpResolver())
+registry.dataset_resolver.add_implementation(kaggle_cache_resolver.DatasetKaggleCacheResolver())

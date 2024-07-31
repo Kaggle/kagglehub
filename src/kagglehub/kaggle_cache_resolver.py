@@ -10,7 +10,7 @@ from kagglehub.clients import (
 from kagglehub.config import is_kaggle_cache_disabled
 from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
-from kagglehub.handle import ModelHandle
+from kagglehub.handle import DatasetHandle, ModelHandle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.resolver import Resolver
 
@@ -23,6 +23,65 @@ DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER = "/kaggle/input"
 
 
 logger = logging.getLogger(__name__)
+
+
+class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
+        if is_kaggle_cache_disabled():
+            return False
+
+        if is_in_kaggle_notebook():
+            return True
+
+        return False
+
+    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+        if force_download:
+            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
+        client = KaggleJwtClient()
+        dataset_ref = {
+            "OwnerSlug": h.owner,
+            "DatasetSlug": h.dataset,
+        }
+        if h.is_versioned():
+            dataset_ref["VersionNumber"] = str(h.version)
+
+        result = client.post(
+            ATTACH_DATASOURCE_REQUEST_NAME,
+            {
+                "datasetRef": dataset_ref,
+            },
+            timeout=(DEFAULT_CONNECT_TIMEOUT, ATTACH_DATASOURCE_READ_TIMEOUT),
+        )
+        if "mountSlug" not in result:
+            msg = "'result.mountSlug' field missing from response"
+            raise BackendError(msg)
+
+        base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
+        cached_path = f"{base_mount_path}/{result['mountSlug']}"
+
+        if not os.path.exists(cached_path):
+            # Only print this if the dataset is not already mounted.
+            logger.info(f"Mounting files to {cached_path}...")
+        else:
+            logger.info(
+                f"Attaching '{path}' from dataset '{h}' to your Kaggle notebook...",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+
+        while not os.path.exists(cached_path):
+            time.sleep(5)
+
+        if path:
+            cached_filepath = f"{cached_path}/{path}"
+            if not os.path.exists(cached_filepath):
+                msg = (
+                    f"'{path}' is not present in the dataset files."
+                    f"You can acces the other files othe attached dataset at '{cached_path}'"
+                )
+                raise ValueError(msg)
+            return cached_filepath
+        return cached_path
 
 
 class ModelKaggleCacheResolver(Resolver[ModelHandle]):
