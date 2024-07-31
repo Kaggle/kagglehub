@@ -95,6 +95,52 @@ kagglehub.model_upload(handle, local_model_dir, license_name='Apache 2.0')
 kagglehub.model_upload(handle, local_model_dir, ignore_patterns=["original/", "*.tmp"])
 ```
 
+### Download Dataset
+
+The following examples download the `Spotify Recommendation` dataset of this Kaggle dataset: https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
+
+```python
+import kagglehub
+
+# Download the latest version.
+kagglehub.dataset_download('bricevergnou/spotify-recommendation')
+
+# Download a specific version.
+kagglehub.dataset_download('bricevergnou/spotify-recommendation/versions/1')
+
+# Download a single file
+kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv')
+
+# Download a dataset or file, even if previously downloaded to cache. Only available outside Kaggle notebooks.
+kagglehub.dataset_download('bricevergnou/spotify-recommendation', force_download=True)
+```
+
+### Upload Dataset
+
+Uploads a new dataset (or a new version if it alreadt exists).
+
+```python
+import kagglehub
+
+# For example, to upload a new version to this dataset:
+# - https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
+# 
+# You would use the following handle: `bricevergnou/spotify-recommendation`
+handle = '<KAGGLE_USERNAME>/<DATASET>
+local_dataset_dir = 'path/to/local/dataset/dir'
+
+kagglehub.dataset_upload(handle, local_dataset_dir)
+
+# You can also specify some version notes (optional)
+kagglehub.dataset_upload(handle, local_dataset_dir, version_notes='improved data')
+
+# You can also specify a list of patterns for files/dirs to ignore.
+# These patterns are combined with `kagglehub.datasets.DEFAULT_IGNORE_PATTERNS` 
+# to determine which files and directories to exclude. 
+# To ignore entire directories, include a trailing slash (/) in the pattern.
+kagglehub.dataset_upload(handle, local_dataset_dir, ignore_patterns=["original/", "*.tmp"])
+```
+
 ## Development
 
 ### Prequisites
