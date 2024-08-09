@@ -64,10 +64,16 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
             # Only print this if the dataset is not already mounted.
             logger.info(f"Mounting files to {cached_path}...")
         else:
-            logger.info(
-                f"Attaching '{path}' from dataset '{h}' to your Kaggle notebook...",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
+            if path:
+                logger.info(
+                    f"Attaching '{path}' from dataset '{h}' to your Kaggle notebook...",
+                    extra={**EXTRA_CONSOLE_BLOCK},
+                )
+            else:
+                logger.info(
+                    f"Attaching dataset '{h}' to your Kaggle notebook...",
+                    extra={**EXTRA_CONSOLE_BLOCK},
+                )
 
         while not os.path.exists(cached_path):
             time.sleep(5)
@@ -125,10 +131,16 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
             # Only print this if the model is not already mounted.
             logger.info(f"Mounting files to {cached_path}...")
         else:
-            logger.info(
-                f"Attaching '{path}' from model '{h}' to your Kaggle notebook...",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
+            if path:
+                logger.info(
+                    f"Attaching '{path}' from model '{h}' to your Kaggle notebook...",
+                    extra={**EXTRA_CONSOLE_BLOCK},
+                )
+            else:
+                logger.info(
+                    f"Attaching model '{h}' to your Kaggle notebook...",
+                    extra={**EXTRA_CONSOLE_BLOCK},
+                )
 
         while not os.path.exists(cached_path):
             time.sleep(5)
