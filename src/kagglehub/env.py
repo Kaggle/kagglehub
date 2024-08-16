@@ -1,4 +1,9 @@
-import importlib.metadata
+try:
+    # For Python 3.8 and above
+    from importlib import metadata  # type: ignore
+except ImportError:
+    # For Python 3.7 and below
+    import importlib_metadata as metadata  # type: ignore
 import inspect
 import logging
 import os
@@ -59,8 +64,8 @@ def search_lib_in_call_stack(lib_name: str) -> Optional[str]:
 
         if module_name is not None and re.match(lib_name, module_name):
             try:
-                lib_version = importlib.metadata.version(lib_name)
+                lib_version = metadata.version(lib_name)
                 return f"{lib_name}/{lib_version}"
-            except importlib.metadata.PackageNotFoundError:
+            except metadata.PackageNotFoundError:
                 continue
     return None
