@@ -1,5 +1,9 @@
+import importlib.metadata
+import inspect
 import logging
 import os
+import re
+from typing import Optional
 
 KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
 KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_URL"
@@ -33,3 +37,30 @@ def read_kaggle_build_date() -> str:
     except FileNotFoundError:
         logging.warning(f"Build date file {build_date_file} not found in Kaggle Notebook environment.")
         return "unknown"
+
+
+def search_lib_in_call_stack(lib_name: str) -> Optional[str]:
+    """Search the call stack for a given library name and get its information.
+
+    Args:
+        lib_name (str):
+            The name of the library to search for.
+            We use re.match so the lib_name must match the module name from beginning.
+
+    Returns:
+        str: A formatted string f"{lib_name}/{lib_version}" if found, otherwise None.
+    """
+    for frame_info in inspect.stack():
+        module = inspect.getmodule(frame_info.frame)
+        if module and hasattr(module, "__name__"):
+            module_name = module.__name__
+        else:
+            module_name = None
+
+        if module_name is not None and re.match(lib_name, module_name):
+            try:
+                lib_version = importlib.metadata.version(lib_name)
+                return f"{lib_name}/{lib_version}"
+            except importlib.metadata.PackageNotFoundError:
+                continue
+    return None
