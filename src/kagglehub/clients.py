@@ -20,6 +20,7 @@ from kagglehub.env import (
     is_in_colab_notebook,
     is_in_kaggle_notebook,
     read_kaggle_build_date,
+    search_lib_in_call_stack,
 )
 from kagglehub.exceptions import (
     BackendError,
@@ -54,27 +55,31 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
-_cached_user_agent = None
-
 
 def get_user_agent() -> str:
-    global _cached_user_agent  # noqa: PLW0603
-    if _cached_user_agent:
-        return _cached_user_agent
+    """Identifies the user agent based on available system information.
 
-    base_user_agent = f"kagglehub/{kagglehub.__version__}"
+    Returns:
+        str: user agent information.
+    """
+    user_agent = f"kagglehub/{kagglehub.__version__}"
+    delimiter = " "
+
+    for keras_lib in ("keras_nlp", "keras_cv", "keras"):
+        keras_info = search_lib_in_call_stack(keras_lib)
+        if keras_info is not None:
+            user_agent += f"{delimiter}{keras_info}"
+            break
 
     if is_in_kaggle_notebook():
         build_date = read_kaggle_build_date()
-        _cached_user_agent = f"{base_user_agent} kkb/{build_date}"
+        user_agent += f"{delimiter}kkb/{build_date}"
     elif is_in_colab_notebook():
         colab_tag = os.getenv("COLAB_RELEASE_TAG")
         runtime_suffix = "-managed" if os.getenv("TBE_RUNTIME_ADDR") else "-unmanaged"
-        _cached_user_agent = f"{base_user_agent} colab/{colab_tag}{runtime_suffix}"
-    else:
-        _cached_user_agent = base_user_agent
+        user_agent += f"{delimiter}colab/{colab_tag}{runtime_suffix}"
 
-    return _cached_user_agent
+    return user_agent
 
 
 logger = logging.getLogger(__name__)

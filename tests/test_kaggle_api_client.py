@@ -1,12 +1,22 @@
 import os
+import sys
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock, patch
 
+from kagglehub import clients
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import DataCorruptionError
 from tests.fixtures import BaseTestCase
 
 from .server_stubs import kaggle_api_stub as stub
 from .server_stubs import serv
+
+
+def _patch_metadata_version():  # noqa: ANN202
+    if sys.version_info >= (3, 8):
+        return patch("importlib.metadata.version")
+    else:
+        return patch("importlib_metadata.version")
 
 
 class TestKaggleApiV1Client(BaseTestCase):
@@ -64,3 +74,40 @@ class TestKaggleApiV1Client(BaseTestCase):
 
             # Assert the corrupted file has been deleted.
             self.assertFalse(os.path.exists(out_file))
+
+    @patch.dict("os.environ", {})
+    def test_get_user_agent(self) -> None:
+        self.assertEqual(clients.get_user_agent(), "kagglehub/0.2.9")
+
+    @patch.dict(
+        "os.environ", {"KAGGLE_KERNEL_RUN_TYPE": "Interactive", "KAGGLE_DATA_PROXY_URL": "https://dp.kaggle.net"}
+    )
+    def test_get_user_agent_kkb(self) -> None:
+        self.assertEqual(clients.get_user_agent(), "kagglehub/0.2.9 kkb/unknown")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "COLAB_RELEASE_TAG": "release-colab-20230531-060125-RC00",
+        },
+    )
+    def test_get_user_agent_colab(self) -> None:
+        self.assertEqual(clients.get_user_agent(), "kagglehub/0.2.9 colab/release-colab-20230531-060125-RC00-unmanaged")
+
+    @_patch_metadata_version()
+    @patch("inspect.ismodule")
+    @patch("inspect.stack")
+    def test_get_user_agent_keras_nlp(
+        self, mock_stack: MagicMock, mock_is_module: MagicMock, mock_version: MagicMock
+    ) -> None:
+        # Mock the call stack and version information.
+        mock_stack.return_value = [
+            MagicMock(frame=MagicMock(__name__="kagglehub.clients")),
+            MagicMock(frame=MagicMock(__name__="kagglehub.models_helpers")),
+            MagicMock(frame=MagicMock(__name__="kagglehub.models")),
+            MagicMock(frame=MagicMock(__name__="keras_nlp.src.utils.preset_utils")),
+            MagicMock(frame=MagicMock(None)),
+        ]
+        mock_is_module.return_value = True
+        mock_version.return_value = "0.15.0"
+        self.assertEqual(clients.get_user_agent(), "kagglehub/0.2.9 keras_nlp/0.15.0")

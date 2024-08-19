@@ -1,5 +1,14 @@
+try:
+    # For Python 3.8 and above
+    from importlib import metadata  # type: ignore
+except ImportError:
+    # For Python 3.7 and below
+    import importlib_metadata as metadata  # type: ignore
+import functools
+import inspect
 import logging
 import os
+from typing import Optional
 
 KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
 KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_URL"
@@ -25,6 +34,7 @@ def is_in_kaggle_notebook() -> bool:
     return False
 
 
+@functools.lru_cache(maxsize=None)
 def read_kaggle_build_date() -> str:
     build_date_file = "/etc/build_date"
     try:
@@ -33,3 +43,30 @@ def read_kaggle_build_date() -> str:
     except FileNotFoundError:
         logging.warning(f"Build date file {build_date_file} not found in Kaggle Notebook environment.")
         return "unknown"
+
+
+def search_lib_in_call_stack(lib_name: str) -> Optional[str]:
+    """Search the call stack for a given library name and get its information.
+
+    Args:
+        lib_name (str):
+            The name of the library to search for.
+            We use str.startswith so the lib_name must match the exact module name from beginning.
+
+    Returns:
+        str: A formatted string f"{lib_name}/{lib_version}" if found, otherwise None.
+    """
+    for frame_info in inspect.stack():
+        module = inspect.getmodule(frame_info.frame)
+        if module and hasattr(module, "__name__"):
+            module_name = module.__name__
+        else:
+            module_name = None
+
+        if module_name is not None and module_name.startswith(lib_name):
+            try:
+                lib_version = metadata.version(lib_name)
+                return f"{lib_name}/{lib_version}"
+            except metadata.PackageNotFoundError:
+                continue
+    return None
