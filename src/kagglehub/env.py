@@ -34,7 +34,7 @@ def is_in_kaggle_notebook() -> bool:
     return False
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def read_kaggle_build_date() -> str:
     build_date_file = "/etc/build_date"
     try:
