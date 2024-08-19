@@ -4,10 +4,10 @@ try:
 except ImportError:
     # For Python 3.7 and below
     import importlib_metadata as metadata  # type: ignore
+import functools
 import inspect
 import logging
 import os
-import re
 from typing import Optional
 
 KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
@@ -34,6 +34,7 @@ def is_in_kaggle_notebook() -> bool:
     return False
 
 
+@functools.cache
 def read_kaggle_build_date() -> str:
     build_date_file = "/etc/build_date"
     try:
@@ -50,7 +51,7 @@ def search_lib_in_call_stack(lib_name: str) -> Optional[str]:
     Args:
         lib_name (str):
             The name of the library to search for.
-            We use re.match so the lib_name must match the module name from beginning.
+            We use str.startswith so the lib_name must match the exact module name from beginning.
 
     Returns:
         str: A formatted string f"{lib_name}/{lib_version}" if found, otherwise None.
@@ -62,7 +63,7 @@ def search_lib_in_call_stack(lib_name: str) -> Optional[str]:
         else:
             module_name = None
 
-        if module_name is not None and re.match(lib_name, module_name):
+        if module_name is not None and module_name.startswith(lib_name):
             try:
                 lib_version = metadata.version(lib_name)
                 return f"{lib_name}/{lib_version}"
