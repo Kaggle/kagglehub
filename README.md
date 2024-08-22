@@ -153,11 +153,14 @@ Follow these [instructions](https://hatch.pypa.io/latest/install/) to install it
 ### Tests
 
 ```sh
-# Run all tests
-hatch run test
+# Run all tests for all Python versions.
+hatch test --all
+
+# Run all tests for a specific Python version.
+hatch test -py 3.11
 
 # Run a single test file
-hatch run test tests/test_<SOME_FILE>.py
+hatch test tests/test_<SOME_FILE>.py
 ```
 
 ### Integration Tests
@@ -170,7 +173,7 @@ After setting up your credentials by any of these methods, you can run the integ
 
 ```sh
 # Run all tests
-hatch run integration-test
+hatch test integration_tests
 ```
 
 
@@ -196,7 +199,7 @@ hatch run lint:fmt
 ### Coverage report
 
 ```sh
-hatch cov
+hatch test -x py=3.7 --cover
 ```
 
 ### Build
