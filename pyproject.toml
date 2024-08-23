@@ -19,7 +19,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords = ["Kaggle", "API"]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = [
   "requests", 
   "tqdm",
@@ -34,7 +34,7 @@ dependencies = [
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
 
-[tool.hatch.envs.default]
+[tool.hatch.envs.hatch-test]
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
@@ -42,35 +42,14 @@ dependencies = [
   "flask-jwt-extended",
 ]
 
-[tool.hatch.envs.default.scripts]
-test = "pytest {args:tests}"
-integration-test = "pytest {args:integration_tests}"
-test-cov = "coverage run -m pytest {args:tests integration_tests}"
-cov-report = [
-  "- coverage combine",
-  "coverage report",
-]
-cov = [
-  "test-cov",
-  "cov-report",
-]
-
-[tool.hatch.envs.hatch-test]
-dependencies = [
-  "coverage[toml]>=6.5; python_version >= '3.8'",
-  "pytest",
-  "flask",
-  "flask-jwt-extended",
-]
-
 [[tool.hatch.envs.hatch-test.matrix]]
-python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+python = ["3.9", "3.10", "3.11"]
 
 [[tool.hatch.envs.all.matrix]]
-python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+python = ["3.9", "3.10", "3.11"]
 
 [[tool.hatch.envs.lint.matrix]]
-python = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+python = ["3.9", "3.10", "3.11"]
 
 [tool.hatch.envs.lint]
 detached = true

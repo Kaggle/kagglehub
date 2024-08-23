@@ -32,7 +32,6 @@ steps:
 - name: us-docker.pkg.dev/$PROJECT_ID/tools/hatch:${_PYTHON_VERSION}
   id: tests
   args:
-  - run
   - test
   waitFor: ['build-hatch-image']
 

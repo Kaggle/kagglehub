@@ -220,6 +220,9 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 
 # Use specific Python version (Must be a valid tag from: https://hub.docker.com/_/python)
 ./docker-hatch -v 3.9 run lint:all
+
+# Run test in docker with specific Python version
+./docker-hatch -v 3.9 test
 ```
 
 ## VS Code setup
