@@ -39,6 +39,7 @@ steps:
   id: lint
   args:
   - run
+  - +py=${_PYTHON_VERSION}
   - lint:all
   waitFor: ['build-hatch-image']
 

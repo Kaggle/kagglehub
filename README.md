@@ -153,6 +153,9 @@ Follow these [instructions](https://hatch.pypa.io/latest/install/) to install it
 ### Tests
 
 ```sh
+# Run all tests for current Python version.
+hatch test
+
 # Run all tests for all Python versions.
 hatch test --all
 
