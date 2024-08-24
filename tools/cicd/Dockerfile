@@ -6,6 +6,6 @@ ARG PYTHON_VERSION
 
 FROM python:${PYTHON_VERSION}
 
-RUN python -m pip install hatch==1.12.0 twine
+RUN python -m pip install hatch twine
 
 ENTRYPOINT ["hatch"]

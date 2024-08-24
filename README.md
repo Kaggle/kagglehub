@@ -202,7 +202,7 @@ hatch run lint:fmt
 ### Coverage report
 
 ```sh
-hatch test -x py=3.7 --cover
+hatch test --cover
 ```
 
 ### Build
