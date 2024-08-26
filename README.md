@@ -153,11 +153,17 @@ Follow these [instructions](https://hatch.pypa.io/latest/install/) to install it
 ### Tests
 
 ```sh
-# Run all tests
-hatch run test
+# Run all tests for current Python version.
+hatch test
+
+# Run all tests for all Python versions.
+hatch test --all
+
+# Run all tests for a specific Python version.
+hatch test -py 3.11
 
 # Run a single test file
-hatch run test tests/test_<SOME_FILE>.py
+hatch test tests/test_<SOME_FILE>.py
 ```
 
 ### Integration Tests
@@ -170,7 +176,7 @@ After setting up your credentials by any of these methods, you can run the integ
 
 ```sh
 # Run all tests
-hatch run integration-test
+hatch test integration_tests
 ```
 
 
@@ -196,7 +202,7 @@ hatch run lint:fmt
 ### Coverage report
 
 ```sh
-hatch cov
+hatch test --cover
 ```
 
 ### Build
@@ -217,6 +223,9 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 
 # Use specific Python version (Must be a valid tag from: https://hub.docker.com/_/python)
 ./docker-hatch -v 3.9 run lint:all
+
+# Run test in docker with specific Python version
+./docker-hatch -v 3.9 test
 ```
 
 ## VS Code setup
