@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import requests
 
@@ -103,7 +103,7 @@ def colab_raise_for_status(response: requests.Response, resource_handle: Optiona
         raise ColabHTTPError(message, response=response) from e
 
 
-def process_post_response(response: Dict[str, Any]) -> None:
+def process_post_response(response: dict[str, Any]) -> None:
     """
     Postprocesses the API response to check for errors.
     """

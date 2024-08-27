@@ -1,8 +1,8 @@
 import os
 import unittest
+from collections.abc import Generator
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Generator, List
 from unittest import mock
 
 from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KEY_ENV_VAR_NAME, USERNAME_ENV_VAR_NAME
@@ -15,7 +15,7 @@ def create_test_cache() -> Generator[str, None, None]:
             yield d
 
 
-def list_files_recursively(path: str) -> List[str]:
+def list_files_recursively(path: str) -> list[str]:
     """List all files recursively in the given path.
     If the path is a file, return a list containing only that file.
     If the path is a directory, list all files recursively in that directory."""
@@ -32,7 +32,7 @@ def list_files_recursively(path: str) -> List[str]:
     return sorted(files)
 
 
-def assert_files(test_case: unittest.TestCase, path: str, expected_files: List[str]) -> bool:
+def assert_files(test_case: unittest.TestCase, path: str, expected_files: list[str]) -> bool:
     """Assert that all expected files exist and are non-empty."""
     files = list_files_recursively(path)
     expected_files_sorted = sorted(expected_files)

@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from kagglehub import registry
 from kagglehub.gcs_upload import normalize_patterns, upload_files_and_directories
@@ -35,7 +35,7 @@ def model_upload(
     local_model_dir: str,
     license_name: Optional[str] = None,
     version_notes: str = "",
-    ignore_patterns: Optional[Union[List[str], str]] = None,
+    ignore_patterns: Optional[Union[list[str], str]] = None,
 ) -> None:
     """Upload model files.
 
@@ -44,7 +44,7 @@ def model_upload(
         local_model_dir: (str) path to a file in a local directory.
         license_name: (str) model license.
         version_notes: (str, optional) model versions.
-        ignore_patterns (str or List[str], optional):
+        ignore_patterns (str or list[str], optional):
             Additional ignore patterns to DEFAULT_IGNORE_PATTERNS.
             Files matching any of the patterns are not uploaded.
             Patterns are standard wildcards that can be matched by

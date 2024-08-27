@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 from urllib.parse import urljoin
 
 import requests
@@ -251,7 +251,7 @@ class KaggleJwtClient:
         self,
         request_name: str,
         data: dict,
-        timeout: Tuple[float, float] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+        timeout: tuple[float, float] = (DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
     ) -> dict:
         url = f"{self.endpoint}{KaggleJwtClient.BASE_PATH}{request_name}"
         with requests.post(

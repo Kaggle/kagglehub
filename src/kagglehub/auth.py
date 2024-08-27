@@ -1,7 +1,7 @@
 import io
 import logging
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials

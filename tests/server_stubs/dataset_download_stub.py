@@ -1,6 +1,7 @@
 import hashlib
 import os
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 from flask import Flask, Response, jsonify
 from flask.typing import ResponseReturnValue

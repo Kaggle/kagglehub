@@ -1,6 +1,5 @@
 import threading
 from dataclasses import dataclass, field
-from typing import List
 
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
@@ -12,7 +11,7 @@ app = Flask(__name__)
 
 @dataclass
 class SharedData:
-    files: List[str] = field(default_factory=list)
+    files: list[str] = field(default_factory=list)
     simulate_308: bool = False
     blob_request_count: int = 0
 

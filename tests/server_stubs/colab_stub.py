@@ -1,8 +1,9 @@
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Generator
+from typing import Any
 from unittest import mock
 
 from flask import Flask, jsonify, request

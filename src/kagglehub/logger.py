@@ -3,7 +3,7 @@ import sys
 from logging import LogRecord
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 from kagglehub.config import get_log_verbosity
 
@@ -13,7 +13,7 @@ _CONSOLE_BLOCK_KEY = "console"
 EXTRA_CONSOLE_BLOCK = {"block": _CONSOLE_BLOCK_KEY}
 
 
-def _block_logrecord_factory(elements: List[str]) -> Callable[[LogRecord], bool]:
+def _block_logrecord_factory(elements: list[str]) -> Callable[[LogRecord], bool]:
     """Filter to block log statements based on data attributes
     Args:
         elements: The value for the key 'block'. For example log.info("..", extra={"block" : "console"})
