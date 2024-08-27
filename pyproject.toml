@@ -47,10 +47,6 @@ python = ["3.9", "3.10", "3.11", "3.12"]
 [[tool.hatch.envs.all.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
 
-# TODO: remove this for lint for now
-[[tool.hatch.envs.lint.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
-
 [tool.hatch.envs.lint]
 detached = true
 dependencies = [
