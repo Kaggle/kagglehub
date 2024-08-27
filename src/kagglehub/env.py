@@ -1,13 +1,8 @@
-try:
-    # For Python 3.8 and above
-    from importlib import metadata  # type: ignore
-except ImportError:
-    # For Python 3.7 and below
-    import importlib_metadata as metadata  # type: ignore
 import functools
 import inspect
 import logging
 import os
+from importlib import metadata  # type: ignore
 from typing import Optional
 
 KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
@@ -34,7 +29,7 @@ def is_in_kaggle_notebook() -> bool:
     return False
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def read_kaggle_build_date() -> str:
     build_date_file = "/etc/build_date"
     try:

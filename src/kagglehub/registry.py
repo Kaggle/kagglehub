@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable
 
 
 class MultiImplRegistry:
@@ -11,7 +11,7 @@ class MultiImplRegistry:
 
     def __init__(self, name: str) -> None:
         self._name = name
-        self._impls: List[Callable] = []
+        self._impls: list[Callable] = []
 
     def add_implementation(self, impl: Callable) -> None:
         self._impls += [impl]

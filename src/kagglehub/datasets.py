@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from kagglehub import registry
 from kagglehub.datasets_helpers import create_dataset_or_version
@@ -32,14 +32,14 @@ def dataset_upload(
     handle: str,
     local_dataset_dir: str,
     version_notes: str = "",
-    ignore_patterns: Optional[Union[List[str], str]] = None,
+    ignore_patterns: Optional[Union[list[str], str]] = None,
 ) -> None:
     """Upload dataset files.
     Args:
         handle: (string) the dataset handle.
         local_dataset_dir: (string) path to a file in a local directory.
         version_notes: (string) Optional to write dataset versions.
-        ignore_patterns (str or List[str], optional):
+        ignore_patterns (str or list[str], optional):
             Additional ignore patterns to DEFAULT_IGNORE_PATTERNS.
             Files matching any of the patterns are not uploaded.
             Patterns are standard wildcards that can be matched by

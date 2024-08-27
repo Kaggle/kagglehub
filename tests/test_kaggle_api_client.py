@@ -1,5 +1,4 @@
 import os
-import sys
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
@@ -10,13 +9,6 @@ from tests.fixtures import BaseTestCase
 
 from .server_stubs import kaggle_api_stub as stub
 from .server_stubs import serv
-
-
-def _patch_metadata_version():  # noqa: ANN202
-    if sys.version_info >= (3, 8):
-        return patch("importlib.metadata.version")
-    else:
-        return patch("importlib_metadata.version")
 
 
 class TestKaggleApiV1Client(BaseTestCase):
@@ -94,7 +86,7 @@ class TestKaggleApiV1Client(BaseTestCase):
     def test_get_user_agent_colab(self) -> None:
         self.assertEqual(clients.get_user_agent(), "kagglehub/0.2.9 colab/release-colab-20230531-060125-RC00-unmanaged")
 
-    @_patch_metadata_version()
+    @patch("importlib.metadata.version")
     @patch("inspect.ismodule")
     @patch("inspect.stack")
     def test_get_user_agent_keras_nlp(

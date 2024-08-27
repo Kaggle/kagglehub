@@ -1,8 +1,8 @@
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Generator, Tuple
 from unittest import mock
 
 from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME
@@ -13,7 +13,7 @@ def get_test_file_path(relative_path: str) -> str:
     return os.path.join(Path(__file__).parent, "data", relative_path)
 
 
-def resolve_endpoint(var_name: str = "KAGGLE_API_ENDPOINT") -> Tuple[str, int]:
+def resolve_endpoint(var_name: str = "KAGGLE_API_ENDPOINT") -> tuple[str, int]:
     endpoint = os.environ.get(var_name, "127.0.0.1:7777")
     address, port = endpoint.replace("http://", "").split(":")
     return address, int(port)

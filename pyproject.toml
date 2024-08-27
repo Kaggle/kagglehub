@@ -24,7 +24,6 @@ dependencies = [
   "requests", 
   "tqdm",
   "packaging",
-  "importlib_metadata; python_version < '3.8'"
 ]
 
 [project.urls]
@@ -46,6 +45,10 @@ dependencies = [
 python = ["3.9", "3.10", "3.11", "3.12"]
 
 [[tool.hatch.envs.all.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
+
+# TODO: remove this for lint for now
+[[tool.hatch.envs.lint.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.lint]
@@ -78,12 +81,12 @@ all = [
 ]
 
 [tool.black]
-target-version = ["py37"]
+target-version = ["py39"]
 line-length = 120
 skip-string-normalization = true
 
 [tool.ruff]
-target-version = "py37"
+target-version = "py39"
 line-length = 120
 
 [tool.ruff.lint]
