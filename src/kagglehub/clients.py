@@ -62,24 +62,23 @@ def get_user_agent() -> str:
     Returns:
         str: user agent information.
     """
-    user_agent = f"kagglehub/{kagglehub.__version__}"
-    delimiter = " "
+    user_agents = [f"kagglehub/{kagglehub.__version__}"]
 
     for keras_lib in ("keras_nlp", "keras_cv", "keras"):
         keras_info = search_lib_in_call_stack(keras_lib)
         if keras_info is not None:
-            user_agent += f"{delimiter}{keras_info}"
+            user_agents.append(keras_info)
             break
 
     if is_in_kaggle_notebook():
         build_date = read_kaggle_build_date()
-        user_agent += f"{delimiter}kkb/{build_date}"
+        user_agents.append(f"kkb/{build_date}")
     elif is_in_colab_notebook():
         colab_tag = os.getenv("COLAB_RELEASE_TAG")
         runtime_suffix = "-managed" if os.getenv("TBE_RUNTIME_ADDR") else "-unmanaged"
-        user_agent += f"{delimiter}colab/{colab_tag}{runtime_suffix}"
+        user_agents.append(f"colab/{colab_tag}{runtime_suffix}")
 
-    return user_agent
+    return " ".join(user_agents)
 
 
 logger = logging.getLogger(__name__)
