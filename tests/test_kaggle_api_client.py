@@ -2,6 +2,7 @@ import os
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
+import kagglehub
 from kagglehub import clients
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import DataCorruptionError
@@ -9,7 +10,6 @@ from tests.fixtures import BaseTestCase
 
 from .server_stubs import kaggle_api_stub as stub
 from .server_stubs import serv
-import kagglehub
 
 
 class TestKaggleApiV1Client(BaseTestCase):
@@ -85,7 +85,10 @@ class TestKaggleApiV1Client(BaseTestCase):
         },
     )
     def test_get_user_agent_colab(self) -> None:
-        self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__} colab/release-colab-20230531-060125-RC00-unmanaged")
+        self.assertEqual(
+            clients.get_user_agent(),
+            f"kagglehub/{kagglehub.__version__} colab/release-colab-20230531-060125-RC00-unmanaged",
+        )
 
     @patch("importlib.metadata.version")
     @patch("inspect.ismodule")
