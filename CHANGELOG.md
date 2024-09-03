@@ -2,6 +2,12 @@
 
 ## Next (Unreleased)
 
+## v.0.3.0 (September 4th, 2024)
+
+* Integrate Keras metrics ([#152](https://github.com/Kaggle/kagglehub/pull/152))
+* Enhance logging messages ([#151](https://github.com/Kaggle/kagglehub/pull/151))
+* Upgrade Python version support to 3.9 and above ([#154](https://github.com/Kaggle/kagglehub/pull/154))
+
 ## v.0.2.9 (July 31st, 2024)
 
 * Improve upload by ignoring patterns ([#147](https://github.com/Kaggle/kagglehub/pull/147))
