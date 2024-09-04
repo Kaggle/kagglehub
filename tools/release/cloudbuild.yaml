@@ -68,7 +68,6 @@ steps:
   id: tests
   dir: $_GITHUB_REPOSITORY
   args:
-  - run
   - test
 
 - name: us-docker.pkg.dev/$PROJECT_ID/tools/hatch:${_PYTHON_VERSION}
