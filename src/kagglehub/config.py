@@ -150,6 +150,7 @@ def clear_kaggle_credentials() -> None:
 
 
 def get_colab_credentials() -> Optional[tuple[str, str]]:
+    # userdata access is already thread-safe after b/318732641
     try:
         from google.colab import userdata  # type: ignore[import]
         from google.colab.errors import Error as ColabError  # type: ignore[import]
