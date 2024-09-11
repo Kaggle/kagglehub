@@ -13,7 +13,7 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 import kagglehub
-from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.config import get_colab_credentials, get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME,
@@ -82,26 +82,6 @@ def get_user_agent() -> str:
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_colab_auth() -> Optional[HTTPBasicAuth]:
-    try:
-        from google.colab import userdata  # type: ignore[import]
-        from google.colab.errors import Error as ColabError  # type: ignore[import]
-    except ImportError:
-        return None
-
-    try:
-        username = userdata.get("KAGGLE_USERNAME")
-        key = userdata.get("KAGGLE_KEY")
-        return HTTPBasicAuth(username, key)
-    except userdata.NotebookAccessError:
-        logger.warning("Access to secret `KAGGLE_USERNAME` and `KAGGLE_KEY` are not granted.")
-    except userdata.SecretNotFoundError:
-        logger.warning("Access to secret `KAGGLE_USERNAME` and `KAGGLE_KEY` are not defined.")
-    except ColabError:
-        logger.warning("Error fetching secret `KAGGLE_USERNAME` and `KAGGLE_KEY`")
-    return None
 
 
 # TODO(b/307576378): When ready, use `kagglesdk` to issue requests.
@@ -203,8 +183,8 @@ class KaggleApiV1Client:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
-        elif is_in_colab_notebook() and (colab_auth := get_colab_auth()) is not None:
-            return colab_auth
+        elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
+            return HTTPBasicAuth(colab_secret[0], colab_secret[1])
         return None
 
     def _build_url(self, path: str) -> str:
@@ -332,8 +312,8 @@ class ColabClient:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
-        elif is_in_colab_notebook() and (colab_auth := get_colab_auth()) is not None:
-            return colab_auth
+        elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
+            return HTTPBasicAuth(colab_secret[0], colab_secret[1])
         return None
 
 

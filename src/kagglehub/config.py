@@ -30,6 +30,9 @@ TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 CREDENTIALS_JSON_USERNAME = "username"
 CREDENTIALS_JSON_KEY = "key"
 
+COLAB_SECRET_USERNAME = "KAGGLE_USERNAME"
+COLAB_SECRET_KEY = "KAGGLE_KEY"
+
 _kaggle_credentials = None
 
 LOG_LEVELS_MAP = {
@@ -144,3 +147,23 @@ def set_kaggle_credentials(username: str, api_key: str) -> None:
 def clear_kaggle_credentials() -> None:
     global _kaggle_credentials  # noqa: PLW0603
     _kaggle_credentials = None
+
+
+def get_colab_credentials() -> Optional[tuple[str, str]]:
+    try:
+        from google.colab import userdata  # type: ignore[import]
+        from google.colab.errors import Error as ColabError  # type: ignore[import]
+    except ImportError:
+        return None
+
+    try:
+        username = userdata.get(COLAB_SECRET_USERNAME)
+        key = userdata.get(COLAB_SECRET_KEY)
+        return (username, key)
+    except userdata.NotebookAccessError:
+        logger.warning("Access to secret %s and %s are not granted.", COLAB_SECRET_USERNAME, COLAB_SECRET_KEY)
+    except userdata.SecretNotFoundError:
+        logger.warning("Access to secret %s and %s are not defined.", COLAB_SECRET_USERNAME, COLAB_SECRET_KEY)
+    except ColabError:
+        logger.warning("Error fetching secret %s and %s", COLAB_SECRET_USERNAME, COLAB_SECRET_KEY)
+    return None
