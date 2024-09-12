@@ -47,6 +47,12 @@ Alternatively, you can set the `KAGGLE_CONFIG_DIR` environment variable to chang
 
 Note for Windows users: The default directory is `%HOMEPATH%/kaggle.json`.
 
+#### Option 4: Read credentials from Google Colab secrets
+
+Store your username and key token as Colab secrets `KAGGLE_USERNAME` and `KAGGLE_KEY`.
+
+Instructions on adding secrets in both Colab and Colab Enterprise can be found in [this article](https://www.googlecloudcommunity.com/gc/Cloud-Hub/How-do-I-add-secrets-in-Google-Colab-Enterprise/m-p/784866).
+
 ### Download Model
 
 The following examples download the `answer-equivalence-bem` variation of this Kaggle model: https://www.kaggle.com/models/google/bert/tensorFlow2/answer-equivalence-bem
