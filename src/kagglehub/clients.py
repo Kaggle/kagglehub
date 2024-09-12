@@ -184,7 +184,7 @@ class KaggleApiV1Client:
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
         elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
-            return HTTPBasicAuth(colab_secret[0], colab_secret[1])
+            return HTTPBasicAuth(colab_secret.username, colab_secret.key)
         return None
 
     def _build_url(self, path: str) -> str:
@@ -313,7 +313,7 @@ class ColabClient:
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
         elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
-            return HTTPBasicAuth(colab_secret[0], colab_secret[1])
+            return HTTPBasicAuth(colab_secret.username, colab_secret.key)
         return None
 
 

@@ -149,7 +149,11 @@ def clear_kaggle_credentials() -> None:
     _kaggle_credentials = None
 
 
-def get_colab_credentials() -> Optional[tuple[str, str]]:
+def _normalize_whitespace(s: str) -> str:
+    return s.replace("\r", "").replace("\n", "").strip()
+
+
+def get_colab_credentials() -> Optional[KaggleApiCredentials]:
     # userdata access is already thread-safe after b/318732641
     try:
         from google.colab import userdata  # type: ignore[import]
@@ -158,13 +162,10 @@ def get_colab_credentials() -> Optional[tuple[str, str]]:
         return None
 
     try:
-        username = userdata.get(COLAB_SECRET_USERNAME)
-        key = userdata.get(COLAB_SECRET_KEY)
-        return (username, key)
-    except userdata.NotebookAccessError:
-        logger.warning("Access to secret %s and %s are not granted.", COLAB_SECRET_USERNAME, COLAB_SECRET_KEY)
-    except userdata.SecretNotFoundError:
-        logger.warning("Access to secret %s and %s are not defined.", COLAB_SECRET_USERNAME, COLAB_SECRET_KEY)
+        username = _normalize_whitespace(userdata.get(COLAB_SECRET_USERNAME))
+        key = _normalize_whitespace(userdata.get(COLAB_SECRET_KEY))
+        if username and key:
+            return KaggleApiCredentials(username=username, key=key)
     except ColabError:
-        logger.warning("Error fetching secret %s and %s", COLAB_SECRET_USERNAME, COLAB_SECRET_KEY)
+        pass
     return None
