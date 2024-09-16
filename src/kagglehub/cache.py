@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Optional
 
 from kagglehub.config import get_cache_folder
-from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
+from kagglehub.handle import DatasetHandle, ModelHandle, CompetitionHandle, ResourceHandle
 
 DATASETS_CACHE_SUBFOLDER = "datasets"
+COMPETITIONS_CACHE_SUBFOLDER = "datasets"
 MODELS_CACHE_SUBFOLDER = "models"
 FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
@@ -32,6 +33,8 @@ def get_cached_path(handle: ResourceHandle, path: Optional[str] = None) -> str:
         return _get_model_path(handle, path)
     elif isinstance(handle, DatasetHandle):
         return _get_dataset_path(handle, path)
+    elif isinstance(handle, CompetitionHandle):
+        return _get_competition_path(handle, path)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
@@ -108,6 +111,10 @@ def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
     if handle.is_versioned():
         base_path = os.path.join(base_path, "versions", str(handle.version))
 
+    return os.path.join(base_path, path) if path else base_path
+
+def _get_competition_path(handle: CompetitionHandle, path: Optional[str] = None) -> str:
+    base_path = os.path.join(get_cache_folder(), COMPETITIONS_CACHE_SUBFOLDER, handle.competition)
     return os.path.join(base_path, path) if path else base_path
 
 

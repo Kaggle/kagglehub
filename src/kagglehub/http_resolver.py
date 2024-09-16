@@ -14,7 +14,7 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
+from kagglehub.handle import DatasetHandle, ModelHandle, CompetitionHandle, ResourceHandle
 from kagglehub.resolver import Resolver
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
@@ -24,6 +24,48 @@ MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
 
 logger = logging.getLogger(__name__)
 
+
+class CompetitionHttpResolver(Resolver[CompetitionHandle]):
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
+        # Downloading files over HTTP is supported in all environments for all handles / paths.
+        return True
+
+    def __call__(self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+        api_client = KaggleApiV1Client()
+
+        dataset_path = load_from_cache(h, path)
+        if dataset_path and not force_download:
+            return dataset_path  # Already cached
+        elif dataset_path and force_download:
+            delete_from_cache(h, path)
+
+        url_path = _build_competition_download_url_path(h)
+        out_path = get_cached_path(h, path)
+
+        # Create the intermediary directories
+        if path:
+            # Downloading a single file.
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            api_client.download_file(url_path + "&file_name=" + path, out_path, h)
+        else:
+            # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
+            # Downloading the full archived bundle.
+            archive_path = get_cached_archive_path(h)
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+            # First, we download the archive.
+            api_client.download_file(url_path, archive_path, h)
+
+            # Create the directory to extract the archive to.
+            os.makedirs(out_path, exist_ok=True)
+
+            _extract_archive(archive_path, out_path)
+
+            # Delete the archive
+            os.remove(archive_path)
+
+        mark_as_complete(h, path)
+        return out_path
 
 class DatasetHttpResolver(Resolver[DatasetHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
@@ -69,6 +111,77 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
         mark_as_complete(h, path)
         return out_path
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
@@ -203,3 +316,7 @@ def _build_get_dataset_url_path(h: DatasetHandle) -> str:
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
     return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+
+
+def _build_competition_download_url_path(h: CompetitionHandle) -> str:
+    return f"/competitions/data/download/{h.competition}"

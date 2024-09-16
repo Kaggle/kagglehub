@@ -5,6 +5,7 @@ from kagglehub import colab_cache_resolver, http_resolver, kaggle_cache_resolver
 from kagglehub.auth import login, whoami
 from kagglehub.datasets import dataset_download, dataset_upload
 from kagglehub.models import model_download, model_upload
+from kagglehub.competition import competition_download
 
 registry.model_resolver.add_implementation(http_resolver.ModelHttpResolver())
 registry.model_resolver.add_implementation(kaggle_cache_resolver.ModelKaggleCacheResolver())
@@ -12,3 +13,5 @@ registry.model_resolver.add_implementation(colab_cache_resolver.ModelColabCacheR
 
 registry.dataset_resolver.add_implementation(http_resolver.DatasetHttpResolver())
 registry.dataset_resolver.add_implementation(kaggle_cache_resolver.DatasetKaggleCacheResolver())
+
+registry.competition_resolver.add_implementation(http_resolver.CompetitionHttpResolver())
