@@ -20,4 +20,4 @@ def competition_download(handle: str, path: Optional[str] = None, *, force_downl
 
     h = parse_dataset_handle(handle)
     logger.info(f"Downloading competition: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    return registry.dataset_resolver(h, path, force_download=force_download)
+    return registry.competition_resolver(h, path, force_download=force_download)
