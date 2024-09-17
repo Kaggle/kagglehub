@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from kagglehub import registry
-from kagglehub.handle import parse_dataset_handle
+from kagglehub.handle import parse_competition_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 
 logger = logging.getLogger(__name__)
@@ -18,6 +18,6 @@ def competition_download(handle: str, path: Optional[str] = None, *, force_downl
         A string requesting the path to the requested competition files.
     """
 
-    h = parse_dataset_handle(handle)
+    h = parse_competition_handle(handle)
     logger.info(f"Downloading competition: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
     return registry.competition_resolver(h, path, force_download=force_download)
