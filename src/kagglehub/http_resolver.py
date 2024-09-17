@@ -248,7 +248,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
 
 def _extract_archive(archive_path: str, out_path: str) -> None:
-    logger.info("Extracting model files...")
+    logger.info("Extracting files...")
     if tarfile.is_tarfile(archive_path):
         with tarfile.open(archive_path) as f:
             f.extractall(out_path)
@@ -319,4 +319,4 @@ def _build_dataset_download_url_path(h: DatasetHandle) -> str:
 
 
 def _build_competition_download_url_path(h: CompetitionHandle) -> str:
-    return f"/competitions/data/download/{h.competition}"
+    return f"competitions/data/download-all/{h.competition}"

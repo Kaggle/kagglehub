@@ -149,7 +149,7 @@ def parse_competition_handle(handle: str) -> DatasetHandle:
     parts = handle.split("/")
 
     if len(parts) == 1:
-        return CompetitionHandle(competition=parts[0])
+        return CompetitionHandle(owner="", competition=parts[0])
 
     msg = f"Invalid competition handle: {handle}"
     raise ValueError(msg)
