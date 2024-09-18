@@ -69,6 +69,7 @@ class DatasetHandle(ResourceHandle):
             return f"{base_url}/versions/{self.version}"
         return base_url
 
+
 @dataclass
 class CompetitionHandle(ResourceHandle):
     competition: str
@@ -144,6 +145,7 @@ def parse_model_handle(handle: str) -> ModelHandle:
 
     msg = f"Invalid model handle: {handle}"
     raise ValueError(msg)
+
 
 def parse_competition_handle(handle: str) -> CompetitionHandle:
     parts = handle.split("/")

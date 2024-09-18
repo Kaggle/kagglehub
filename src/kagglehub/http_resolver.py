@@ -14,7 +14,7 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.handle import DatasetHandle, ModelHandle, CompetitionHandle, ResourceHandle
+from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, ResourceHandle
 from kagglehub.resolver import Resolver
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
@@ -30,7 +30,9 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
-    def __call__(self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def __call__(
+        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> str:
         api_client = KaggleApiV1Client()
 
         cached_path = load_from_cache(h, path)
@@ -244,6 +246,7 @@ def _build_dataset_download_url_path(h: DatasetHandle) -> str:
 
 def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
     return f"competitions/data/download-all/{h.competition}"
+
 
 def _build_competition_download_file_path(h: CompetitionHandle, file: str) -> str:
     return f"competitions/data/download/{h.competition}/{file}"

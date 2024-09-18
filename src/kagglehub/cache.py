@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from kagglehub.config import get_cache_folder
-from kagglehub.handle import DatasetHandle, ModelHandle, CompetitionHandle, ResourceHandle
+from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, ResourceHandle
 
 DATASETS_CACHE_SUBFOLDER = "datasets"
 COMPETITIONS_CACHE_SUBFOLDER = "competitions"
@@ -117,6 +117,7 @@ def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
 
     return os.path.join(base_path, path) if path else base_path
 
+
 def _get_competition_path(handle: CompetitionHandle, path: Optional[str] = None) -> str:
     base_path = os.path.join(get_cache_folder(), COMPETITIONS_CACHE_SUBFOLDER, handle.competition)
     return os.path.join(base_path, path) if path else base_path
@@ -157,12 +158,14 @@ def _get_dataset_archive_path(handle: DatasetHandle) -> str:
         f"{handle.version!s}.archive",
     )
 
+
 def _get_competition_archive_path(handle: CompetitionHandle) -> str:
     return os.path.join(
         get_cache_folder(),
         COMPETITIONS_CACHE_SUBFOLDER,
         f"{handle.competition}.archive",
     )
+
 
 def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None) -> str:
     if path:
@@ -208,6 +211,7 @@ def _get_datasets_completion_marker_filepath(handle: DatasetHandle, path: Option
         handle.dataset,
         f"{handle.version!s}.complete",
     )
+
 
 def _get_competitions_completion_marker_filepath(handle: CompetitionHandle, path: Optional[str] = None) -> str:
     if path:
