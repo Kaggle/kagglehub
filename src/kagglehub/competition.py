@@ -12,8 +12,8 @@ def competition_download(handle: str, path: Optional[str] = None, *, force_downl
     """Download competition files
     Args:
         handle: (string) the competition name
-        path: (string) Optional path to a file within a competition
-        force_download: (bool) Optional flag to force download a competition, even if it's cached
+        path: (string) Optional path to a file within a competition dataset
+        force_download: (bool) Optional flag to force download a competition dataset, even if it's cached
     Returns:
         A string requesting the path to the requested competition files.
     """

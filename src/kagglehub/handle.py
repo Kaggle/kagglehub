@@ -145,7 +145,7 @@ def parse_model_handle(handle: str) -> ModelHandle:
     msg = f"Invalid model handle: {handle}"
     raise ValueError(msg)
 
-def parse_competition_handle(handle: str) -> DatasetHandle:
+def parse_competition_handle(handle: str) -> CompetitionHandle:
     parts = handle.split("/")
 
     if len(parts) == 1:
