@@ -13,7 +13,7 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 import kagglehub
-from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.config import get_colab_credentials, get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME,
@@ -183,6 +183,8 @@ class KaggleApiV1Client:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
+        elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
+            return HTTPBasicAuth(colab_secret.username, colab_secret.key)
         return None
 
     def _build_url(self, path: str) -> str:
@@ -294,7 +296,7 @@ class ColabClient:
         with requests.post(
             url,
             data=json.dumps(data),
-            auth=self._get_http_basic_auth(),
+            auth=self._get_auth(),
             headers=self.headers,
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
@@ -305,11 +307,13 @@ class ColabClient:
                 return response.json()
         return None
 
-    def _get_http_basic_auth(self) -> Optional[requests.auth.AuthBase]:
+    def _get_auth(self) -> Optional[requests.auth.AuthBase]:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
+        elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
+            return HTTPBasicAuth(colab_secret.username, colab_secret.key)
         return None
 
 

@@ -30,6 +30,9 @@ TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 CREDENTIALS_JSON_USERNAME = "username"
 CREDENTIALS_JSON_KEY = "key"
 
+COLAB_SECRET_USERNAME = "KAGGLE_USERNAME"
+COLAB_SECRET_KEY = "KAGGLE_KEY"
+
 _kaggle_credentials = None
 
 LOG_LEVELS_MAP = {
@@ -144,3 +147,25 @@ def set_kaggle_credentials(username: str, api_key: str) -> None:
 def clear_kaggle_credentials() -> None:
     global _kaggle_credentials  # noqa: PLW0603
     _kaggle_credentials = None
+
+
+def _normalize_whitespace(s: str) -> str:
+    return s.replace("\r", "").replace("\n", "").strip()
+
+
+def get_colab_credentials() -> Optional[KaggleApiCredentials]:
+    # userdata access is already thread-safe after b/318732641
+    try:
+        from google.colab import userdata  # type: ignore[import]
+        from google.colab.errors import Error as ColabError  # type: ignore[import]
+    except ImportError:
+        return None
+
+    try:
+        username = _normalize_whitespace(userdata.get(COLAB_SECRET_USERNAME))
+        key = _normalize_whitespace(userdata.get(COLAB_SECRET_KEY))
+        if username and key:
+            return KaggleApiCredentials(username=username, key=key)
+    except ColabError:
+        pass
+    return None
