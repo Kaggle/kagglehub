@@ -1,4 +1,4 @@
-from kagglehub.handle import parse_dataset_handle, parse_model_handle
+from kagglehub.handle import parse_competition_handle, parse_dataset_handle, parse_model_handle
 from tests.fixtures import BaseTestCase
 
 
@@ -57,3 +57,15 @@ class TestHandle(BaseTestCase):
         self.assertEqual(2, h.version)
         self.assertTrue(h.is_versioned())
         self.assertEqual(handle, str(h))
+
+    def test_invalid_competition_handle(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_competition_handle("owner/slug/does/not/needed/only/competition/slug")
+
+    def test_competition_handle(self) -> None:
+        handle = "titanic"
+
+        h = parse_competition_handle(handle)
+
+        self.assertEqual("", h.owner)
+        self.assertEqual("titanic", h.competition)

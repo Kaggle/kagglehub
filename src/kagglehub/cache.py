@@ -8,6 +8,7 @@ from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, Reso
 
 DATASETS_CACHE_SUBFOLDER = "datasets"
 COMPETITIONS_CACHE_SUBFOLDER = "competitions"
+COMPETITIONS_INDIVIDUAL_FILE_MARKER_FOLDER = ".competition-indivial-file-markers"
 MODELS_CACHE_SUBFOLDER = "models"
 FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
@@ -218,8 +219,8 @@ def _get_competitions_completion_marker_filepath(handle: CompetitionHandle, path
         return os.path.join(
             get_cache_folder(),
             COMPETITIONS_CACHE_SUBFOLDER,
-            handle.competition,
-            FILE_COMPLETION_MARKER_FOLDER,
+            COMPETITIONS_INDIVIDUAL_FILE_MARKER_FOLDER,
+            f"{handle.competition}",
             f"{path}.complete",
         )
 
