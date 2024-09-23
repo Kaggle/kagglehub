@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def competition_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
-    """Download competition files
+    """Download competition dataset
     Args:
         handle: (string) the competition name
         path: (string) Optional path to a file within a competition dataset
