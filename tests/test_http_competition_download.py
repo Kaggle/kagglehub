@@ -28,6 +28,8 @@ class TestHttpCompetitionDownload(BaseTestCase):
     @classmethod
     def setUpClass(cls):
         cls.server = serv.start_server(stub.app)
+        os.environ["KAGGLE_USERNAME"] = "fakeUser"
+        os.environ["KAGGLE_KEY"] = "fakeKaggleKey"
 
     @classmethod
     def tearDownClass(cls):

@@ -15,8 +15,6 @@ NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
 @dataclass
 class ResourceHandle:
-    owner: str
-
     @abc.abstractmethod
     def to_url(self) -> str:
         """Returns URL to the resource detail page."""
@@ -25,6 +23,7 @@ class ResourceHandle:
 
 @dataclass
 class ModelHandle(ResourceHandle):
+    owner: str
     model: str
     framework: str
     variation: str
@@ -75,7 +74,7 @@ class CompetitionHandle(ResourceHandle):
     competition: str
 
     def __str__(self) -> str:
-        handle_str = f"competitions/{self.competition}"
+        handle_str = f"{self.competition}"
         return handle_str
 
     def to_url(self) -> str:
@@ -148,10 +147,8 @@ def parse_model_handle(handle: str) -> ModelHandle:
 
 
 def parse_competition_handle(handle: str) -> CompetitionHandle:
-    parts = handle.split("/")
+    if "/" in handle:
+        msg = f"Invalid competition handle: {handle}"
+        raise ValueError(msg)
 
-    if len(parts) == 1:
-        return CompetitionHandle(owner="", competition=parts[0])
-
-    msg = f"Invalid competition handle: {handle}"
-    raise ValueError(msg)
+    return CompetitionHandle(competition=handle)

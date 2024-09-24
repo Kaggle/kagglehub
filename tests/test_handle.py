@@ -67,5 +67,4 @@ class TestHandle(BaseTestCase):
 
         h = parse_competition_handle(handle)
 
-        self.assertEqual("", h.owner)
         self.assertEqual("titanic", h.competition)
