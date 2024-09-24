@@ -35,7 +35,6 @@ class TestKaggleApiV1Client(BaseTestCase):
         with TemporaryDirectory() as d:
             out_file = os.path.join(d, "out")
 
-            # If the out_file already has data, we use the 'Range' header to resume download.
             with open(out_file, "w") as f:
                 f.write("fo")  # Should download the remaining "o".
 
