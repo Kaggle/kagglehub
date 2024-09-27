@@ -64,7 +64,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                     return cached_path
                 raise
 
-            if not download_needed:
+            if not download_needed and cached_path:
                 return cached_path
         else:
             # Download, extract, then delete the archive.
@@ -81,7 +81,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                     return cached_path
                 raise
 
-            if not download_needed:
+            if not download_needed and cached_path:
                 if os.path.exists(archive_path):
                     os.remove(archive_path)
                 return cached_path
