@@ -4,6 +4,7 @@ import tarfile
 import zipfile
 from typing import Optional
 
+import requests
 from tqdm.contrib.concurrent import thread_map
 
 from kagglehub.auth import whoami
@@ -15,6 +16,7 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.clients import KaggleApiV1Client
+from kagglehub.exceptions import UnauthenticatedError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, ResourceHandle
 from kagglehub.resolver import Resolver
 
@@ -34,31 +36,55 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
     def __call__(
         self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
     ) -> str:
-        # competition does not alllow for anonymous download
-        _ = whoami()
-
         api_client = KaggleApiV1Client()
 
         cached_path = load_from_cache(h, path)
-        if cached_path and not force_download:
-            return cached_path
-        elif cached_path and force_download:
+        if cached_path and force_download:
             delete_from_cache(h, path)
+            cached_path = None
+
+        try:
+            # Competition does not alllow for anonymous downloads.
+            _ = whoami()
+        except UnauthenticatedError:
+            if cached_path:
+                return cached_path
+            raise
 
         out_path = get_cached_path(h, path)
-
         if path:
-            # Downloading a single file.
-            url_path = _build_competition_download_file_path(h, path)
+            # For single file downloads.
+            url_path = _build_competition_download_file_url_path(h, path)
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path, out_path, h)
+
+            try:
+                download_needed = api_client.download_file(url_path, out_path, h, cached_path)
+            except requests.exceptions.ConnectionError:
+                if cached_path:
+                    return cached_path
+                raise
+
+            if not download_needed:
+                return cached_path
         else:
-            # Download, extract, then delete the archive
+            # Download, extract, then delete the archive.
             url_path = _build_competition_download_all_url_path(h)
             archive_path = get_cached_archive_path(h)
             os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
-            api_client.download_file(url_path, archive_path, h)
+            try:
+                download_needed = api_client.download_file(url_path, archive_path, h, cached_path)
+            except requests.exceptions.ConnectionError:
+                if cached_path:
+                    if os.path.exists(archive_path):
+                        os.remove(archive_path)
+                    return cached_path
+                raise
+
+            if not download_needed:
+                if os.path.exists(archive_path):
+                    os.remove(archive_path)
+                return cached_path
 
             os.makedirs(out_path, exist_ok=True)
             _extract_archive(archive_path, out_path)
@@ -252,5 +278,5 @@ def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
     return f"competitions/data/download-all/{h.competition}"
 
 
-def _build_competition_download_file_path(h: CompetitionHandle, file: str) -> str:
+def _build_competition_download_file_url_path(h: CompetitionHandle, file: str) -> str:
     return f"competitions/data/download/{h.competition}/{file}"

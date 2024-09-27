@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 import requests
 
-from kagglehub.handle import ResourceHandle
+from kagglehub.handle import CompetitionHandle, ResourceHandle
 
 
 class CredentialError(Exception):
@@ -59,15 +59,24 @@ def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Op
     except requests.HTTPError as e:
         message = str(e)
         resource_url = resource_handle.to_url() if resource_handle else response.url
-
         if response.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
-            message = (
-                f"{response.status_code} Client Error."
-                "\n\n"
-                f"You don't have permission to access resource at URL: {resource_url}"
-                "\nPlease make sure you are authenticated if you are trying to access a private resource or a resource"
-                " requiring consent."
-            )
+            if isinstance(resource_handle, CompetitionHandle):
+                message = (
+                    f"{response.status_code} Client Error."
+                    "\n\n"
+                    f"You don't have permission to access resource at URL: {resource_url}"
+                    "\nPlease make sure you are authenticated and have accepted the competition rules which"
+                    f" can be found using this at: {resource_url}/rules"
+                )
+            else:
+                message = (
+                    f"{response.status_code} Client Error."
+                    "\n\n"
+                    f"You don't have permission to access resource at URL: {resource_url}"
+                    "\nPlease make sure you are authenticated if you are trying to access a"
+                    " private resource or a resource requiring consent."
+                )
+
         if response.status_code == HTTPStatus.NOT_FOUND:
             message = (
                 f"{response.status_code} Client Error."

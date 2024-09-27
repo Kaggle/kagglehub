@@ -11,10 +11,12 @@ from tests.utils import get_test_file_path
 
 app = Flask(__name__)
 
-TARGZ_ARCHIVE_HANDLE = "king-of the-targz"
+TARGZ_ARCHIVE_HANDLE = "competition-targz"
 
 # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
 GCS_HASH_HEADER = "x-goog-hash"
+LAST_MODIFIED = "Last-Modified"
+LAST_MODIFIED_DATE = "Thu, 02 Mar 2020 02:17:12 GMT"
 
 
 @app.route("/", methods=["HEAD"])
@@ -39,6 +41,7 @@ def competition_download(competition_slug: str) -> ResponseReturnValue:
         file_hash.update(content)
         resp = Response()
         resp.headers[GCS_HASH_HEADER] = f"md5={to_b64_digest(file_hash)}"
+        resp.headers[LAST_MODIFIED] = LAST_MODIFIED_DATE
         resp.content_type = content_type
         resp.content_length = os.path.getsize(test_file_path)
         resp.data = content
@@ -65,7 +68,11 @@ def competition_download_file(competition_slug: str, file_name: str) -> Response
         return (
             Response(
                 generate_file_content(),
-                headers={GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}", "Content-Length": str(len(content))},
+                headers={
+                    GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}",
+                    "Content-Length": str(len(content)),
+                    LAST_MODIFIED: LAST_MODIFIED_DATE,
+                },
             ),
             200,
         )
