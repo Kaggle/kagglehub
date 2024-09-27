@@ -30,3 +30,4 @@ class MultiImplRegistry:
 
 model_resolver = MultiImplRegistry("ModelResolver")
 dataset_resolver = MultiImplRegistry("DatasetResolver")
+competition_resolver = MultiImplRegistry("CompetitionResolver")

@@ -4,8 +4,10 @@ import tarfile
 import zipfile
 from typing import Optional
 
+import requests
 from tqdm.contrib.concurrent import thread_map
 
+from kagglehub.auth import whoami
 from kagglehub.cache import (
     delete_from_cache,
     get_cached_archive_path,
@@ -14,7 +16,8 @@ from kagglehub.cache import (
     mark_as_complete,
 )
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.handle import DatasetHandle, ModelHandle, ResourceHandle
+from kagglehub.exceptions import UnauthenticatedError
+from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, ResourceHandle
 from kagglehub.resolver import Resolver
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
@@ -23,6 +26,72 @@ MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
 
 logger = logging.getLogger(__name__)
+
+
+class CompetitionHttpResolver(Resolver[CompetitionHandle]):
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
+        # Downloading files over HTTP is supported in all environments for all handles / paths.
+        return True
+
+    def __call__(
+        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> str:
+        api_client = KaggleApiV1Client()
+
+        cached_path = load_from_cache(h, path)
+        if cached_path and force_download:
+            delete_from_cache(h, path)
+            cached_path = None
+
+        try:
+            # Competition does not alllow for anonymous downloads.
+            _ = whoami()
+        except UnauthenticatedError:
+            if cached_path:
+                return cached_path
+            raise
+
+        out_path = get_cached_path(h, path)
+        if path:
+            # For single file downloads.
+            url_path = _build_competition_download_file_url_path(h, path)
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+            try:
+                download_needed = api_client.download_file(url_path, out_path, h, cached_path)
+            except requests.exceptions.ConnectionError:
+                if cached_path:
+                    return cached_path
+                raise
+
+            if not download_needed and cached_path:
+                return cached_path
+        else:
+            # Download, extract, then delete the archive.
+            url_path = _build_competition_download_all_url_path(h)
+            archive_path = get_cached_archive_path(h)
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+            try:
+                download_needed = api_client.download_file(url_path, archive_path, h, cached_path)
+            except requests.exceptions.ConnectionError:
+                if cached_path:
+                    if os.path.exists(archive_path):
+                        os.remove(archive_path)
+                    return cached_path
+                raise
+
+            if not download_needed and cached_path:
+                if os.path.exists(archive_path):
+                    os.remove(archive_path)
+                return cached_path
+
+            os.makedirs(out_path, exist_ok=True)
+            _extract_archive(archive_path, out_path)
+            os.remove(archive_path)
+
+        mark_as_complete(h, path)
+        return out_path
 
 
 class DatasetHttpResolver(Resolver[DatasetHandle]):
@@ -135,7 +204,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
 
 def _extract_archive(archive_path: str, out_path: str) -> None:
-    logger.info("Extracting model files...")
+    logger.info("Extracting files...")
     if tarfile.is_tarfile(archive_path):
         with tarfile.open(archive_path) as f:
             f.extractall(out_path)
@@ -203,3 +272,11 @@ def _build_get_dataset_url_path(h: DatasetHandle) -> str:
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
     return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+
+
+def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
+    return f"competitions/data/download-all/{h.competition}"
+
+
+def _build_competition_download_file_url_path(h: CompetitionHandle, file: str) -> str:
+    return f"competitions/data/download/{h.competition}/{file}"

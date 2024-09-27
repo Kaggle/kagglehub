@@ -12,13 +12,9 @@ NUM_UNVERSIONED_DATASET_PARTS = 2  # e.g.: <owner>/<dataset>
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
-# TODO(b/313706281): Implement a DatasetHandle class & parse_dataset_handle method.
-
 
 @dataclass
 class ResourceHandle:
-    owner: str
-
     @abc.abstractmethod
     def to_url(self) -> str:
         """Returns URL to the resource detail page."""
@@ -27,6 +23,7 @@ class ResourceHandle:
 
 @dataclass
 class ModelHandle(ResourceHandle):
+    owner: str
     model: str
     framework: str
     variation: str
@@ -69,6 +66,20 @@ class DatasetHandle(ResourceHandle):
         base_url = f"{endpoint}/datasets/{self.owner}/{self.dataset}"
         if self.is_versioned():
             return f"{base_url}/versions/{self.version}"
+        return base_url
+
+
+@dataclass
+class CompetitionHandle(ResourceHandle):
+    competition: str
+
+    def __str__(self) -> str:
+        handle_str = f"{self.competition}"
+        return handle_str
+
+    def to_url(self) -> str:
+        endpoint = get_kaggle_api_endpoint()
+        base_url = f"{endpoint}/competitions/{self.competition}"
         return base_url
 
 
@@ -133,3 +144,11 @@ def parse_model_handle(handle: str) -> ModelHandle:
 
     msg = f"Invalid model handle: {handle}"
     raise ValueError(msg)
+
+
+def parse_competition_handle(handle: str) -> CompetitionHandle:
+    if "/" in handle:
+        msg = f"Invalid competition handle: {handle}"
+        raise ValueError(msg)
+
+    return CompetitionHandle(competition=handle)

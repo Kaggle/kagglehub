@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urljoin
@@ -13,6 +14,7 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 import kagglehub
+from kagglehub.cache import delete_from_cache, get_cached_archive_path
 from kagglehub.config import get_colab_credentials, get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
@@ -33,7 +35,7 @@ from kagglehub.exceptions import (
     kaggle_api_raise_for_status,
     process_post_response,
 )
-from kagglehub.handle import ResourceHandle
+from kagglehub.handle import CompetitionHandle, ResourceHandle
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
 
 CHUNK_SIZE = 1048576
@@ -130,7 +132,20 @@ class KaggleApiV1Client:
             self._check_for_version_update(response)
             return response_dict
 
-    def download_file(self, path: str, out_file: str, resource_handle: Optional[ResourceHandle] = None) -> None:
+    def download_file(
+        self,
+        path: str,
+        out_file: str,
+        resource_handle: Optional[ResourceHandle] = None,
+        cached_path: Optional[str] = None,
+    ) -> bool:
+        """
+        Issues a call to kaggle api and downloads files. For competition downloads,
+        call may return early if local cache is newer than the last time the file was modified.
+
+        Returns:
+        bool:  If downloading remote was necessary
+        """
         url = self._build_url(path)
         with requests.get(
             url,
@@ -143,6 +158,11 @@ class KaggleApiV1Client:
             total_size = int(response.headers["Content-Length"])
             size_read = 0
 
+            if isinstance(resource_handle, CompetitionHandle) and not _download_needed(
+                response, resource_handle, cached_path
+            ):
+                return False
+
             expected_md5_hash = get_md5_checksum_from_response(response)
             hash_object = hashlib.md5() if expected_md5_hash else None
 
@@ -152,7 +172,7 @@ class KaggleApiV1Client:
 
                 if size_read == total_size:
                     logger.info(f"Download already complete ({size_read} bytes).")
-                    return
+                    return True
 
                 logger.info(f"Resuming download from {size_read} bytes ({total_size - size_read} bytes left)...")
 
@@ -177,6 +197,8 @@ class KaggleApiV1Client:
                     raise DataCorruptionError(
                         _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(expected_md5_hash, actual_md5_hash)
                     )
+
+            return True
 
     def _get_auth(self) -> Optional[requests.auth.AuthBase]:
         if self.credentials:
@@ -211,6 +233,52 @@ def _download_file(
                     hash_object.update(chunk)
                 size_read = min(total_size, size_read + CHUNK_SIZE)
                 progress_bar.update(len(chunk))
+
+
+def _download_needed(response: requests.Response, h: ResourceHandle, cached_path: Optional[str] = None) -> bool:
+    """
+    Determine if a download is needed based on timestamp and cached path.
+
+    Returns:
+        bool: download needed.
+    """
+    if not cached_path:
+        return True
+
+    last_modified = response.headers.get("Last-Modified")
+    if last_modified is None:
+        delete_from_cache(h, cached_path)
+
+        archive_path = get_cached_archive_path(h)
+        os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+        return True
+    else:
+        remote_date = datetime.strptime(response.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S %Z").replace(
+            tzinfo=timezone.utc
+        )
+
+    file_exists = os.path.exists(cached_path)
+    if file_exists:
+        local_date = datetime.fromtimestamp(os.path.getmtime(cached_path), tz=timezone.utc)
+
+        download_needed = remote_date >= local_date
+        if download_needed:
+            delete_from_cache(h, cached_path)
+
+            archive_path = get_cached_archive_path(h)
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+            return True
+
+        return False
+
+    delete_from_cache(h, cached_path)
+
+    archive_path = get_cached_archive_path(h)
+    os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+    return True
 
 
 # These environment variables are set by the Kaggle notebook environment.
