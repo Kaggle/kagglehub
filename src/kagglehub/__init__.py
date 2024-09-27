@@ -15,3 +15,4 @@ registry.dataset_resolver.add_implementation(http_resolver.DatasetHttpResolver()
 registry.dataset_resolver.add_implementation(kaggle_cache_resolver.DatasetKaggleCacheResolver())
 
 registry.competition_resolver.add_implementation(http_resolver.CompetitionHttpResolver())
+registry.competition_resolver.add_implementation(kaggle_cache_resolver.CompetitionKaggleCacheResolver())
