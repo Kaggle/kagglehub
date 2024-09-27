@@ -11,7 +11,7 @@ from tests.fixtures import BaseTestCase
 from .server_stubs import jwt_stub as stub
 from .server_stubs import serv
 
-INVALID_ARCHIVE_COMPETITION_HANDLE = "invalid/invalid/invalid/invalid/invalid"
+INVALID_ARCHIVE_COMPETITION_HANDLE = "invalid/invalid"
 COMPETITION_HANDLE = "squid-game"
 TEST_FILEPATH = "foo.txt"
 
