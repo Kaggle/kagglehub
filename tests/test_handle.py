@@ -60,7 +60,7 @@ class TestHandle(BaseTestCase):
 
     def test_invalid_competition_handle(self) -> None:
         with self.assertRaises(ValueError):
-            parse_competition_handle("owner/slug/does/not/needed/only/competition/slug")
+            parse_competition_handle("ownerSlugNotNeeded/onlyCompetitionSlug")
 
     def test_competition_handle(self) -> None:
         handle = "titanic"

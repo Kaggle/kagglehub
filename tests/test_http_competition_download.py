@@ -15,7 +15,6 @@ from .utils import create_test_cache
 
 INVALID_ARCHIVE_COMPETITION_HANDLE = "invalid/invalid"
 COMPETITION_HANDLE = "titanic"
-COMPETITION_2_HANDLE = "titanic"
 TEST_FILEPATH = "foo.txt"
 TEST_CONTENTS = "foo"
 

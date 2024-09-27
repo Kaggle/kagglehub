@@ -66,7 +66,7 @@ def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Op
                     "\n\n"
                     f"You don't have permission to access resource at URL: {resource_url}"
                     "\nPlease make sure you are authenticated and have accepted the competition rules which"
-                    f" can be found using this at: {resource_url}/rules"
+                    f" can be found at this location: {resource_url}/rules"
                 )
             else:
                 message = (
