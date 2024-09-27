@@ -200,7 +200,6 @@ class KaggleApiV1Client:
 
             return True
 
-
     def _get_auth(self) -> Optional[requests.auth.AuthBase]:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
