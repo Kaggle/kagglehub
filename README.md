@@ -148,6 +148,24 @@ kagglehub.dataset_upload(handle, local_dataset_dir, version_notes='improved data
 kagglehub.dataset_upload(handle, local_dataset_dir, ignore_patterns=["original/", "*.tmp"])
 ```
 
+### Download Competition
+
+The following examples download the `Digit Recognizer` Kaggle competition: https://www.kaggle.com/competitions/digit-recognizer
+
+```python
+import kagglehub
+
+# Download the latest version.
+kagglehub.competition_download('digit-recognizer')
+
+# Download a single file
+kagglehub.competition_download('digit-recognizer', path='train.csv')
+
+# Download a competition or file, even if previously downloaded to cache. 
+# Only available outside Kaggle notebooks.
+kagglehub.competition_download('digit-recognizer', force_download=True)
+```
+
 ## Development
 
 ### Prequisites
