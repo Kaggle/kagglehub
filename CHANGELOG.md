@@ -2,6 +2,12 @@
 
 ## Next (Unreleased)
 
+## v.0.3.1 (October 1st, 2024)
+
+* Attach competition in Kaggle notebook environment ([#161](https://github.com/Kaggle/kagglehub/pull/161))
+* Download competition using `kagglehub.competition_download(...)` ([#158](https://github.com/Kaggle/kagglehub/pull/158))
+* Enable authorization via Colab secrets ([#157](https://github.com/Kaggle/kagglehub/pull/157))
+
 ## v.0.3.0 (September 4th, 2024)
 
 * Integrate Keras metrics ([#152](https://github.com/Kaggle/kagglehub/pull/152))
