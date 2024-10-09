@@ -4,7 +4,7 @@ from requests import HTTPError
 
 from kagglehub import dataset_download
 
-from .utils import assert_files, create_test_cache
+from .utils import assert_files, create_test_cache, unauthenticated
 
 HANDLE = "ryanholbrook/dl-course-data/versions/5"
 
@@ -74,3 +74,25 @@ class TestDatasetDownload(unittest.TestCase):
         incorrect_path = "nonexistent/file/path"
         with self.assertRaises(HTTPError):
             dataset_download(HANDLE, path=incorrect_path)
+
+    def test_public_dataset_with_unauthenticated_succeeds(self) -> None:
+        with create_test_cache():
+            with unauthenticated():
+                actual_path = dataset_download(HANDLE)
+
+                expected_files = [
+                    "abalone.csv",
+                    "candy.csv",
+                    "cereal.csv",
+                    "concrete.csv",
+                    "diamonds.csv",
+                    "forestfires.csv",
+                    "fuel.csv",
+                    "hotel.csv",
+                    "housing.csv",
+                    "ion.csv",
+                    "red-wine.csv",
+                    "songs.csv",
+                    "spotify.csv",
+                ]
+                assert_files(self, actual_path, expected_files)
