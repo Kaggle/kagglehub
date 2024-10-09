@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from kagglehub.env import is_in_colab_notebook
+
 DEFAULT_CACHE_FOLDER = os.path.join(Path.home(), ".cache", "kagglehub")
 DEFAULT_KAGGLE_API_ENDPOINT = "https://www.kaggle.com"
 DEFAULT_KAGGLE_CREDENTIALS_FOLDER = os.path.join(Path.home(), ".kaggle")
@@ -93,6 +95,8 @@ def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
             return KaggleApiCredentials(
                 username=creds_dict[CREDENTIALS_JSON_USERNAME], key=creds_dict[CREDENTIALS_JSON_KEY]
             )
+    if is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
+        return KaggleApiCredentials(username=colab_secret.username, key=colab_secret.key)
 
     return None
 
