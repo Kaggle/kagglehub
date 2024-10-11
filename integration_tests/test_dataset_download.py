@@ -6,6 +6,7 @@ from kagglehub import dataset_download
 
 from .utils import assert_files, create_test_cache, unauthenticated
 
+UNVERSIONED_HANDLE = "ryanholbrook/dl-course-data"
 HANDLE = "ryanholbrook/dl-course-data/versions/5"
 
 
@@ -33,8 +34,7 @@ class TestDatasetDownload(unittest.TestCase):
 
     def test_dataset_unversioned_succeeds(self) -> None:
         with create_test_cache():
-            unversioned_handle = "ryanholbrook/dl-course-data"
-            actual_path = dataset_download(unversioned_handle)
+            actual_path = dataset_download(UNVERSIONED_HANDLE)
 
             expected_files = [
                 "abalone.csv",
@@ -78,7 +78,8 @@ class TestDatasetDownload(unittest.TestCase):
     def test_public_dataset_with_unauthenticated_succeeds(self) -> None:
         with create_test_cache():
             with unauthenticated():
-                actual_path = dataset_download(HANDLE)
+                actual_path = dataset_download(UNVERSIONED_HANDLE)
+                self.assertFalse(actual_path)
 
                 expected_files = [
                     "abalone.csv",
