@@ -5,7 +5,12 @@ from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 from unittest import mock
 
-from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, KEY_ENV_VAR_NAME, USERNAME_ENV_VAR_NAME
+from kagglehub.config import (
+    CACHE_FOLDER_ENV_VAR_NAME,
+    CREDENTIALS_FOLDER_ENV_VAR_NAME,
+    KEY_ENV_VAR_NAME,
+    USERNAME_ENV_VAR_NAME,
+)
 
 
 @contextmanager
@@ -52,9 +57,6 @@ def assert_files(test_case: unittest.TestCase, path: str, expected_files: list[s
 def unauthenticated() -> Generator[None, None, None]:
     with mock.patch.dict(
         os.environ,
-        {
-            USERNAME_ENV_VAR_NAME: "",
-            KEY_ENV_VAR_NAME: "",
-        },
+        {USERNAME_ENV_VAR_NAME: "", KEY_ENV_VAR_NAME: "", CREDENTIALS_FOLDER_ENV_VAR_NAME: "/nonexistent"},
     ):
         yield

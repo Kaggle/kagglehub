@@ -74,7 +74,9 @@ def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
 
     creds_filepath = _get_kaggle_credentials_file()
 
-    if USERNAME_ENV_VAR_NAME in os.environ and KEY_ENV_VAR_NAME in os.environ:
+    env_var_username = os.getenv(USERNAME_ENV_VAR_NAME)
+    env_var_key = os.getenv(KEY_ENV_VAR_NAME)
+    if env_var_username and env_var_key:
         return KaggleApiCredentials(username=os.environ[USERNAME_ENV_VAR_NAME], key=os.environ[KEY_ENV_VAR_NAME])
     if os.path.exists(creds_filepath):
         with open(creds_filepath) as creds_json_file:
