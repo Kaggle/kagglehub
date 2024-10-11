@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import Optional
 
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials
+from kagglehub.config import set_kaggle_credentials
 from kagglehub.exceptions import UnauthenticatedError
 
 _logger = logging.getLogger(__name__)
@@ -112,13 +112,14 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
 
     login_button.on_click(on_click_login_button)
 
+
 def _validate_credentials_helper() -> Optional[str]:
     api_client = KaggleApiV1Client()
     response = api_client.get("/hello")
     if "userName" in response:
         _logger.info("Kaggle credentials successfully validated.")
         return response["userName"]
-    elif "code"  in response and response["code"] == INVALID_CREDENTIALS_ERROR:
+    elif "code" in response and response["code"] == INVALID_CREDENTIALS_ERROR:
         _logger.error(
             "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
         )
