@@ -43,13 +43,10 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
             delete_from_cache(h, path)
             cached_path = None
 
-        try:
-            # Competition does not alllow for anonymous downloads.
-            _ = whoami()
-        except UnauthenticatedError:
+        if not api_client.has_credentials():
             if cached_path:
                 return cached_path
-            raise
+            raise UnauthenticatedError()
 
         out_path = get_cached_path(h, path)
         if path:

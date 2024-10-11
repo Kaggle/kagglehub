@@ -149,6 +149,9 @@ def whoami() -> dict:
     """
     Return a dictionary with the username of the authenticated Kaggle user or raise an error if unauthenticated.
     """
+    api_client = KaggleApiV1Client()
+    if not api_client.has_credentials():
+        raise UnauthenticatedError()
     try:
         username = _validate_credentials_helper()
         if username:
@@ -156,3 +159,4 @@ def whoami() -> dict:
         raise UnauthenticatedError()
     except Exception as e:
         raise UnauthenticatedError() from e
+    
