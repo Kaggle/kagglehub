@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 import kagglehub
 from kagglehub.cache import delete_from_cache, get_cached_archive_path
-from kagglehub.config import get_colab_credentials, get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME,
@@ -205,8 +205,6 @@ class KaggleApiV1Client:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
-        elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
-            return HTTPBasicAuth(colab_secret.username, colab_secret.key)
         return None
 
     def _build_url(self, path: str) -> str:
@@ -380,8 +378,6 @@ class ColabClient:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():
             return KaggleTokenAuth()
-        elif is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
-            return HTTPBasicAuth(colab_secret.username, colab_secret.key)
         return None
 
 
