@@ -125,6 +125,7 @@ def _validate_credentials_helper() -> Optional[str]:
         )
     else:
         _logger.warning("Unable to validate Kaggle credentials at this time.")
+    return None
 
 
 def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
