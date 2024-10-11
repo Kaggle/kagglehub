@@ -2,6 +2,7 @@ import io
 import logging
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials
@@ -111,13 +112,13 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
 
     login_button.on_click(on_click_login_button)
 
-
-def _validate_credentials_helper() -> None:
+def _validate_credentials_helper() -> Optional[str]:
     api_client = KaggleApiV1Client()
     response = api_client.get("/hello")
-    if "code" not in response:
+    if "userName" in response:
         _logger.info("Kaggle credentials successfully validated.")
-    elif response["code"] == INVALID_CREDENTIALS_ERROR:
+        return response["userName"]
+    elif "code"  in response and response["code"] == INVALID_CREDENTIALS_ERROR:
         _logger.error(
             "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
         )
@@ -148,10 +149,9 @@ def whoami() -> dict:
     Return a dictionary with the username of the authenticated Kaggle user or raise an error if unauthenticated.
     """
     try:
-        credentials = get_kaggle_credentials()
-        if credentials and credentials.username:
-            return {"username": credentials.username}
-        else:
-            raise UnauthenticatedError()
+        username = _validate_credentials_helper()
+        if username:
+            return {"username": username}
+        raise UnauthenticatedError()
     except Exception as e:
         raise UnauthenticatedError() from e
