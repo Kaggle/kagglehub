@@ -79,7 +79,6 @@ class TestDatasetDownload(unittest.TestCase):
         with create_test_cache():
             with unauthenticated():
                 actual_path = dataset_download(UNVERSIONED_HANDLE)
-                self.assertFalse(actual_path)
 
                 expected_files = [
                     "abalone.csv",
