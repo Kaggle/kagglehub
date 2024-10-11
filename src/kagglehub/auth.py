@@ -159,4 +159,3 @@ def whoami() -> dict:
         raise UnauthenticatedError()
     except Exception as e:
         raise UnauthenticatedError() from e
-    

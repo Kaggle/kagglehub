@@ -7,7 +7,6 @@ from typing import Optional
 import requests
 from tqdm.contrib.concurrent import thread_map
 
-from kagglehub.auth import whoami
 from kagglehub.cache import (
     delete_from_cache,
     get_cached_archive_path,
