@@ -7,7 +7,6 @@ from typing import Optional
 import requests
 from tqdm.contrib.concurrent import thread_map
 
-from kagglehub.auth import whoami
 from kagglehub.cache import (
     delete_from_cache,
     get_cached_archive_path,
@@ -43,13 +42,10 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
             delete_from_cache(h, path)
             cached_path = None
 
-        try:
-            # Competition does not alllow for anonymous downloads.
-            _ = whoami()
-        except UnauthenticatedError:
+        if not api_client.has_credentials():
             if cached_path:
                 return cached_path
-            raise
+            raise UnauthenticatedError()
 
         out_path = get_cached_path(h, path)
         if path:

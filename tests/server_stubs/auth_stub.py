@@ -23,7 +23,7 @@ def error(e: Exception):  # noqa: ANN201
 def model_create() -> ResponseReturnValue:
     auth = request.authorization
     if auth and auth.username == GOOD_CREDENTIALS_USERNAME and auth.password == GOOD_CREDENTIALS_API_KEY:
-        data = {"message": "Hello from test server!"}
+        data = {"message": "Hello from test server!", "userName": auth.username}
         return jsonify(data), 200
     else:
         return jsonify({"code": 401}), 200
