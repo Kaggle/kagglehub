@@ -75,25 +75,25 @@
 * Fix message when detecting newer version ([#82](https://github.com/Kaggle/kagglehub/pull/82))
 * Link to model detail page in errors(Colab resolver) ([#83](https://github.com/Kaggle/kagglehub/pull/83))
 
-## v0.1.8 (January 31st, 2023)
+## v0.1.8 (January 31st, 2024)
 
 * Include URL to model detail page in error message ([#80](https://github.com/Kaggle/kagglehub/pull/80))
 * Add Kaggle/Colab to user-agent if running on these environment ([#78](https://github.com/Kaggle/kagglehub/pull/78))
 * Improve logging for Colab resolver ([#77](https://github.com/Kaggle/kagglehub/pull/77))
 
-## v0.1.7 (January 29th, 2023)
+## v0.1.7 (January 29th, 2024)
 
 * Fix `model_upload` with nested directory ([#75](https://github.com/Kaggle/kagglehub/pull/75))
 * Detect if a newer version of `kagglehub` is available and suggest to upgrade ([#73](https://github.com/Kaggle/kagglehub/pull/73))
 
-## v0.1.6 (January 22nd, 2023)
+## v0.1.6 (January 22nd, 2024)
 
 * Fix permission issue in `model_upload` and add integration tests ([#69](https://github.com/Kaggle/kagglehub/pull/69))
 * Make specifying a license optional in `model_upload` ([#62](https://github.com/Kaggle/kagglehub/pull/62))
 * Improve logging ([#68](https://github.com/Kaggle/kagglehub/pull/68), [#71](https://github.com/Kaggle/kagglehub/pull/71))
 * Add resumable upload ([#55](https://github.com/Kaggle/kagglehub/pull/55))
 
-## v0.1.5 (January 8th, 2023)
+## v0.1.5 (January 8th, 2024)
 
 * Prevent log message from being printed twice in some environment ([#57](https://github.com/Kaggle/kagglehub/pull/57))
 * Add Colab model resolver ([#53](https://github.com/Kaggle/kagglehub/pull/53))
