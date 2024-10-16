@@ -38,7 +38,10 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
     ) -> str:
         client = KaggleJwtClient()
         if force_download:
-            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
+            logger.info(
+                "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
 
         competition_ref = {
             "CompetitionSlug": h.competition,
@@ -96,7 +99,10 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
 
     def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
-            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
+            logger.info(
+                "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         client = KaggleJwtClient()
         dataset_ref = {
             "OwnerSlug": h.owner,
@@ -160,7 +166,10 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
 
     def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
-            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
+            logger.info(
+                "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         client = KaggleJwtClient()
         model_ref = {
             "OwnerSlug": h.owner,
