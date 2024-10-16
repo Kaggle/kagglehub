@@ -7,6 +7,7 @@ from kagglehub.clients import ColabClient
 from kagglehub.config import is_colab_cache_disabled
 from kagglehub.exceptions import BackendError, NotFoundError
 from kagglehub.handle import ModelHandle
+from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.resolver import Resolver
 
 COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "COLAB_CACHE_MOUNT_FOLDER"
@@ -40,7 +41,10 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
 
     def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
-            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Colab notebook")
+            logger.info(
+                "Ignoring `force_download` argument when running inside the Colab notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
 
         api_client = ColabClient()
         data = {
