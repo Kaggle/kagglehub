@@ -38,7 +38,10 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
     ) -> str:
         client = KaggleJwtClient()
         if force_download:
-            logger.warning("Ignoring invalid input: force_download flag cannot be used in a Kaggle notebook")
+            logger.info(
+                "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
 
         competition_ref = {
             "CompetitionSlug": h.competition,

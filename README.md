@@ -69,7 +69,7 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem/1')
 # Download a single file.
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', path='variables/variables.index')
 
-# Download a model or file, even if previously downloaded to cache. Only available outside Kaggle notebooks.
+# Download a model or file, even if previously downloaded to cache.
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', force_download=True)
 ```
 
@@ -117,7 +117,7 @@ kagglehub.dataset_download('bricevergnou/spotify-recommendation/versions/1')
 # Download a single file
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv')
 
-# Download a dataset or file, even if previously downloaded to cache. Only available outside Kaggle notebooks.
+# Download a dataset or file, even if previously downloaded to cache.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', force_download=True)
 ```
 
@@ -162,7 +162,6 @@ kagglehub.competition_download('digit-recognizer')
 kagglehub.competition_download('digit-recognizer', path='train.csv')
 
 # Download a competition or file, even if previously downloaded to cache. 
-# Only available outside Kaggle notebooks.
 kagglehub.competition_download('digit-recognizer', force_download=True)
 ```
 
