@@ -3,6 +3,7 @@ import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Optional
+from getpass import getpass
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
@@ -136,7 +137,7 @@ def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
         return
     else:
         username = input("Enter your Kaggle username: ")
-        api_key = input("Enter your Kaggle API key: ")
+        api_key = getpass("Enter your Kaggle API key (input will not be visible): ")
 
     set_kaggle_credentials(username=username, api_key=api_key)
 
