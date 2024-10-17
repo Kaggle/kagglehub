@@ -2,8 +2,8 @@ import io
 import logging
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Optional
 from getpass import getpass
+from typing import Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
