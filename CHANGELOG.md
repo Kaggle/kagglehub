@@ -1,6 +1,9 @@
 # Changelog
 
-## Next (Unreleased)
+## v0.3.3 (October 17th, 2024)
+
+* Hide API key in terminal when prompting in `kaggle.login(...)` ([#173](https://github.com/Kaggle/kagglehub/pull/173))
+* Reduce logging spam when using `force_download` in Kaggle notebook environment ([#172](https://github.com/Kaggle/kagglehub/pull/172))
 
 ## v0.3.2 (October 15th, 2024)
 
