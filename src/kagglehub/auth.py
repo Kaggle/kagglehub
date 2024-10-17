@@ -1,3 +1,4 @@
+import getpass
 import io
 import logging
 from collections.abc import Generator
@@ -136,7 +137,7 @@ def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
         return
     else:
         username = input("Enter your Kaggle username: ")
-        api_key = input("Enter your Kaggle API key: ")
+        api_key = getpass.getpass("Enter your Kaggle API key (input will not be visible): ")
 
     set_kaggle_credentials(username=username, api_key=api_key)
 
