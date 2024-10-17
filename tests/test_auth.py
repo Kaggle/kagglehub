@@ -23,11 +23,7 @@ class TestAuth(BaseTestCase):
         cls.server.shutdown()
 
     def test_login_updates_global_credentials(self) -> None:
-        with mock.patch("builtins.input") as mock_input:
-            with mock.patch("getpass.getpass") as mock_getpass:
-                mock_input.side_effect = ["lastplacelarry"]
-                mock_getpass.return_value = "some-key"
-                kagglehub.login()
+        login("lastplacelarry", "some-key")
 
         # Verify that the global variable contains the updated credentials
         credentials = get_kaggle_credentials()
@@ -37,11 +33,7 @@ class TestAuth(BaseTestCase):
         self.assertEqual("some-key", credentials.key)
 
     def test_login_updates_global_credentials_no_validation(self) -> None:
-        with mock.patch("builtins.input") as mock_input:
-            with mock.patch("getpass.getpass") as mock_getpass:
-                mock_input.side_effect = ["lastplacelarry"]
-                mock_getpass.return_value = "some-key"
-                kagglehub.login(validate_credentials=False)
+        login("lastplacelarry", "some-key", validate_credentials=False)
 
         # Verify that the global variable contains the updated credentials
         credentials = get_kaggle_credentials()
@@ -52,37 +44,21 @@ class TestAuth(BaseTestCase):
 
     def test_set_kaggle_credentials_raises_error_with_empty_username(self) -> None:
         with self.assertRaises(ValueError):
-            with mock.patch("builtins.input") as mock_input:
-                with mock.patch("getpass.getpass") as mock_getpass:
-                    mock_input.side_effect = [""]
-                    mock_getpass.return_value = "some-key"
-                    kagglehub.login()
+            login("", "some-key")
 
     def test_set_kaggle_credentials_raises_error_with_empty_api_key(self) -> None:
         with self.assertRaises(ValueError):
-            with mock.patch("builtins.input") as mock_input:
-                with mock.patch("getpass.getpass") as mock_getpass:
-                    mock_input.side_effect = ["lastplacelarry"]
-                    mock_getpass.return_value = ""
-                    kagglehub.login()
+            login("lastplacelarry", "")
 
     def test_set_kaggle_credentials_raises_error_with_empty_username_api_key(self) -> None:
         with self.assertRaises(ValueError):
-            with mock.patch("builtins.input") as mock_input:
-                with mock.patch("getpass.getpass") as mock_getpass:
-                    mock_input.side_effect = [""]
-                    mock_getpass.return_value = ""
-                    kagglehub.login()
+            login("", "")
 
     def test_login_returns_403_for_bad_credentials(self) -> None:
         output_stream = io.StringIO()
         handler = logging.StreamHandler(output_stream)
         logger.addHandler(handler)
-        with mock.patch("builtins.input") as mock_input:
-            with mock.patch("getpass.getpass") as mock_getpass:
-                mock_input.side_effect = ["invalid"]
-                mock_getpass.return_value = "invalid"
-                kagglehub.login()
+        login("invalid", "invalid")
 
         captured_output = output_stream.getvalue()
         self.assertEqual(
@@ -102,11 +78,15 @@ class TestAuth(BaseTestCase):
             kagglehub.whoami()
 
     def test_whoami_success(self) -> None:
-        with mock.patch("builtins.input") as mock_input:
-            with mock.patch("getpass.getpass") as mock_getpass:
-                mock_input.side_effect = ["lastplacelarry"]
-                mock_getpass.return_value = "some-key"
-                kagglehub.login(validate_credentials=False)
-                result = kagglehub.whoami()
+        login("lastplacelarry", "some-key")
 
-                self.assertEqual(result, {"username": "lastplacelarry"})
+        result = kagglehub.whoami()
+        self.assertEqual(result, {"username": "lastplacelarry"})
+
+
+def login(username: str, api_key: str, validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
+    with mock.patch("builtins.input") as mock_input:
+        with mock.patch("getpass.getpass") as mock_getpass:
+            mock_input.side_effect = [username]
+            mock_getpass.return_value = api_key
+            kagglehub.login(validate_credentials=validate_credentials)
