@@ -66,7 +66,7 @@ def get_user_agent() -> str:
     """
     user_agents = [f"kagglehub/{kagglehub.__version__}"]
 
-    for keras_lib in ("keras_nlp", "keras_cv", "keras"):
+    for keras_lib in ("keras_hub", "keras_nlp", "keras_cv", "keras"):
         keras_info = search_lib_in_call_stack(keras_lib)
         if keras_info is not None:
             user_agents.append(keras_info)
