@@ -17,6 +17,7 @@ from kagglehub.colab_cache_resolver import COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME
 app = Flask(__name__)
 
 LATEST_MODEL_VERSION = 2
+LATEST_DATASET_VERSION = 2
 
 
 @app.route("/", methods=["HEAD"])
@@ -30,7 +31,7 @@ def error(e: Exception):  # noqa: ANN201
     return jsonify(data), 200
 
 
-@app.route(ColabClient.IS_SUPPORTED_PATH, methods=["POST"])
+@app.route(ColabClient.IS_MODEL_SUPPORTED_PATH, methods=["POST"])
 def models_is_supported() -> ResponseReturnValue:
     data = request.get_json()
     version = LATEST_MODEL_VERSION
@@ -45,7 +46,7 @@ def models_is_supported() -> ResponseReturnValue:
     return "", 200
 
 
-@app.route(ColabClient.MOUNT_PATH, methods=["POST"])
+@app.route(ColabClient.MODEL_MOUNT_PATH, methods=["POST"])
 def models_mount() -> ResponseReturnValue:
     data = request.get_json()
     version = LATEST_MODEL_VERSION
@@ -62,6 +63,38 @@ def models_mount() -> ResponseReturnValue:
     if version == LATEST_MODEL_VERSION:
         # The latest version has an extra file.
         Path(f"{base_path}/model.keras").touch()
+    return jsonify({"slug": slug}), 200
+
+
+@app.route(ColabClient.IS_DATASET_SUPPORTED_PATH, methods=["POST"])
+def datasets_is_supported() -> ResponseReturnValue:
+    data = request.get_json()
+    version = LATEST_DATASET_VERSION
+    if "version" in data:
+        version = data["version"]
+    dataset = data["dataset"]
+    slug = f"{dataset}/version/{version}"
+    if data["owner"] == "unavailable":
+        return slug, 400
+    return "", 200
+
+
+@app.route(ColabClient.DATASET_MOUNT_PATH, methods=["POST"])
+def datasets_mount() -> ResponseReturnValue:
+    data = request.get_json()
+    version = LATEST_DATASET_VERSION
+    if "version" in data:
+        version = data["version"]
+    dataset = data["dataset"]
+    slug = f"{dataset}/version/{version}"
+    cache_mount_folder = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
+    base_path = f"{cache_mount_folder}/{slug}"
+    os.makedirs(base_path, exist_ok=True)
+    Path(f"{base_path}/foo.txt").touch()
+    if version == LATEST_DATASET_VERSION:
+        # The latest version has an extra file.
+        Path(f"{base_path}/foo.txt").touch()
+        Path(f"{base_path}/bar.csv").touch()
     return jsonify({"slug": slug}), 200
 
 
