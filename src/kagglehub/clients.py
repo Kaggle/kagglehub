@@ -346,7 +346,11 @@ class KaggleJwtClient:
 
 class ColabClient:
     IS_SUPPORTED_PATH = "/kagglehub/models/is_supported"
+    IS_MODEL_SUPPORTED_PATH = "/kagglehub/models/is_supported"
+    IS_DATASET_SUPPORTED_PATH = "/kagglehub/datasets/is_supported"
     MOUNT_PATH = "/kagglehub/models/mount"
+    MODEL_MOUNT_PATH = "/kagglehub/models/mount"
+    DATASET_MOUNT_PATH = "/kagglehub/datasets/mount"
     # TBE_RUNTIME_ADDR serves requests made from `is_supported` and  `__call__`
     # of ModelColabCacheResolver.
     TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"

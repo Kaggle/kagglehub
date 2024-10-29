@@ -13,6 +13,7 @@ registry.model_resolver.add_implementation(colab_cache_resolver.ModelColabCacheR
 
 registry.dataset_resolver.add_implementation(http_resolver.DatasetHttpResolver())
 registry.dataset_resolver.add_implementation(kaggle_cache_resolver.DatasetKaggleCacheResolver())
+registry.dataset_resolver.add_implementation(colab_cache_resolver.DatasetColabCacheResolver())
 
 registry.competition_resolver.add_implementation(http_resolver.CompetitionHttpResolver())
 registry.competition_resolver.add_implementation(kaggle_cache_resolver.CompetitionKaggleCacheResolver())
