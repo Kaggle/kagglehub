@@ -26,7 +26,7 @@ def model_download(
         handle: (string) the model handle.
         path: (string) Optional path to a file within the model bundle.
         force_download: (bool) Optional flag to force download a model, even if it's cached.
-        output_dir: (str) Optional path to copy model files to after successful download.
+        output_dir: (string) Optional path to copy model files to after successful download.
 
     Returns:
         A string representing the path to the requested model files.
@@ -35,7 +35,7 @@ def model_download(
     logger.info(f"Downloading Model: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
     cached_dir = registry.model_resolver(h, path, force_download=force_download)
 
-    if output_dir is None:
+    if output_dir is None or output_dir == cached_dir:
         return cached_dir
 
     try:

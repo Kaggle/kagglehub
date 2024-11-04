@@ -1,5 +1,7 @@
 import os
+from tempfile import TemporaryDirectory
 from typing import Optional
+from unittest import mock
 
 import requests
 
@@ -7,7 +9,6 @@ import kagglehub
 from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_archive_path
 from kagglehub.handle import parse_model_handle
 from tests.fixtures import BaseTestCase
-from unittest import mock
 
 from .server_stubs import model_download_stub as stub
 from .server_stubs import serv
@@ -150,24 +151,28 @@ class TestHttpModelDownload(BaseTestCase):
 
     def test_versioned_model_download_with_output_dir(self) -> None:
         with create_test_cache() as d:
-            expected_ouput_dir = "/tmp/downloaded_model"
-            self._download_model_and_assert_downloaded(
-                d,
-                VERSIONED_MODEL_HANDLE,
-                expected_ouput_dir,
-                output_dir=expected_ouput_dir
-            )
+            with TemporaryDirectory() as expected_output_dir:
+                self._download_model_and_assert_downloaded(
+                    d,
+                    VERSIONED_MODEL_HANDLE,
+                    expected_output_dir,
+                    output_dir=expected_output_dir
+                )
 
     def test_versioned_model_download_with_bad_output_dir(self) -> None:
-        with create_test_cache() as d:
-            mock.patch("kagglehub.models.copytree", side_effect=Exception())
-            bad_output_dir = "/bad/path/that/fails"
+        with (
+            create_test_cache() as d,
+            TemporaryDirectory() as placeholder_dir,
+            mock.patch("kagglehub.models.copytree") as mock_copytree
+        ):
+            mock_copytree.side_effect = Exception("Mock exception")
             expected_output_dir = EXPECTED_MODEL_SUBDIR # falls back to default
             self._download_model_and_assert_downloaded(
                 d,
                 VERSIONED_MODEL_HANDLE,
                 expected_output_dir,
-                output_dir=bad_output_dir
+                # note: placeholder name is irrelevant since copytree is mocked to throw
+                output_dir=placeholder_dir
             )
 
     def test_unversioned_model_download_with_path_with_force_download(self) -> None:
