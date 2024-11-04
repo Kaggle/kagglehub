@@ -7,6 +7,7 @@ import kagglehub
 from kagglehub.cache import MODELS_CACHE_SUBFOLDER, get_cached_archive_path
 from kagglehub.handle import parse_model_handle
 from tests.fixtures import BaseTestCase
+from unittest import mock
 
 from .server_stubs import model_download_stub as stub
 from .server_stubs import serv
@@ -147,6 +148,28 @@ class TestHttpModelDownload(BaseTestCase):
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE, force_download=True)
 
+    def test_versioned_model_download_with_output_dir(self) -> None:
+        with create_test_cache() as d:
+            expected_ouput_dir = "/tmp/downloaded_model"
+            self._download_model_and_assert_downloaded(
+                d,
+                VERSIONED_MODEL_HANDLE,
+                expected_ouput_dir,
+                output_dir=expected_ouput_dir
+            )
+
+    def test_versioned_model_download_with_bad_output_dir(self) -> None:
+        with create_test_cache() as d:
+            mock.patch("kagglehub.models.copytree", side_effect=Exception())
+            bad_output_dir = "/bad/path/that/fails"
+            expected_output_dir = EXPECTED_MODEL_SUBDIR # falls back to default
+            self._download_model_and_assert_downloaded(
+                d,
+                VERSIONED_MODEL_HANDLE,
+                expected_output_dir,
+                output_dir=bad_output_dir
+            )
+
     def test_unversioned_model_download_with_path_with_force_download(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE, force_download=True)
@@ -187,7 +210,6 @@ class TestHttpModelDownload(BaseTestCase):
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH, force_download=False)
 
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
-
 
 class TestHttpNoInternet(BaseTestCase):
     def test_versioned_model_download_already_cached_with_force_download(self) -> None:
