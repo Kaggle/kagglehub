@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.4 (November 8th, 2024)
+
+* Add a naive Colab dataset cache resolver ([#177](https://github.com/Kaggle/kagglehub/pull/177))
+* Add `keras_hub` as user-agent ([#176](https://github.com/Kaggle/kagglehub/pull/176))
+
 ## v0.3.3 (October 17th, 2024)
 
 * Hide API key in terminal when prompting in `kaggle.login(...)` ([#173](https://github.com/Kaggle/kagglehub/pull/173))
