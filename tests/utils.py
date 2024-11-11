@@ -1,16 +1,19 @@
+import functools
 import hashlib
 import mimetypes
 import os
+import sys
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, Callable
 from unittest import mock
 
 from flask import Flask, Response
 from flask.typing import ResponseReturnValue
 
+import kagglehub
 from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, get_kaggle_api_endpoint
 from kagglehub.handle import ResourceHandle
 from kagglehub.integrity import GCS_HASH_HEADER, to_b64_digest
@@ -102,3 +105,40 @@ def handle_mock_gcs_redirect(file_name: str) -> ResponseReturnValue:
             ),
             200,
         )
+
+
+def login(username: str, api_key: str, validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
+    with mock.patch("builtins.input") as mock_input:
+        with mock.patch("getpass.getpass") as mock_getpass:
+            mock_input.side_effect = [username]
+            mock_getpass.return_value = api_key
+            kagglehub.login(validate_credentials=validate_credentials)
+
+
+def clear_imported_kaggle_packages() -> None:
+    names = [name for name in sys.modules if name.startswith("kagglehub_package")]
+    for name in names:
+        del sys.modules[name]
+
+
+def parameterized(*parameter_values: Any) -> Callable:  # noqa: ANN401
+    """Decorator which parameterizes a unittest test method.
+
+    Currently only supports single arguments but could be extended."""
+
+    def decorator(method: Callable) -> Callable:
+        @functools.wraps(method)
+        def wrapper(self) -> None:  # noqa: ANN001
+            for value in parameter_values:
+                if hasattr(self, "setUp"):
+                    self.setUp()
+
+                with self.subTest(value):
+                    method(self, value)
+
+                if hasattr(self, "tearDown"):
+                    self.tearDown()
+
+        return wrapper
+
+    return decorator

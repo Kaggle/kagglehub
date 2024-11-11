@@ -1,6 +1,5 @@
 import io
 import logging
-from unittest import mock
 
 import kagglehub
 from kagglehub.auth import _capture_logger_output
@@ -8,6 +7,7 @@ from kagglehub.auth import _logger as logger
 from kagglehub.config import get_kaggle_credentials
 from kagglehub.exceptions import UnauthenticatedError
 from tests.fixtures import BaseTestCase
+from tests.utils import login
 
 from .server_stubs import auth_stub as stub
 from .server_stubs import serv
@@ -82,11 +82,3 @@ class TestAuth(BaseTestCase):
 
         result = kagglehub.whoami()
         self.assertEqual(result, {"username": "lastplacelarry"})
-
-
-def login(username: str, api_key: str, validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
-    with mock.patch("builtins.input") as mock_input:
-        with mock.patch("getpass.getpass") as mock_getpass:
-            mock_input.side_effect = [username]
-            mock_getpass.return_value = api_key
-            kagglehub.login(validate_credentials=validate_credentials)
