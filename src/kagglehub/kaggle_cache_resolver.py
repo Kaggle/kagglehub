@@ -3,6 +3,7 @@ import os
 import time
 from typing import Optional
 
+from kagglehub.cache import added_resources
 from kagglehub.clients import (
     DEFAULT_CONNECT_TIMEOUT,
     KaggleJwtClient,
@@ -83,7 +84,9 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
                     f"You can acces the other files othe attached competition at '{cached_path}'"
                 )
                 raise ValueError(msg)
+            added_resources.append(h)
             return cached_filepath
+        added_resources.append(h)
         return cached_path
 
 
@@ -150,7 +153,9 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
                     f"You can acces the other files othe attached dataset at '{cached_path}'"
                 )
                 raise ValueError(msg)
+            added_resources.append(h)
             return cached_filepath
+        added_resources.append(h)
         return cached_path
 
 
@@ -219,5 +224,7 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
                     f"You can access the other files of the attached model at '{cached_path}'"
                 )
                 raise ValueError(msg)
+            added_resources.append(h)
             return cached_filepath
+        added_resources.append(h)
         return cached_path

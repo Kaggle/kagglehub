@@ -9,6 +9,7 @@ import requests
 from tqdm.contrib.concurrent import thread_map
 
 from kagglehub.cache import (
+    added_resources,
     delete_from_cache,
     get_cached_archive_path,
     get_cached_path,
@@ -45,6 +46,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
 
         if not api_client.has_credentials():
             if cached_path:
+                added_resources.append(h)
                 return cached_path
             raise UnauthenticatedError()
 
@@ -58,10 +60,12 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 download_needed = api_client.download_file(url_path, out_path, h, cached_path)
             except requests.exceptions.ConnectionError:
                 if cached_path:
+                    added_resources.append(h)
                     return cached_path
                 raise
 
             if not download_needed and cached_path:
+                added_resources.append(h)
                 return cached_path
         else:
             # Download, extract, then delete the archive.
@@ -75,12 +79,14 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 if cached_path:
                     if os.path.exists(archive_path):
                         os.remove(archive_path)
+                    added_resources.append(h)
                     return cached_path
                 raise
 
             if not download_needed and cached_path:
                 if os.path.exists(archive_path):
                     os.remove(archive_path)
+                added_resources.append(h)
                 return cached_path
 
             os.makedirs(out_path, exist_ok=True)
@@ -88,6 +94,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
+        added_resources.append(h)
         return out_path
 
 
@@ -104,6 +111,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
         dataset_path = load_from_cache(h, path)
         if dataset_path and not force_download:
+            added_resources.append(h)
             return dataset_path  # Already cached
         elif dataset_path and force_download:
             delete_from_cache(h, path)
@@ -134,6 +142,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
+        added_resources.append(h)
         return out_path
 
 
@@ -150,6 +159,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
         model_path = load_from_cache(h, path)
         if model_path and not force_download:
+            added_resources.append(h)
             return model_path  # Already cached
         elif model_path and force_download:
             delete_from_cache(h, path)
@@ -197,6 +207,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 )
 
         mark_as_complete(h, path)
+        added_resources.append(h)
         return out_path
 
 

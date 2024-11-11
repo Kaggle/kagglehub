@@ -56,6 +56,11 @@ def get_cached_archive_path(handle: ResourceHandle) -> str:
         msg = "Invalid handle"
         raise ValueError(msg)
 
+added_resources = []
+def write_added_resources(filename: str):
+    with open(filename, 'w') as f:
+        for r in added_resources:
+            f.write(repr(r) + '\n')
 
 def mark_as_complete(handle: ResourceHandle, path: Optional[str] = None) -> None:
     marker_path = _get_completion_marker_filepath(handle, path)
