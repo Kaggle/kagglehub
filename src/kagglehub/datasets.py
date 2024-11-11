@@ -37,7 +37,8 @@ def dataset_download(handle: str, path: Optional[str] = None, *, force_download:
 
     h = parse_dataset_handle(handle)
     logger.info(f"Downloading Dataset: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    return registry.dataset_resolver(h, path, force_download=force_download)
+    path, _ = registry.dataset_resolver(h, path, force_download=force_download)
+    return path
 
 
 def dataset_upload(
