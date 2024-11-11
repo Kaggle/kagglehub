@@ -17,6 +17,7 @@ from kagglehub.cache import (
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import UnauthenticatedError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
+from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
@@ -33,9 +34,9 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
-    def __call__(
+    def _resolve(
         self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> str:
+    ) -> tuple[str, Optional[int]]:
         api_client = KaggleApiV1Client()
 
         cached_path = load_from_cache(h, path)
@@ -45,7 +46,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
 
         if not api_client.has_credentials():
             if cached_path:
-                return cached_path
+                return cached_path, None
             raise UnauthenticatedError()
 
         out_path = get_cached_path(h, path)
@@ -60,11 +61,11 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 )
             except requests.exceptions.ConnectionError:
                 if cached_path:
-                    return cached_path
+                    return cached_path, None
                 raise
 
             if not download_needed and cached_path:
-                return cached_path
+                return cached_path, None
         else:
             # Download, extract, then delete the archive.
             url_path = _build_competition_download_all_url_path(h)
@@ -77,19 +78,19 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 if cached_path:
                     if os.path.exists(archive_path):
                         os.remove(archive_path)
-                    return cached_path
+                    return cached_path, None
                 raise
 
             if not download_needed and cached_path:
                 if os.path.exists(archive_path):
                     os.remove(archive_path)
-                return cached_path
+                return cached_path, None
 
             _extract_archive(archive_path, out_path)
             os.remove(archive_path)
 
         mark_as_complete(h, path)
-        return out_path
+        return out_path, None
 
 
 class DatasetHttpResolver(Resolver[DatasetHandle]):
@@ -97,15 +98,17 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
-    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
+            h = h.with_version(_get_current_version(api_client, h))
 
         dataset_path = load_from_cache(h, path)
         if dataset_path and not force_download:
-            return dataset_path  # Already cached
+            return dataset_path, h.version  # Already cached
         elif dataset_path and force_download:
             delete_from_cache(h, path)
 
@@ -132,7 +135,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
-        return out_path
+        return out_path, h.version
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
@@ -140,15 +143,17 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
+            h = h.with_version(_get_current_version(api_client, h))
 
         model_path = load_from_cache(h, path)
         if model_path and not force_download:
-            return model_path  # Already cached
+            return model_path, h.version  # Already cached
         elif model_path and force_download:
             delete_from_cache(h, path)
 
@@ -192,7 +197,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 )
 
         mark_as_complete(h, path)
-        return out_path
+        return out_path, h.version
 
 
 class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
@@ -200,15 +205,17 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
-    def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
+            h = h.with_version(_get_current_version(api_client, h))
 
         notebook_path = load_from_cache(h, path)
         if notebook_path and not force_download:
-            return notebook_path  # Already cached
+            return notebook_path, h.version  # Already cached
         elif notebook_path and force_download:
             delete_from_cache(h, path)
 
@@ -233,7 +240,8 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
-        return out_path
+
+        return out_path, h.version
 
     def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
         query = f"kernels/output/list/{h.owner}/{h.notebook}?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
@@ -265,6 +273,11 @@ def _extract_archive(archive_path: str, out_path: str) -> None:
 
 
 def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> int:
+    # Check if there's a Package in scope which has stored a version number used when it was created.
+    version_from_package_scope = PackageScope.get_version(h)
+    if version_from_package_scope is not None:
+        return version_from_package_scope
+
     if isinstance(h, ModelHandle):
         json_response = api_client.get(_build_get_instance_url_path(h), h)
         if MODEL_INSTANCE_VERSION_FIELD not in json_response:

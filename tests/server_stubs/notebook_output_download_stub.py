@@ -37,8 +37,10 @@ def notebook_output_download(owner_slug: str, kernel_slug: str) -> ResponseRetur
 
     # First, determine if we're fetching a file or the whole notebook output
     file_name_query_param = request.args.get("file_path")
-    test_file_name = "foo.txt.zip"
-    if file_name_query_param:
+    if kernel_slug == "package-test":
+        version = request.args.get("version_number", type=int)
+        test_file_name = f"package-v{version}.zip"
+    elif file_name_query_param:
         # This mimics behavior for our file downloads, where users request a file, but
         # receive a zipped version of the file from GCS.
         test_file_name = (
@@ -46,6 +48,8 @@ def notebook_output_download(owner_slug: str, kernel_slug: str) -> ResponseRetur
             if file_name_query_param == AUTO_COMPRESSED_FILE_NAME
             else file_name_query_param
         )
+    else:
+        test_file_name = "foo.txt.zip"
 
     return get_gcs_redirect_response(test_file_name)
 
