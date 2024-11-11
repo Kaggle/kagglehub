@@ -103,7 +103,6 @@ def delete_from_cache(handle: ResourceHandle, path: Optional[str] = None) -> Opt
 
 
 def _get_completion_marker_filepath(handle: ResourceHandle, path: Optional[str] = None) -> str:
-    # Can extend to add support for other resources like DatasetHandle.
     if isinstance(handle, ModelHandle):
         return _get_models_completion_marker_filepath(handle, path)
     elif isinstance(handle, DatasetHandle):
@@ -127,6 +126,9 @@ def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
 
 def _get_notebook_output_path(handle: NotebookHandle, path: Optional[str] = None) -> str:
     base_path = os.path.join(get_cache_folder(), NOTEBOOKS_CACHE_SUBFOLDER, handle.owner, handle.notebook, "output")
+    if handle.is_versioned():
+        base_path = os.path.join(base_path, "versions", str(handle.version))
+
     return os.path.join(base_path, path) if path else base_path
 
 
@@ -180,7 +182,13 @@ def _get_competition_archive_path(handle: CompetitionHandle) -> str:
 
 
 def _get_notebook_output_archive_path(handle: NotebookHandle) -> str:
-    return os.path.join(get_cache_folder(), NOTEBOOKS_CACHE_SUBFOLDER, handle.owner, handle.notebook, "output.archive")
+    return os.path.join(
+        get_cache_folder(),
+        NOTEBOOKS_CACHE_SUBFOLDER,
+        handle.owner,
+        handle.notebook,
+        "output-{handle.version!s}.archive",
+    )
 
 
 def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None) -> str:
@@ -237,10 +245,16 @@ def _get_notebook_output_completion_marker_filepath(handle: NotebookHandle, path
             handle.owner,
             handle.notebook,
             FILE_COMPLETION_MARKER_FOLDER,
-            "output",
+            "output-{handle.version!s}",
             f"{path}.complete",
         )
-    return os.path.join(get_cache_folder(), NOTEBOOKS_CACHE_SUBFOLDER, handle.owner, handle.notebook, "output.complete")
+    return os.path.join(
+        get_cache_folder(),
+        NOTEBOOKS_CACHE_SUBFOLDER,
+        handle.owner,
+        handle.notebook,
+        "output-{handle.version!s}.complete",
+    )
 
 
 def _get_competitions_completion_marker_filepath(handle: CompetitionHandle, path: Optional[str] = None) -> str:

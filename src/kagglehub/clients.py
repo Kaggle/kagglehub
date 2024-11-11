@@ -158,7 +158,6 @@ class KaggleApiV1Client:
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response, resource_handle)
-
             total_size = int(response.headers["Content-Length"]) if "Content-Length" in response.headers else None
             size_read = 0
 
@@ -170,7 +169,7 @@ class KaggleApiV1Client:
             expected_md5_hash = get_md5_checksum_from_response(response)
             hash_object = hashlib.md5() if expected_md5_hash else None
 
-            if _is_resumable(response) and total_size and os.path.isfile(out_file):
+            if total_size and _is_resumable(response) and os.path.isfile(out_file):
                 size_read = os.path.getsize(out_file)
                 update_hash_from_file(hash_object, out_file)
 
@@ -380,7 +379,7 @@ class ColabClient:
     MOUNT_PATH = "/kagglehub/models/mount"
     MODEL_MOUNT_PATH = "/kagglehub/models/mount"
     DATASET_MOUNT_PATH = "/kagglehub/datasets/mount"
-    # TBE_RUNTIME_ADDR serves requests made from `is_supported` and  `__call__`
+    # TBE_RUNTIME_ADDR serves requests made from `is_supported` and  `resolve`
     # of ModelColabCacheResolver.
     TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 

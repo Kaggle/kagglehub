@@ -1,7 +1,12 @@
-from typing import Callable
+from typing import Generic, Optional, TypeVar
+
+from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
+from kagglehub.resolver import Resolver
+
+T = TypeVar("T", bound=ResourceHandle)
 
 
-class MultiImplRegistry:
+class MultiImplRegistry(Generic[T]):
     """Utility class to inject multiple implementations of class.
 
     Each implementation must implement __call__ and is_supported with the same set of arguments. The registered
@@ -11,12 +16,12 @@ class MultiImplRegistry:
 
     def __init__(self, name: str) -> None:
         self._name = name
-        self._impls: list[Callable] = []
+        self._impls: list[Resolver[T]] = []
 
-    def add_implementation(self, impl: Callable) -> None:
-        self._impls += [impl]
+    def add_implementation(self, impl: Resolver[T]) -> None:
+        self._impls.append(impl)
 
-    def __call__(self, *args, **kwargs):  # noqa: ANN002, ANN003
+    def __call__(self, *args, **kwargs) -> tuple[str, Optional[int]]:  # noqa: ANN002, ANN003
         fails = []
         for impl in reversed(self._impls):
             if impl.is_supported(*args, **kwargs):
@@ -28,7 +33,7 @@ class MultiImplRegistry:
         raise RuntimeError(msg)
 
 
-model_resolver = MultiImplRegistry("ModelResolver")
-dataset_resolver = MultiImplRegistry("DatasetResolver")
-competition_resolver = MultiImplRegistry("CompetitionResolver")
-notebook_output_resolver = MultiImplRegistry("NotebookOutputResolver")
+model_resolver = MultiImplRegistry[ModelHandle]("ModelResolver")
+dataset_resolver = MultiImplRegistry[DatasetHandle]("DatasetResolver")
+competition_resolver = MultiImplRegistry[CompetitionHandle]("CompetitionResolver")
+notebook_output_resolver = MultiImplRegistry[NotebookHandle]("NotebookOutputResolver")
