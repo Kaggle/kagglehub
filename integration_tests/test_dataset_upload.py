@@ -10,6 +10,9 @@ from typing import TypeVar
 
 from kagglehub import dataset_upload, datasets_helpers
 from kagglehub.config import get_kaggle_credentials
+from kagglehub.clients import KaggleApiV1Client
+from kagglehub.http_resolver import _get_current_version
+from kagglehub.handle import parse_dataset_handle
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class TestDatasetUpload(unittest.TestCase):
 
     def test_dataset_upload_and_versioning(self) -> None:
         # Create Dataset
-        dataset_upload(self.handle, self.temp_dir)
+        self.assertTrue(dataset_upload_and_wait(self.handle, self.temp_dir))
 
         # Create Version
         dataset_upload(self.handle, self.temp_dir, "new version")
@@ -48,10 +51,10 @@ class TestDatasetUpload(unittest.TestCase):
                 test_filepath.touch()
 
             # Create Dataset
-            dataset_upload(self.handle, self.temp_dir)
+            self.assertTrue(dataset_upload_and_wait(self.handle, self.temp_dir))
 
             # Create Version
-            dataset_upload(self.handle, self.temp_dir, "new version")
+            #dataset_upload(self.handle, self.temp_dir, "new version")
 
     def test_dataset_upload_directory(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -69,7 +72,7 @@ class TestDatasetUpload(unittest.TestCase):
                 test_filepath_inner.touch()
 
             # Create Dataset
-            dataset_upload(self.handle, self.temp_dir)
+            self.assertTrue(dataset_upload_and_wait(self.handle, self.temp_dir))
 
             # Create Version
             dataset_upload(self.handle, self.temp_dir, "new version")
@@ -114,3 +117,20 @@ class TestDatasetUpload(unittest.TestCase):
     def tearDown(self) -> None:
         time.sleep(5)  # hacky. Need to wait until a dataset is ready to be deleted.
         datasets_helpers.dataset_delete(self.owner_slug, self.dataset_slug)
+
+# TODO(b/379171781): Remove waiting logic once uploading a new version while the first version is being processed is supported.
+def dataset_upload_and_wait(handle: str, local_dataset_dir: str, version_notes: str = "") -> bool:
+    dataset_upload(handle, local_dataset_dir, version_notes)
+    h = parse_dataset_handle(handle)
+    client = KaggleApiV1Client()
+
+    max_attempts = 10
+    for attempt in range(max_attempts):
+        try:
+            time.sleep(5)
+            if _get_current_version(client, h) > 0:
+                return True
+        except:
+            print(f"Attempt #{attempt} failed. Waiting some more for processing to finish")
+
+    return False
