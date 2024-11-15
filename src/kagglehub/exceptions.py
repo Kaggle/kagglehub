@@ -58,6 +58,9 @@ def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Op
         response.raise_for_status()
     except requests.HTTPError as e:
         message = str(e)
+        server_error_message = response.json().get("message", "")
+        if server_error_message:
+            server_error_message = f"The server reported the following issues: {server_error_message}\n"
         resource_url = resource_handle.to_url() if resource_handle else response.url
         if response.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
             if isinstance(resource_handle, CompetitionHandle):
@@ -72,17 +75,19 @@ def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Op
                 message = (
                     f"{response.status_code} Client Error."
                     "\n\n"
-                    f"You don't have permission to access resource at URL: {resource_url}"
-                    "\nPlease make sure you are authenticated if you are trying to access a"
-                    " private resource or a resource requiring consent."
+                    f"You don't have permission to access resource at URL: {resource_url}. "
+                    f"{server_error_message}"
+                    f"Please make sure you are authenticated if you are trying to access a "
+                    f"private resource or a resource requiring consent."
                 )
 
         if response.status_code == HTTPStatus.NOT_FOUND:
             message = (
                 f"{response.status_code} Client Error."
                 "\n\n"
-                f"Resource not found at URL: {resource_url}"
-                "\nPlease make sure you specified the correct resource identifiers."
+                f"Resource not found at URL: {resource_url}\n"
+                f"{server_error_message}"
+                "Please make sure you specified the correct resource identifiers."
             )
 
         # Default handling

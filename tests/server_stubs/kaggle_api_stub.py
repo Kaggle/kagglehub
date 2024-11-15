@@ -18,8 +18,8 @@ def head() -> ResponseReturnValue:
 
 @app.errorhandler(404)
 def error(e: Exception):  # noqa: ANN201
-    data = {"code": "404", "error": str(e)}
-    return jsonify(data), 200
+    data = {"code": "404", "error": str(e), "message": "server side error"}
+    return jsonify(data), 404
 
 
 @app.route("/api/v1/no-integrity", methods=["GET"])
