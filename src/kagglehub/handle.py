@@ -83,6 +83,25 @@ class CompetitionHandle(ResourceHandle):
         return base_url
 
 
+@dataclass
+class CodeHandle(ResourceHandle):
+    owner: str
+    notebook: str
+    version: Optional[int] = None
+
+    def is_versioned(self) -> bool:
+        return self.version is not None and self.version > 0
+
+    def __str__(self) -> str:
+        handle_str = f"{self.owner}/{self.notebook}"
+        return handle_str
+
+    def to_url(self) -> str:
+        endpoint = get_kaggle_api_endpoint()
+        base_url = f"{endpoint}/code/{self.owner}/{self.notebook}"
+        return base_url
+
+
 def parse_dataset_handle(handle: str) -> DatasetHandle:
     parts = handle.split("/")
 
@@ -152,3 +171,8 @@ def parse_competition_handle(handle: str) -> CompetitionHandle:
         raise ValueError(msg)
 
     return CompetitionHandle(competition=handle)
+
+
+def parse_code_handle(handle: str) -> CodeHandle:
+    parts = handle.split("/")
+    return CodeHandle(owner=parts[0], notebook=parts[1])
