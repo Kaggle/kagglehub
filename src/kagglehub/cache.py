@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Optional
 
 from kagglehub.config import get_cache_folder
-from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, ResourceHandle
+from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
 
 DATASETS_CACHE_SUBFOLDER = "datasets"
+NOTEBOOKS_CACHE_SUBFOLDER = "notebooks"  # for resources under kaggle.com/code
 COMPETITIONS_CACHE_SUBFOLDER = "competitions"
 MODELS_CACHE_SUBFOLDER = "models"
 FILE_COMPLETION_MARKER_FOLDER = ".complete"
@@ -35,6 +36,8 @@ def get_cached_path(handle: ResourceHandle, path: Optional[str] = None) -> str:
         return _get_dataset_path(handle, path)
     elif isinstance(handle, CompetitionHandle):
         return _get_competition_path(handle, path)
+    elif isinstance(handle, NotebookHandle):
+        return _get_notebook_output_path(handle, path)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
@@ -47,6 +50,8 @@ def get_cached_archive_path(handle: ResourceHandle) -> str:
         return _get_dataset_archive_path(handle)
     elif isinstance(handle, CompetitionHandle):
         return _get_competition_archive_path(handle)
+    elif isinstance(handle, NotebookHandle):
+        return _get_notebook_output_archive_path(handle)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
@@ -105,6 +110,8 @@ def _get_completion_marker_filepath(handle: ResourceHandle, path: Optional[str] 
         return _get_datasets_completion_marker_filepath(handle, path)
     elif isinstance(handle, CompetitionHandle):
         return _get_competitions_completion_marker_filepath(handle, path)
+    elif isinstance(handle, NotebookHandle):
+        return _get_notebook_output_completion_marker_filepath(handle, path)
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
@@ -115,6 +122,11 @@ def _get_dataset_path(handle: DatasetHandle, path: Optional[str] = None) -> str:
     if handle.is_versioned():
         base_path = os.path.join(base_path, "versions", str(handle.version))
 
+    return os.path.join(base_path, path) if path else base_path
+
+
+def _get_notebook_output_path(handle: NotebookHandle, path: Optional[str] = None) -> str:
+    base_path = os.path.join(get_cache_folder(), NOTEBOOKS_CACHE_SUBFOLDER, handle.owner, handle.notebook, "output")
     return os.path.join(base_path, path) if path else base_path
 
 
@@ -167,6 +179,10 @@ def _get_competition_archive_path(handle: CompetitionHandle) -> str:
     )
 
 
+def _get_notebook_output_archive_path(handle: NotebookHandle) -> str:
+    return os.path.join(get_cache_folder(), NOTEBOOKS_CACHE_SUBFOLDER, handle.owner, handle.notebook, "output.archive")
+
+
 def _get_models_completion_marker_filepath(handle: ModelHandle, path: Optional[str] = None) -> str:
     if path:
         return os.path.join(
@@ -211,6 +227,20 @@ def _get_datasets_completion_marker_filepath(handle: DatasetHandle, path: Option
         handle.dataset,
         f"{handle.version!s}.complete",
     )
+
+
+def _get_notebook_output_completion_marker_filepath(handle: NotebookHandle, path: Optional[str] = None) -> str:
+    if path:
+        return os.path.join(
+            get_cache_folder(),
+            NOTEBOOKS_CACHE_SUBFOLDER,
+            handle.owner,
+            handle.notebook,
+            FILE_COMPLETION_MARKER_FOLDER,
+            "output",
+            f"{path}.complete",
+        )
+    return os.path.join(get_cache_folder(), NOTEBOOKS_CACHE_SUBFOLDER, handle.owner, handle.notebook, "output.complete")
 
 
 def _get_competitions_completion_marker_filepath(handle: CompetitionHandle, path: Optional[str] = None) -> str:
