@@ -37,6 +37,7 @@ path = "src/kagglehub/__init__.py"
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
+  "pytest-mock",
   "flask",
   "flask-jwt-extended",
 ]

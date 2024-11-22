@@ -1,4 +1,4 @@
-from kagglehub.handle import parse_competition_handle, parse_dataset_handle, parse_model_handle
+from kagglehub.handle import parse_code_handle, parse_competition_handle, parse_dataset_handle, parse_model_handle
 from tests.fixtures import BaseTestCase
 
 
@@ -68,3 +68,14 @@ class TestHandle(BaseTestCase):
         h = parse_competition_handle(handle)
 
         self.assertEqual("titanic", h.competition)
+
+    def test_code_handle(self) -> None:
+        handle = "owner/notebook"
+        h = parse_code_handle(handle)
+
+        self.assertEqual("owner", h.owner)
+        self.assertEqual("notebook", h.notebook)
+
+    def test_invalid_code_handle(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_code_handle("notebook")
