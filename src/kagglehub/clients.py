@@ -320,7 +320,7 @@ class KaggleJwtClient:
 
         iap_token = os.getenv(KAGGLE_IAP_TOKEN_ENV_VAR_NAME)
         if iap_token:
-            self.headers['Authorization'] = f'Bearer {iap_token}'
+            self.headers["Authorization"] = f"Bearer {iap_token}"
 
     def post(
         self,
