@@ -285,6 +285,7 @@ def _download_needed(response: requests.Response, h: ResourceHandle, cached_path
 # These environment variables are set by the Kaggle notebook environment.
 KAGGLE_JWT_TOKEN_ENV_VAR_NAME = "KAGGLE_USER_SECRETS_TOKEN"
 KAGGLE_DATA_PROXY_TOKEN_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_TOKEN"
+KAGGLE_IAP_TOKEN_ENV_VAR_NAME = "KAGGLE_IAP_TOKEN"
 
 
 class KaggleJwtClient:
@@ -316,6 +317,10 @@ class KaggleJwtClient:
             "X-Kaggle-Authorization": f"Bearer {jwt_token}",
             "X-KAGGLE-PROXY-DATA": data_proxy_token,
         }
+
+        iap_token = os.getenv(KAGGLE_IAP_TOKEN_ENV_VAR_NAME)
+        if iap_token:
+            self.headers['Authorization'] = f'Bearer {iap_token}'
 
     def post(
         self,
