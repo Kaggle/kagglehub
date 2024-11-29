@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from typing import Optional, Union
 
 import requests
-from requests.exceptions import ConnectionError, Timeout
+from requests.exceptions import Timeout
 from tqdm import tqdm
 from tqdm.utils import CallbackIOWrapper
 
@@ -66,7 +66,7 @@ class File(object):  # noqa: UP004
         while size >= 1024 and suffix_index < 4:  # noqa: PLR2004
             suffix_index += 1
             size /= 1024.0
-        return "%.*f%s" % (precision, size, suffixes[suffix_index])
+        return f"{size:.{precision}f}{suffixes[suffix_index]}"
 
 
 def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str]) -> Iterable[tuple[str, list[str], list[str]]]:
@@ -109,7 +109,7 @@ def _check_uploaded_size(session_uri: str, file_size: int, backoff_factor: int =
                 return 0  # If no Range header, assume no bytes were uploaded
             else:
                 return file_size
-        except (ConnectionError, Timeout):
+        except (requests.ConnectionError, Timeout):
             logger.info(f"Network issue while checking uploaded size, retrying in {backoff_factor} seconds...")
             time.sleep(backoff_factor)
             backoff_factor = min(backoff_factor * 2, 60)
