@@ -101,8 +101,8 @@ class KaggleApiV1Client:
             latest_version = parse(latest_version_str)
             if latest_version > current_version:
                 logger.info(
-                    "Warning: Looks like you're using an outdated `kagglehub` "
-                    f"version, please consider updating (latest version: {latest_version})"
+                    "Warning: Looks like you're using an outdated `kagglehub` (installed version: {current_version})"
+                    f"version, please consider updating (latest version: {latest_version})."
                 )
 
     def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
