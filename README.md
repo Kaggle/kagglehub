@@ -279,4 +279,6 @@ The table below contains possible locations:
 | linux   | ~/.kaggle/logs/kagglehub.log                     |
 | windows | C:\Users\\%USERNAME%\\.kaggle\logs\kagglehub.log |
 
+If needed, the root log directory can be overriden using the following environment variable: `KAGGLE_LOGGING_ROOT_DIR`
+
 Please include the log to help troubleshoot issues.

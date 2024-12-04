@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from logging import LogRecord
 from logging.handlers import RotatingFileHandler
@@ -6,6 +7,8 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from kagglehub.config import get_log_verbosity
+
+KAGGLE_LOGGING_ROOT_DIR_ENV_VAR_NAME = "KAGGLE_LOGGING_ROOT_DIR"
 
 _FILE_BLOCK_KEY = "kaggle_file"
 EXTRA_FILE_BLOCK = {"block": _FILE_BLOCK_KEY}
@@ -35,7 +38,8 @@ def _configure_logger(log_dir: Optional[Path] = None) -> None:
         handler = library_logger.handlers.pop()
         while handler.filters:
             handler.filters.pop()
-    log_dir = Path.home() / ".kaggle" / "logs" if log_dir is None else log_dir
+    log_root_dir = Path(os.environ.get(KAGGLE_LOGGING_ROOT_DIR_ENV_VAR_NAME, Path.home()))
+    log_dir = log_root_dir / ".kaggle" / "logs" if log_dir is None else log_dir
     log_dir.mkdir(exist_ok=True, parents=True)
     file_handler = RotatingFileHandler(
         str(log_dir / "kagglehub.log"), maxBytes=1024 * 1024 * 5, backupCount=5, delay=True
