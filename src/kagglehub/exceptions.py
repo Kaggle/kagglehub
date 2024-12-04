@@ -58,9 +58,11 @@ def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Op
         response.raise_for_status()
     except requests.HTTPError as e:
         message = str(e)
-        server_error_message = response.json().get("message", "")
-        if server_error_message:
-            server_error_message = f"The server reported the following issues: {server_error_message}\n"
+        server_error_message = ""
+        if response.headers.get("Content-Type") == "application/json":
+            server_error_message = response.json().get("message", "")
+            if server_error_message:
+                server_error_message = f"The server reported the following issues: {server_error_message}\n"
         resource_url = resource_handle.to_url() if resource_handle else response.url
         if response.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
             if isinstance(resource_handle, CompetitionHandle):
