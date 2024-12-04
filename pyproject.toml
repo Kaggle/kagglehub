@@ -30,6 +30,9 @@ dependencies = [
 "Homepage" = "https://github.com/Kaggle/kagglehub"
 "Bug Tracker" = "https://github.com/Kaggle/kagglehub/issues"
 
+[project.optional-dependencies]
+hf-datasets = ["datasets", "tensorflow_datasets", "apache_beam", "mlcroissant"]
+
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
 
@@ -74,6 +77,12 @@ fmt = [
 all = [
   "style",
   "typing",
+]
+
+# Set up a separate hatch environment that has the added hf-datasets dependencies
+[tool.hatch.envs.hf-datasets]
+features = [
+  "hf-datasets",
 ]
 
 [tool.black]
