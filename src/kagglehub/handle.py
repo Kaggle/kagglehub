@@ -12,6 +12,8 @@ NUM_UNVERSIONED_DATASET_PARTS = 2  # e.g.: <owner>/<dataset>
 NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<version>
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
+NUM_UNVERSIONED_NOTEBOOK_PARTS = 2  # e.g.: <owner>/<notebook>
+
 
 @dataclass
 class ResourceHandle:
@@ -80,6 +82,21 @@ class CompetitionHandle(ResourceHandle):
     def to_url(self) -> str:
         endpoint = get_kaggle_api_endpoint()
         base_url = f"{endpoint}/competitions/{self.competition}"
+        return base_url
+
+
+@dataclass
+class NotebookHandle(ResourceHandle):
+    owner: str
+    notebook: str
+
+    def __str__(self) -> str:
+        handle_str = f"{self.owner}/{self.notebook}"
+        return handle_str
+
+    def to_url(self) -> str:
+        endpoint = get_kaggle_api_endpoint()
+        base_url = f"{endpoint}/code/{self.owner}/{self.notebook}"
         return base_url
 
 
@@ -152,3 +169,11 @@ def parse_competition_handle(handle: str) -> CompetitionHandle:
         raise ValueError(msg)
 
     return CompetitionHandle(competition=handle)
+
+
+def parse_notebook_handle(handle: str) -> NotebookHandle:
+    parts = handle.split("/")
+    if len(parts) != NUM_UNVERSIONED_NOTEBOOK_PARTS:
+        msg = f"Invalid notebook handle: {handle}"
+        raise ValueError(msg)
+    return NotebookHandle(owner=parts[0], notebook=parts[1])

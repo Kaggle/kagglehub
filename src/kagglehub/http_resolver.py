@@ -2,6 +2,7 @@ import logging
 import os
 import tarfile
 import zipfile
+from pathlib import Path
 from typing import Optional
 
 import requests
@@ -16,7 +17,7 @@ from kagglehub.cache import (
 )
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import UnauthenticatedError
-from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, ResourceHandle
+from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
 from kagglehub.resolver import Resolver
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
@@ -197,6 +198,68 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
         mark_as_complete(h, path)
         return out_path
+
+
+class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
+    def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
+        # Downloading files over HTTP is supported in all environments for all handles / paths.
+        return True
+
+    def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+        api_client = KaggleApiV1Client()
+
+        cached_response = load_from_cache(h, path)
+        if cached_response and not force_download:
+            return cached_response  # Already cached
+        elif cached_response and force_download:
+            delete_from_cache(h, path)
+
+        download_url_root = f"kernels/output/download/{h.owner}/{h.notebook}"
+        output_root = Path(get_cached_path(h, path))
+
+        # List the files and decide how to download them:
+        # - <= 25 files: Download files in parallel
+        # > 25 files: Download the archive and uncompress
+        (files, has_more) = self._list_files(api_client, h) if not path else ([path], False)
+        if has_more:
+            # TODO(b/379761520): add support for .tar.gz archived downloads
+            logger.warning(
+                f"Too many files in {h} (capped at {MAX_NUM_FILES_DIRECT_DOWNLOAD}). "
+                "Unable to download notebook output."
+            )
+            return ""
+
+        # Download files individually in parallel
+        def _inner_download_file(filepath: str) -> None:
+            download_url_path = f"{download_url_root}/{filepath}"
+            full_output_filepath = output_root / filepath
+
+            os.makedirs(os.path.dirname(full_output_filepath), exist_ok=True)
+            api_client.download_file(download_url_path, str(full_output_filepath), h)
+
+        thread_map(
+            _inner_download_file,
+            files,
+            desc=f"Downloading {len(files)} files",
+            max_workers=8,  # Never use more than 8 threads in parallel to download files.
+        )
+
+        mark_as_complete(h, path)
+
+        # TODO(b/377510971): when notebook is a Kaggle utility script, update sys.path
+        return str(output_root)
+
+    def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
+        query = f"kernels/output/list/{h.owner}/{h.notebook}?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
+        json_response = api_client.get(query, h)
+        if "files" not in json_response:
+            msg = "Invalid ApiListKernelSessionOutput API response. Expected to include a 'files' field"
+            raise ValueError(msg)
+
+        files = [f["fileName"].lstrip("/") for f in json_response["files"]]
+        has_more = "nextPageToken" in json_response and json_response["nextPageToken"] != ""
+
+        return (files, has_more)
 
 
 def _extract_archive(archive_path: str, out_path: str) -> None:
