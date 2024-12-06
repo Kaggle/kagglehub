@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import kagglehub
 from kagglehub import clients
 from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import DataCorruptionError
+from kagglehub.exceptions import DataCorruptionError, KaggleApiHTTPError
 from tests.fixtures import BaseTestCase
 
 from .server_stubs import kaggle_api_stub as stub
@@ -67,6 +67,18 @@ class TestKaggleApiV1Client(BaseTestCase):
 
             # Assert the corrupted file has been deleted.
             self.assertFalse(os.path.exists(out_file))
+
+    def test_error_message(self) -> None:
+        api_client = KaggleApiV1Client()
+        with self.assertRaises(KaggleApiHTTPError) as ex:
+            api_client.get("/error")
+        self.assertIn("The server reported the following issues:", str(ex.exception))
+
+    def test_error_message_with_mismatch(self) -> None:
+        api_client = KaggleApiV1Client()
+        with self.assertRaises(KaggleApiHTTPError) as ex:
+            api_client.get("/content_type_mismatch")
+        self.assertNotIn("The server reported the following issues:", str(ex.exception))
 
     @patch.dict("os.environ", {})
     def test_get_user_agent(self) -> None:
