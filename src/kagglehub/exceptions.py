@@ -1,9 +1,13 @@
+import logging
 from http import HTTPStatus
 from typing import Any, Optional
 
 import requests
 
 from kagglehub.handle import CompetitionHandle, ResourceHandle
+from kagglehub.logger import EXTRA_CONSOLE_BLOCK
+
+logger = logging.getLogger(__name__)
 
 
 class CredentialError(Exception):
@@ -59,10 +63,12 @@ def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Op
     except requests.HTTPError as e:
         message = str(e)
         server_error_message = ""
-        if response.headers.get("Content-Type") == "application/json":
+        try:
             server_error_message = response.json().get("message", "")
             if server_error_message:
                 server_error_message = f"The server reported the following issues: {server_error_message}\n"
+        except requests.exceptions.JSONDecodeError as ex:
+            logger.info(f"Server payload is not json. See {ex}", extra={**EXTRA_CONSOLE_BLOCK})
         resource_url = resource_handle.to_url() if resource_handle else response.url
         if response.status_code in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
             if isinstance(resource_handle, CompetitionHandle):

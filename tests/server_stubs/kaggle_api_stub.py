@@ -2,7 +2,7 @@ import hashlib
 import os
 import re
 
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, make_response, request
 from flask.typing import ResponseReturnValue
 
 from kagglehub.integrity import to_b64_digest
@@ -20,6 +20,24 @@ def head() -> ResponseReturnValue:
 def error(e: Exception):  # noqa: ANN201
     data = {"code": "404", "error": str(e), "message": "server side error"}
     return jsonify(data), 404
+
+
+@app.route("/api/v1/content_type_mismatch", methods=["GET"])
+def content_type_and_payload_mismatch() -> ResponseReturnValue:
+    html = """
+    <html>
+    <head>
+        <title>Test</title>
+    </head>
+    <body>
+        <h1>This is HTML content</h1>
+    </body>
+    </html>
+    """
+    resp = make_response(html)
+    resp.headers["Content-Type"] = "application/json"
+    resp.status_code = 404
+    return resp
 
 
 @app.route("/api/v1/no-integrity", methods=["GET"])

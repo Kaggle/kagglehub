@@ -74,6 +74,12 @@ class TestKaggleApiV1Client(BaseTestCase):
             api_client.get("/error")
         self.assertIn("The server reported the following issues:", str(ex.exception))
 
+    def test_error_message_with_mismatch(self) -> None:
+        api_client = KaggleApiV1Client()
+        with self.assertRaises(KaggleApiHTTPError) as ex:
+            api_client.get("/content_type_mismatch")
+        self.assertNotIn("The server reported the following issues:", str(ex.exception))
+
     @patch.dict("os.environ", {})
     def test_get_user_agent(self) -> None:
         self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__}")
