@@ -1,5 +1,7 @@
 import os
+from tempfile import TemporaryDirectory
 from typing import Optional
+from unittest import mock
 
 import requests
 
@@ -147,6 +149,32 @@ class TestHttpModelDownload(BaseTestCase):
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, VERSIONED_MODEL_HANDLE, force_download=True)
 
+    def test_versioned_model_download_with_output_dir(self) -> None:
+        with create_test_cache() as d:
+            with TemporaryDirectory() as expected_output_dir:
+                self._download_model_and_assert_downloaded(
+                    d,
+                    VERSIONED_MODEL_HANDLE,
+                    expected_output_dir,
+                    output_dir=expected_output_dir
+                )
+
+    def test_versioned_model_download_with_bad_output_dir(self) -> None:
+        with (
+            create_test_cache() as d,
+            TemporaryDirectory() as placeholder_dir,
+            mock.patch("kagglehub.models.copytree") as mock_copytree
+        ):
+            mock_copytree.side_effect = Exception("Mock exception")
+            expected_output_dir = EXPECTED_MODEL_SUBDIR # falls back to default
+            self._download_model_and_assert_downloaded(
+                d,
+                VERSIONED_MODEL_HANDLE,
+                expected_output_dir,
+                # note: placeholder name is irrelevant since copytree is mocked to throw
+                output_dir=placeholder_dir
+            )
+
     def test_unversioned_model_download_with_path_with_force_download(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE, force_download=True)
@@ -187,7 +215,6 @@ class TestHttpModelDownload(BaseTestCase):
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH, force_download=False)
 
             self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
-
 
 class TestHttpNoInternet(BaseTestCase):
     def test_versioned_model_download_already_cached_with_force_download(self) -> None:
