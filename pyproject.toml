@@ -31,7 +31,8 @@ dependencies = [
 "Bug Tracker" = "https://github.com/Kaggle/kagglehub/issues"
 
 [project.optional-dependencies]
-hf-datasets = ["datasets", "tensorflow_datasets", "apache_beam", "mlcroissant"]
+hf-datasets = ["datasets", "kagglehub[pandas-datasets]"]
+pandas-datasets = ["mlcroissant", "pandas"]
 
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
@@ -83,6 +84,12 @@ all = [
 [tool.hatch.envs.hf-datasets]
 features = [
   "hf-datasets",
+]
+
+# Set up a separate hatch environment that has the added hf-datasets dependencies
+[tool.hatch.envs.pandas-datasets]
+features = [
+  "pandas-datasets",
 ]
 
 [tool.black]
