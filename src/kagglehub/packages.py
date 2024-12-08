@@ -9,34 +9,34 @@ import urllib.request
 
 from kagglehub.clients import KaggleApiV1Client
 
-scoped_pipeline_dir_ctx = contextvars.ContextVar('kagglehub_scoped_pipeline_dir', default=None)
+scoped_package_dir_ctx = contextvars.ContextVar('kagglehub_scoped_package_dir', default=None)
 
-# Decorator which scopes a function within an exported Pipeline module to
+# Decorator which scopes a function within an exported Package module to
 # 1. Change working directory to the module's base directory so files can be read easily.
 # 2. Set a `kagglehub` ContextVar so datasource references will use the versions used
-#    by the original saved version of the Pipeline.
-def pipeline_scoped(func: Callable) -> Callable:
+#    by the original saved version of the Package.
+def package_scoped(func: Callable) -> Callable:
     def inner(*args, **kwargs):
         module = inspect.getmodule(func)
-        pipeline_dir = (
+        package_dir = (
             pathlib.Path(os.path.dirname(module.__file__)).parent
             if hasattr(module, '__file__')
-            # No __file__ means we weren't imported, so assume we're in an interactive session
+            # No __file__ means we weren't imported, so assume we're in a Kaggle interactive Notebook session
             else '/kaggle/working'
         )
 
-        original_ctx = scoped_pipeline_dir_ctx.get()
+        original_ctx = scoped_package_dir_ctx.get()
         try:
-            scoped_pipeline_dir_ctx.set(pipeline_dir)
+            scoped_package_dir_ctx.set(package_dir)
             return_value = func(*args, **kwargs)
         finally:
-            scoped_pipeline_dir_ctx.set(original_ctx)
+            scoped_package_dir_ctx.set(original_ctx)
         return return_value
     return inner
 
 def get_asset_path(path):
-    pipeline_dir = scoped_pipeline_dir_ctx.get() or '/kaggle/working'
-    assets_dir = os.path.join(pipeline_dir, 'assets')
+    package_dir = scoped_package_dir_ctx.get() or '/kaggle/working'
+    assets_dir = os.path.join(package_dir, 'assets')
     os.makedirs(assets_dir, exist_ok=True)
     return os.path.join(assets_dir, path)
 
@@ -51,7 +51,7 @@ def download_notebook_output_files(user_name, kernel_slug, out_dir=''):
         urllib.request.urlretrieve(f['url'], outfile_path)
         print(f'downloaded {outfile_path}')
 
-def import_pipeline_module(user_name, kernel_slug):
+def import_package_module(user_name, kernel_slug):
     download_notebook_output_files(user_name, kernel_slug, f'/kaggle/tmp/code/{user_name}_{kernel_slug}')
     # TODO: try to import without appending to path?
     sys.path.append(f'/kaggle/tmp/code')

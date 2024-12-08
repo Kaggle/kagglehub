@@ -54,6 +54,7 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
             },
             timeout=(DEFAULT_CONNECT_TIMEOUT, ATTACH_DATASOURCE_READ_TIMEOUT),
         )
+        print(f'Got JWT: {result}')
 
         if "mountSlug" not in result:
             msg = "'result.mountSlug' field missing from response"
@@ -121,6 +122,7 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
             },
             timeout=(DEFAULT_CONNECT_TIMEOUT, ATTACH_DATASOURCE_READ_TIMEOUT),
         )
+        print(f'Got JWT: {result}')
         if "mountSlug" not in result:
             msg = "'result.mountSlug' field missing from response"
             raise BackendError(msg)
@@ -192,6 +194,7 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
             },
             timeout=(DEFAULT_CONNECT_TIMEOUT, ATTACH_DATASOURCE_READ_TIMEOUT),
         )
+        print(f'Got JWT: {result}')
         if "mountSlug" not in result:
             msg = "'result.mountSlug' field missing from response"
             raise BackendError(msg)
