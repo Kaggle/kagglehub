@@ -86,7 +86,7 @@ features = [
   "hf-datasets",
 ]
 
-# Set up a separate hatch environment that has the added hf-datasets dependencies
+# Set up a separate hatch environment that has the added pandas-datasets dependencies
 [tool.hatch.envs.pandas-datasets]
 features = [
   "pandas-datasets",

@@ -130,7 +130,7 @@ def load_dataset(
         adapter_optional_dependency = LOAD_DATASET_ADAPTER_OPTIONAL_DEPENDENCIES_MAP[adapter]
         import_warning_message = (
             f"The 'load_dataset' function requires the '{adapter_optional_dependency}' extras. "
-            "Install them with 'pip install kagglehub[{adapter_optional_dependency}]'"
+            f"Install them with 'pip install kagglehub[{adapter_optional_dependency}]'"
         )
         # Inform the user if we detect that they didn't install everything
         raise ImportError(import_warning_message) from None

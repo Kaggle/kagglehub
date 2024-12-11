@@ -9,7 +9,7 @@ from datasets import Dataset, DatasetDict
 
 from kagglehub.pandas_datasets import load_pandas_dataset
 
-MULTILPE_SHEETS_ERROR_MESSAGE = "Excel-based datasets must specify a single sheet"
+MULTIPLE_SHEETS_ERROR_MESSAGE = "Excel-based datasets must specify a single sheet"
 
 
 def load_hf_dataset(
@@ -44,14 +44,14 @@ def load_hf_dataset(
     # to perform splits and loading into the DatasetDict. We validate upfront to respond to the user
     # before doing any loading.
     if sheet_name is None or isinstance(sheet_name, list):
-        raise ValueError(MULTILPE_SHEETS_ERROR_MESSAGE)
+        raise ValueError(MULTIPLE_SHEETS_ERROR_MESSAGE)
 
     result = load_pandas_dataset(handle, path, columns=columns, sheet_name=sheet_name, sql_query=sql_query)
 
     # This shouldn't happen since we validated the sheet_name argument already, but we can check again to
     # be robust and enable type safety in the else block.
     if isinstance(result, dict):
-        raise ValueError(MULTILPE_SHEETS_ERROR_MESSAGE)
+        raise ValueError(MULTIPLE_SHEETS_ERROR_MESSAGE)
     else:
         # Split the DataFrame into train/test splits based on the user-specified split
         split_index = int(result.shape[0] * train_split_percent)
