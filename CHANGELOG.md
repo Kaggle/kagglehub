@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.5 (December 10th, 2024)
+
+* Include server-side errors if present ([#183](https://github.com/Kaggle/kagglehub/pull/183))
+* Made file logging opt-out by default ([#190](https://github.com/Kaggle/kagglehub/pull/190))
+* Improved version upgrade warning ([#188](https://github.com/Kaggle/kagglehub/pull/188))
+* Add `kagglehub.notebook_output_download(...)`, only supports HTTP resolver for now. ([#184](https://github.com/Kaggle/kagglehub/pull/184))
+
 ## v0.3.4 (November 8th, 2024)
 
 * Add a naive Colab dataset cache resolver ([#177](https://github.com/Kaggle/kagglehub/pull/177))
