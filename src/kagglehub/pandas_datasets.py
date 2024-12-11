@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 # WARNING: This module is intended to be imported only at runtime, with
 # specific error handling to inform users that they need to install the
@@ -53,7 +53,7 @@ SUPPORTED_READ_FUNCTIONS_BY_EXTENSION: dict[str, Callable] = {
 }
 
 # Certain extensions leverage a shared method but require additional static kwargs
-STATIC_KWARGS_BY_EXTENSION: dict[str, dict[str, str | bool]] = {".tsv": {"sep": "\t"}, ".jsonl": {"lines": True}}
+STATIC_KWARGS_BY_EXTENSION: dict[str, dict[str, Union[str, bool]]] = {".tsv": {"sep": "\t"}, ".jsonl": {"lines": True}}
 
 COLUMNS_KWARG_NAME_BY_READ_FUNCTION: dict[Callable, str] = {
     pd.read_csv: "usecols",
@@ -70,9 +70,9 @@ def load_pandas_dataset(
     path: str,
     *,
     columns: Optional[list] = None,
-    sheet_name: str | int | list | None = 0,
+    sheet_name: Union[str, int, list, None] = 0,
     sql_query: Optional[str] = None,
-) -> pd.DataFrame | dict[int | str, pd.DataFrame]:
+) -> Union[pd.DataFrame, dict[Union[int, str], pd.DataFrame]]:
     """Creates pandas DataFrame(s) from a file in the dataset
 
     Args:
@@ -128,7 +128,7 @@ def _validate_read_function(file_extension: str, sql_query: Optional[str] = None
     return read_function
 
 
-def _build_args(read_function: Callable, path: str, sql_query: Optional[str] | None) -> list:
+def _build_args(read_function: Callable, path: str, sql_query: Optional[str] = None) -> list:
     return [path] if read_function != wrapped_read_sql_query else [sql_query, path]
 
 
@@ -136,7 +136,7 @@ def _build_kwargs(
     read_function: Callable,
     file_extension: str,
     columns: Optional[list] = None,
-    sheet_name: str | int | list | None = None,
+    sheet_name: Union[str, int, list, None] = 0,
 ) -> dict:
     additional_kwargs: dict[str, Any] = (
         {} if file_extension not in STATIC_KWARGS_BY_EXTENSION else STATIC_KWARGS_BY_EXTENSION[file_extension]

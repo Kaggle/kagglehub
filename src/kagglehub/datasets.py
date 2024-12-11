@@ -84,7 +84,7 @@ def load_dataset(
     # would specify here if they select the 'hugging_face' adapter.
     train_split_percent: float = 0.8,
     columns: Optional[list] = None,
-    sheet_name: str | int | list | None = 0,
+    sheet_name: Union[str, int, list, None] = 0,
     sql_query: Optional[str] = None,
 ) -> Any:  # noqa: ANN401
     """Load a Kaggle Dataset into a python object based on the selected adapter

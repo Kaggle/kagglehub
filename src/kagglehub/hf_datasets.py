@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 # WARNING: This module is intended to be imported only at runtime, with
 # specific error handling to inform users that they need to install the
@@ -18,7 +18,7 @@ def load_hf_dataset(
     train_split_percent: float = 0.8,
     *,
     columns: Optional[list] = None,
-    sheet_name: str | int | list | None = 0,
+    sheet_name: Union[str, int, list, None] = 0,
     sql_query: Optional[str] = None,
 ) -> DatasetDict:
     """Load a Kaggle Dataset into a Huggingface DatasetDict with test/train splits
