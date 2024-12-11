@@ -32,7 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 hf-datasets = ["datasets", "kagglehub[pandas-datasets]"]
-pandas-datasets = ["mlcroissant", "pandas"]
+pandas-datasets = ["pandas"]
 
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"

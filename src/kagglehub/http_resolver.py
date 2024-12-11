@@ -55,7 +55,9 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
             try:
-                download_needed = api_client.download_file(url_path, out_path, h, cached_path)
+                download_needed = api_client.download_file(
+                    url_path, out_path, h, cached_path, extract_auto_compressed_file=True
+                )
             except requests.exceptions.ConnectionError:
                 if cached_path:
                     return cached_path
@@ -115,7 +117,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         if path:
             # Downloading a single file.
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "&file_name=" + path, out_path, h)
+            api_client.download_file(url_path + "&file_name=" + path, out_path, h, extract_auto_compressed_file=True)
         else:
             # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
             # Downloading the full archived bundle.
@@ -161,7 +163,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         if path:
             # Downloading a single file.
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "/" + path, out_path, h)
+            api_client.download_file(url_path + "/" + path, out_path, h, extract_auto_compressed_file=True)
         else:
             # List the files and decide how to download them:
             # - <= 25 files: Download files in parallel
