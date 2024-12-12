@@ -10,14 +10,16 @@ Usage: $0 [OPTIONS] HATCH-OPTIONS-COMMAND-ARGS
 Run the given HATCH-OPTIONS-COMMAND-ARGS in a container.
 
 Options:
+    -h                                      Show documentation on how to use $0
     -P, --python-version PYTHON-VERSION     Run in a container using this specfic Python version.
-                                            Valid versions are tags of the `python` Docker image: https://hub.docker.com/_/python
+                                            Valid versions are tags of the \`python\` Docker image: https://hub.docker.com/_/python
     -f, --force-rebuild-docker-image        Force re-build the Docker image.
 EOF
 }
 
 while :; do
     case "$1" in 
+        # --help is a hatch flag, so don't include it here
         -h)
             usage
             exit
@@ -34,19 +36,7 @@ while :; do
         -f|--force-rebuild-docker-image)
             CACHE_FLAG='--no-cache'
             ;;
-        # These are flags for hatch commands: https://hatch.pypa.io/latest/cli/reference/#hatch
-        # Instead of flagging as an unknown option below, let them pass through to hatch.
-        -e|--env|-p|--project|-v|--verbose|-q|--quiet|--color|--no-color|--interactive|--no-interactive)
-            break
-            ;;
-        --data-dir|--cache-dir|--config|--version|--help)
-            break
-            ;;
-        -?*)
-            usage
-            printf 'ERROR: Unknown option: %s\n' "$1" >&2
-            exit
-            ;;
+        # Everything else is assumed to be for hatch
         *)            
             break
     esac
