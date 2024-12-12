@@ -10,8 +10,9 @@ Usage: $0 [OPTIONS] HATCH-OPTIONS-COMMAND-ARGS
 Run the given HATCH-OPTIONS-COMMAND-ARGS in a container.
 
 Options:
+    -h, --help                              Show documentation on how to use $0
     -v, --python-version PYTHON-VERSION     Run in a container using this specfic Python version.
-                                            Valid versions are tags of the `python` Docker image: https://hub.docker.com/_/python
+                                            Valid versions are tags of the \`python\` Docker image: https://hub.docker.com/_/python
     -f, --force-rebuild-docker-image        Force re-build the Docker image.
 EOF
 }
@@ -33,6 +34,11 @@ while :; do
             ;;
         -f|--force-rebuild-docker-image)
             CACHE_FLAG='--no-cache'
+            ;;
+        # Use this marker to indicate that the rest of the command is for hatch
+        --)
+            shift # skip this one to pass the rest to hatch  
+            break
             ;;
         -?*)
             usage
