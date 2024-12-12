@@ -205,10 +205,33 @@ hatch test integration_tests
 
 ### Run `kagglehub` from source
 
+#### Option 1: Execute a one-liner of code from the command line
+
 ```sh
 # Download a model & print the path
 hatch run python -c "import kagglehub; print('path: ', kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem'))"
 ```
+
+#### Option 2: Run a saved script from the /tools/scripts directory
+
+```sh
+# This runs the same code as the one-liner above, but reads it from a 
+# checked in script located at tool/scripts/download_model.py
+hatch run python tools/scripts/download_model.py
+```
+
+#### Option 3: Run a temporary script from the root of the repo
+
+Any script created at the root of the repo is gitignore'd, so they're
+just temporary scripts for testing in development. Placing temporary 
+scripts at the root makes the run command easier to use during local 
+development.
+
+```sh
+# Test out some new changes
+hatch run python test_new_feature.py
+```
+
 
 ### Lint / Format
 
@@ -245,10 +268,13 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 ./docker-hatch run lint:all
 
 # Use specific Python version (Must be a valid tag from: https://hub.docker.com/_/python)
-./docker-hatch -v 3.9 run lint:all
+./docker-hatch -P 3.9 run lint:all
 
 # Run test in docker with specific Python version
-./docker-hatch -v 3.9 test
+./docker-hatch -P 3.9 test
+
+# Run python from specific environment (e.g. one with optional dependencies like `hf-datasets` installed)
+./docker-hatch run hf-datasets:python -c "print('hello world')"
 ```
 
 ## VS Code setup
