@@ -57,7 +57,7 @@ class TestCompetitionDownload(unittest.TestCase):
     def test_auto_decompress_file(self) -> None:
         with create_test_cache():
             # sample_submission.csv is an auto-compressed CSV with the following columns
-            expected_columns = ["TransactionId", "isFraud"]
+            expected_columns = ["TransactionID", "isFraud"]
             actual_path = competition_download(IEEE_FRAUD_DETECTION_HANDLE, path="sample_submission.csv")
             assert_columns(self, actual_path, expected_columns)
 
