@@ -65,7 +65,7 @@ def dataset_download(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
         Response(
             headers={
                 LOCATION_HEADER: get_mocked_gcs_signed_url(os.path.basename(test_file_name)),
-                CONTENT_LENGTH_HEADER: 0,
+                CONTENT_LENGTH_HEADER: "0",
             }
         ),
         302,
@@ -94,7 +94,7 @@ def handle_mock_gcs_redirect(file_name: str) -> ResponseReturnValue:
                 generate_file_content(),
                 headers={
                     GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}",
-                    "Content-Length": os.path.getsize(test_file_path),
+                    "Content-Length": str(os.path.getsize(test_file_path)),
                     "Content-Type": mimetypes.guess_type(test_file_path)[0] or "application/octet-stream",
                 },
             ),
