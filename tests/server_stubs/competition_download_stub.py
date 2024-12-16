@@ -1,15 +1,14 @@
 import hashlib
 import os
-from collections.abc import Generator
-from typing import Any
 
 from flask import Flask, Response, jsonify
 from flask.typing import ResponseReturnValue
 
 from kagglehub.integrity import to_b64_digest
-from tests.utils import get_test_file_path
+from tests.utils import AUTO_COMPRESSED_FILE_NAME, add_mock_gcs_route, get_gcs_redirect_response, get_test_file_path
 
 app = Flask(__name__)
+add_mock_gcs_route(app)
 
 TARGZ_ARCHIVE_HANDLE = "competition-targz"
 
@@ -49,33 +48,11 @@ def competition_download(competition_slug: str) -> ResponseReturnValue:
 
 
 @app.route("/api/v1/competitions/data/download/<competition_slug>/<file_name>", methods=["GET"])
-def competition_download_file(competition_slug: str, file_name: str) -> ResponseReturnValue:
-    _ = f"{competition_slug}"
-    test_file_path = get_test_file_path(file_name)
-
-    def generate_file_content() -> Generator[bytes, Any, None]:
-        with open(test_file_path, "rb") as f:
-            while True:
-                chunk = f.read(4096)  # Read file in chunks
-                if not chunk:
-                    break
-                yield chunk
-
-    with open(test_file_path, "rb") as f:
-        content = f.read()
-        file_hash = hashlib.md5()
-        file_hash.update(content)
-        return (
-            Response(
-                generate_file_content(),
-                headers={
-                    GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}",
-                    "Content-Length": str(len(content)),
-                    LAST_MODIFIED: LAST_MODIFIED_DATE,
-                },
-            ),
-            200,
-        )
+def competition_download_file(_competition_slug: str, file_name: str) -> ResponseReturnValue:
+    # This mimics behavior for our file downloads, where users request a file, but
+    # receive a zipped version of the file from GCS.
+    test_file = f"{file_name}.zip" if file_name is AUTO_COMPRESSED_FILE_NAME else file_name
+    return get_gcs_redirect_response(test_file)
 
 
 @app.errorhandler(404)

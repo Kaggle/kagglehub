@@ -8,7 +8,7 @@ from tests.fixtures import BaseTestCase
 
 from .server_stubs import dataset_download_stub as stub
 from .server_stubs import serv
-from .utils import create_test_cache
+from .utils import AUTO_COMPRESSED_FILE_NAME, create_test_cache
 
 INVALID_ARCHIVE_DATASET_HANDLE = "invalid/invalid/invalid/invalid/invalid"
 VERSIONED_DATASET_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with-metadata/versions/2"
@@ -74,8 +74,8 @@ class TestHttpDatasetDownload(BaseTestCase):
         dataset_handle: str,
         **kwargs,  # noqa: ANN003
     ) -> None:
-        dataset_path = kagglehub.dataset_download(dataset_handle, path=stub.AUTO_COMPRESSED_FILE_NAME, **kwargs)
-        self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, stub.AUTO_COMPRESSED_FILE_NAME), dataset_path)
+        dataset_path = kagglehub.dataset_download(dataset_handle, path=AUTO_COMPRESSED_FILE_NAME, **kwargs)
+        self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, AUTO_COMPRESSED_FILE_NAME), dataset_path)
         with open(dataset_path) as dataset_file:
             self.assertEqual(AUTO_COMPRESSED_CONTENTS, dataset_file.read())
 
