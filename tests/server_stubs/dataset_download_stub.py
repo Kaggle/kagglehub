@@ -1,25 +1,13 @@
-import hashlib
-import mimetypes
-import os
-from collections.abc import Generator
-from typing import Any
-
-from flask import Flask, Response, jsonify, request
+from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
 
 from kagglehub.http_resolver import DATASET_CURRENT_VERSION_FIELD
-from kagglehub.integrity import to_b64_digest
-from tests.utils import MOCK_GCS_BUCKET_BASE_PATH, get_mocked_gcs_signed_url, get_test_file_path
+from tests.utils import AUTO_COMPRESSED_FILE_NAME, add_mock_gcs_route, get_gcs_redirect_response
 
 app = Flask(__name__)
+add_mock_gcs_route(app)
 
 TARGZ_ARCHIVE_HANDLE = "testuser/zip-dataset/versions/1"
-AUTO_COMPRESSED_FILE_NAME = "dummy.csv"
-
-# See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
-GCS_HASH_HEADER = "x-goog-hash"
-LOCATION_HEADER = "Location"
-CONTENT_LENGTH_HEADER = "Content-Length"
 
 
 @app.route("/", methods=["HEAD"])
@@ -58,48 +46,7 @@ def dataset_download(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
     else:
         test_file_name = "foo.txt.zip"
 
-    # All downloads, regardless of archive or file, happen via GCS signed URLs. We mock the 302 and handle
-    # the redirect not only to be thorough--without this, the response.url in download_file (clients.py)
-    # will not pick up on followed redirect URL being different from the originally requested URL.
-    return (
-        Response(
-            headers={
-                LOCATION_HEADER: get_mocked_gcs_signed_url(os.path.basename(test_file_name)),
-                CONTENT_LENGTH_HEADER: "0",
-            }
-        ),
-        302,
-    )
-
-
-# Route to handle the mocked GCS redirects
-@app.route(f"{MOCK_GCS_BUCKET_BASE_PATH}/<file_name>", methods=["GET"])
-def handle_mock_gcs_redirect(file_name: str) -> ResponseReturnValue:
-    test_file_path = get_test_file_path(file_name)
-
-    def generate_file_content() -> Generator[bytes, Any, None]:
-        with open(test_file_path, "rb") as f:
-            while True:
-                chunk = f.read(4096)  # Read file in chunks
-                if not chunk:
-                    break
-                yield chunk
-
-    with open(test_file_path, "rb") as f:
-        content = f.read()
-        file_hash = hashlib.md5()
-        file_hash.update(content)
-        return (
-            Response(
-                generate_file_content(),
-                headers={
-                    GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}",
-                    "Content-Length": str(os.path.getsize(test_file_path)),
-                    "Content-Type": mimetypes.guess_type(test_file_path)[0] or "application/octet-stream",
-                },
-            ),
-            200,
-        )
+    return get_gcs_redirect_response(test_file_name)
 
 
 @app.errorhandler(404)
