@@ -36,9 +36,6 @@ def dataset_get(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
     return jsonify(data), 200
 
 
-# Route to handle the mocked GCS redirects
-
-
 # For Datasets, downloads of the archive and individual files happen at the same route, controlled
 # by a file_name query param
 @app.route("/api/v1/datasets/download/<owner_slug>/<dataset_slug>", methods=["GET"])
@@ -69,6 +66,7 @@ def dataset_download(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
     ), 302
 
 
+# Route to handle the mocked GCS redirects
 @app.route(f"{MOCK_GCS_BUCKET_BASE_PATH}/<file_name>", methods=["GET"])
 def handle_mock_gcs_redirect(file_name: str) -> ResponseReturnValue:
     test_file_path = get_test_file_path(file_name)
