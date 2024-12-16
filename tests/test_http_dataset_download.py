@@ -68,7 +68,12 @@ class TestHttpDatasetDownload(BaseTestCase):
         with open(dataset_path) as dataset_file:
             self.assertEqual(TEST_CONTENTS, dataset_file.read())
 
-    def _download_test_file_and_assert_downloaded_auto_compressed(self, d: str, dataset_handle: str, **kwargs) -> None:  # noqa: ANN003
+    def _download_test_file_and_assert_downloaded_auto_compressed(
+        self,
+        d: str,
+        dataset_handle: str,
+        **kwargs,  # noqa: ANN003
+    ) -> None:
         dataset_path = kagglehub.dataset_download(dataset_handle, path=stub.AUTO_COMPRESSED_FILE_NAME, **kwargs)
         self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, stub.AUTO_COMPRESSED_FILE_NAME), dataset_path)
         with open(dataset_path) as dataset_file:

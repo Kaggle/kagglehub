@@ -61,9 +61,15 @@ def dataset_download(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
     # All downloads, regardless of archive or file, happen via GCS signed URLs. We mock the 302 and handle
     # the redirect not only to be thorough--without this, the response.url in download_file (clients.py)
     # will not pick up on followed redirect URL being different from the originally requested URL.
-    return Response(
-        headers={LOCATION_HEADER: get_mocked_gcs_signed_url(os.path.basename(test_file_name)), CONTENT_LENGTH_HEADER: 0}
-    ), 302
+    return (
+        Response(
+            headers={
+                LOCATION_HEADER: get_mocked_gcs_signed_url(os.path.basename(test_file_name)),
+                CONTENT_LENGTH_HEADER: 0,
+            }
+        ),
+        302,
+    )
 
 
 # Route to handle the mocked GCS redirects
@@ -83,14 +89,17 @@ def handle_mock_gcs_redirect(file_name: str) -> ResponseReturnValue:
         content = f.read()
         file_hash = hashlib.md5()
         file_hash.update(content)
-        return Response(
-            generate_file_content(),
-            headers={
-                GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}",
-                "Content-Length": os.path.getsize(test_file_path),
-                "Content-Type": mimetypes.guess_type(test_file_path)[0] or "application/octet-stream",
-            },
-        ), 200
+        return (
+            Response(
+                generate_file_content(),
+                headers={
+                    GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}",
+                    "Content-Length": os.path.getsize(test_file_path),
+                    "Content-Type": mimetypes.guess_type(test_file_path)[0] or "application/octet-stream",
+                },
+            ),
+            200,
+        )
 
 
 @app.errorhandler(404)
