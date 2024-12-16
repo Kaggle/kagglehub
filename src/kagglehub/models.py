@@ -61,8 +61,8 @@ def model_upload(
             https://docs.python.org/3/library/fnmatch.html.
             Use a pattern ending with "/" to ignore the whole dir,
             e.g., ".git/" is equivalent to ".git/*".
-        publish_transparency_log: (bool)
-            Creates a trasparent ledger using sigstore. User must be an admin/editor.
+        publish_transparency_log: (bool, optional)
+            Creates a trasparent ledger using sigstore. User must be an admin/editor of the model.
     """
     # parse slug
     h = parse_model_handle(handle)
@@ -71,26 +71,34 @@ def model_upload(
         is_versioned_exception = "The model handle should not include the version"
         raise ValueError(is_versioned_exception)
 
-    if publish_transparency_log:
-        token = signing_token(h.owner, h.model)
-        if token:
-            SigningConfig().set_sigstore_signer(identity_token=token).sign(Path(local_model_dir), Path(local_model_dir))
-        else:
-            # skips transparency log publishing as we are unable to get a token
-            publish_transparency_log = False
-
     # Create the model if it doesn't already exist
     create_model_if_missing(h.owner, h.model)
 
-    # Upload the model files to GCS
+    # Model can be non-existent. Get token after model creation so signing token can be authorized.
+    try:
+        if publish_transparency_log:
+            token = signing_token(h.owner, h.model)
+            if token:
+                # todo: Special kaggle file is needed
+                signing_file = Path(local_model_dir) / "signing.json"
+                signing_file.unlink(missing_ok=True)
+                SigningConfig().set_sigstore_signer(identity_token=token).sign(
+                    Path(local_model_dir), signing_file
+                )
+            else:
+                # skips transparency log publishing as we are unable to get a token
+                publish_transparency_log = False
+    except Exception:
+        logger.exception("Signing failed. Skipping signing...")
+        publish_transparency_log = False
 
+    # Upload the model files to GCS
     tokens = upload_files_and_directories(
         local_model_dir,
         item_type="model",
         ignore_patterns=normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
     )
 
-    if publish_transparency_log:
-        create_model_instance_or_version(
-            h, tokens, license_name, version_notes, publish_transparency_log=publish_transparency_log
-        )
+    create_model_instance_or_version(
+        h, tokens, license_name, version_notes, publish_transparency_log=publish_transparency_log
+    )

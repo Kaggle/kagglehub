@@ -115,12 +115,13 @@ def delete_model(owner_slug: str, model_slug: str) -> None:
             raise (e)
 
 
-def signing_token(owner_slug: str, model_slug: str) -> str:
+def signing_token(owner_slug: str, model_slug: str) -> Optional[str]:
     "Returns a JWT for signing if authorized for /{owner_slug}/{model_slug}"
     try:
         api_client = KaggleApiV1Client()
-        resp = api_client.post("/models/signing/token", {"ownerSlug": owner_slug, "modelSlug": model_slug})
-        return resp["id_token"]
+        # TODO: payload property name casing is unstable
+        resp = api_client.post("/models/signing/token", {"OwnerSlug": owner_slug, "ModelSlug": model_slug})
+        return resp.get("id_token")
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
             logger.info(
