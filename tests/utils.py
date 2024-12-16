@@ -39,7 +39,7 @@ def get_mocked_gcs_signed_url(file_name: str) -> str:
 # the redirect not only to be thorough--without this, the response.url in download_file (clients.py)
 # will not pick up on followed redirect URL being different from the originally requested URL.
 def get_gcs_redirect_response(file_name: str) -> ResponseReturnValue:
-    (
+    return (
         Response(
             headers={
                 LOCATION_HEADER: get_mocked_gcs_signed_url(file_name),
@@ -96,7 +96,7 @@ def handle_mock_gcs_redirect(file_name: str) -> ResponseReturnValue:
                 generate_file_content(),
                 headers={
                     GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}",
-                    "Content-Length": os.path.getsize(test_file_path),
+                    "Content-Length": str(os.path.getsize(test_file_path)),
                     "Content-Type": mimetypes.guess_type(test_file_path)[0] or "application/octet-stream",
                 },
             ),

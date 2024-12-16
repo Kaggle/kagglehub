@@ -48,7 +48,8 @@ def competition_download(competition_slug: str) -> ResponseReturnValue:
 
 
 @app.route("/api/v1/competitions/data/download/<competition_slug>/<file_name>", methods=["GET"])
-def competition_download_file(_competition_slug: str, file_name: str) -> ResponseReturnValue:
+def competition_download_file(competition_slug: str, file_name: str) -> ResponseReturnValue:
+    _ = f"{competition_slug}"
     # This mimics behavior for our file downloads, where users request a file, but
     # receive a zipped version of the file from GCS.
     test_file = f"{file_name}.zip" if file_name is AUTO_COMPRESSED_FILE_NAME else file_name
