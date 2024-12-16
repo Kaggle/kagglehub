@@ -267,7 +267,7 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 ./docker-hatch run lint:all
 
 # Use specific Python version (Must be a valid tag from: https://hub.docker.com/_/python)
-./docker-hatch -P 3.9 run lint:all
+./docker-hatch -v 3.9 run lint:all
 
 # Run test in docker with specific Python version
 ./docker-hatch -v 3.9 test

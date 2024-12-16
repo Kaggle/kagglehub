@@ -19,12 +19,11 @@ EOF
 
 while :; do
     case "$1" in 
-        # --help is a hatch flag, so don't include it here
-        -h)
+        -h|--help)
             usage
             exit
             ;;        
-        -P|--python-version)
+        -v|--python-version)
             if [[ -z $2 ]]; then
                 usage
                 printf 'ERROR: No PYTHON-VERSION specified after the %s flag.\n' "$1" >&2
