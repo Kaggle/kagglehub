@@ -2,10 +2,11 @@ import hashlib
 import json
 import logging
 import os
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 import requests.auth
@@ -138,6 +139,8 @@ class KaggleApiV1Client:
         out_file: str,
         resource_handle: Optional[ResourceHandle] = None,
         cached_path: Optional[str] = None,
+        *,
+        extract_auto_compressed_file: bool = False,
     ) -> bool:
         """
         Issues a call to kaggle api and downloads files. For competition downloads,
@@ -198,6 +201,24 @@ class KaggleApiV1Client:
                         _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(expected_md5_hash, actual_md5_hash)
                     )
 
+            # For individual file downloads, the downloaded file may be a zip of the file rather
+            # than the file name/type that was requested (e.g. my-big-table.csv.zip and not my-big-table.csv).
+            # If that's the case, we should auto-extract it so users get what they expect.
+            expected_downloded_file_name = urlparse(out_file).path.split("/")[-1]
+            actual_downloaded_file_name = urlparse(response.url).path.split("/")[-1]
+            if (
+                extract_auto_compressed_file
+                and f"{expected_downloded_file_name}.zip" == actual_downloaded_file_name
+                and zipfile.is_zipfile(out_file)
+            ):
+                logger.info(f"Extracting zip of {expected_downloded_file_name}...")
+                # Rename the file to match what it really is and make space to write to the expected location
+                renamed_auto_compressed_path = f"{out_file}.zip"
+                os.rename(out_file, renamed_auto_compressed_path)
+                with zipfile.ZipFile(renamed_auto_compressed_path, "r") as f:
+                    f.extract(expected_downloded_file_name, os.path.dirname(out_file))
+                # We don't need the zipped version anymore
+                os.remove(renamed_auto_compressed_path)
             return True
 
     def has_credentials(self) -> bool:
