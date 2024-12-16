@@ -37,7 +37,14 @@ def list_files_recursively(path: str) -> list[str]:
     return sorted(files)
 
 
-def assert_files(test_case: unittest.TestCase, path: str, expected_files: list[str]) -> bool:
+def list_columns(path: str) -> list[str]:
+    """Assuming the path is a CSV, list all columns sorted lexicographically"""
+    with open(path) as file:
+        first_line = file.readline().strip()
+        return sorted(first_line.split(","))
+
+
+def assert_files(test_case: unittest.TestCase, path: str, expected_files: list[str]) -> None:
     """Assert that all expected files exist and are non-empty."""
     files = list_files_recursively(path)
     expected_files_sorted = sorted(expected_files)
@@ -51,6 +58,12 @@ def assert_files(test_case: unittest.TestCase, path: str, expected_files: list[s
             file_path = os.path.join(path, file)
 
         test_case.assertGreater(os.path.getsize(file_path), 0, f"File {file} is empty")
+
+
+def assert_columns(test_case: unittest.TestCase, path: str, expected_columns: list[str]) -> None:
+    """Assert that the given path to a CSV has the expected columns."""
+    columns = list_columns(path)
+    test_case.assertEqual(columns, sorted(expected_columns))
 
 
 @contextmanager

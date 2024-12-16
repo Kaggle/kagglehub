@@ -100,6 +100,10 @@ skip-string-normalization = true
 [tool.ruff]
 target-version = "py39"
 line-length = 120
+extend-exclude = [
+  # Ignore saved scripts for local kagglehub testing
+  "tools/scripts/*",
+]
 
 [tool.ruff.lint]
 select = [

@@ -232,7 +232,6 @@ development.
 hatch run python test_new_feature.py
 ```
 
-
 ### Lint / Format
 
 ```sh
@@ -271,10 +270,13 @@ The following shows how to run `hatch run lint:all` but this also works for any 
 ./docker-hatch -P 3.9 run lint:all
 
 # Run test in docker with specific Python version
-./docker-hatch -P 3.9 test
+./docker-hatch -v 3.9 test
 
-# Run python from specific environment (e.g. one with optional dependencies like `hf-datasets` installed)
-./docker-hatch run hf-datasets:python -c "print('hello world')"
+# Run python from specific environment (e.g. one with optional dependencies installed)
+./docker-hatch run extra-deps-env:python -c "print('hello world')"
+
+# Run commands with other root-level hatch options (everything after -- gets passed to hatch)
+./docker-hatch -v 3.9 -- -v env create debug-env-with-verbose-logging
 ```
 
 ## VS Code setup
@@ -289,14 +291,14 @@ Configure hatch to create virtual env in project folder.
 hatch config set dirs.env.virtual .env
 ```
 
-After, create all the python environments needed by running `hatch -e all run tests`.
+After, create all the python environments needed by running `hatch tests --all`.
 
 Finally, configure vscode to use one of the selected environments:
 `cmd + shift + p` -> `python: Select Interpreter` -> Pick one of the folders in `./.env`
 
 ## Support
 
-The kagglehub library has configured automatic logging which is stored in a log folder. The log destination is resolved via the [os.path.expanduser](https://docs.python.org/3/library/os.path.html#os.path.expanduser)
+The kagglehub library has configured automatic logging for console. For file based logging, setting the `KAGGLE_LOGGING_ENABLED=1` environment variable will output logs to a directory. The default log destination is resolved via the [os.path.expanduser](https://docs.python.org/3/library/os.path.html#os.path.expanduser)
 
 The table below contains possible locations:
 | os      | log path                                         |
@@ -304,5 +306,7 @@ The table below contains possible locations:
 | osx     | /user/$USERNAME/.kaggle/logs/kagglehub.log       |
 | linux   | ~/.kaggle/logs/kagglehub.log                     |
 | windows | C:\Users\\%USERNAME%\\.kaggle\logs\kagglehub.log |
+
+If needed, the root log directory can be overriden using the following environment variable: `KAGGLE_LOGGING_ROOT_DIR`
 
 Please include the log to help troubleshoot issues.
