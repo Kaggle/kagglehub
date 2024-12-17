@@ -15,7 +15,7 @@ VERSIONED_DATASET_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with-m
 UNVERSIONED_DATASET_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with-metadata"
 TEST_FILEPATH = "foo.txt"
 TEST_CONTENTS = "foo"
-AUTO_COMPRESSED_CONTENTS = """column_1,column2
+AUTO_COMPRESSED_CONTENTS = """column_1,column_2
 1,a
 2,b
 3,c"""

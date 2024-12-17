@@ -15,10 +15,9 @@ from kagglehub.datasets import dataset_download
 # This is a thin wrapper around pd.read_sql_query so we get the connection
 # closing for free after we've produced the DataFrame
 def wrapped_read_sql_query(sql_query: str, path: str) -> pd.DataFrame:
-    conn = sqlite3.connect(path)
-    df = pd.read_sql_query(sql_query, conn)
-    conn.close()
-    return df
+    with sqlite3.connect(path) as conn:
+        df = pd.read_sql_query(sql_query, conn)
+        return df
 
 
 # These are the currently supported read functions for the pandas adapter.
@@ -55,13 +54,6 @@ SUPPORTED_READ_FUNCTIONS_BY_EXTENSION: dict[str, Callable] = {
 # Certain extensions leverage a shared method but require additional static kwargs
 STATIC_KWARGS_BY_EXTENSION: dict[str, dict[str, Union[str, bool]]] = {".tsv": {"sep": "\t"}, ".jsonl": {"lines": True}}
 
-COLUMNS_KWARG_NAME_BY_READ_FUNCTION: dict[Callable, str] = {
-    pd.read_csv: "usecols",
-    pd.read_parquet: "columns",
-    pd.read_feather: "columns",
-    pd.read_excel: "usecols",
-}
-
 MISSING_SQL_QUERY_ERROR_MESSAGE = "Loading from a SQLite file requires a SQL query"
 
 
@@ -69,25 +61,19 @@ def load_pandas_dataset(
     handle: str,
     path: str,
     *,
-    columns: Optional[list] = None,
-    sheet_name: Union[str, int, list, None] = 0,
-    sql_query: Optional[str] = None,
+    pandas_kwargs: Any = None,  # noqa: ANN401
+    sql_query: Optional[str],
 ) -> Union[pd.DataFrame, dict[Union[int, str], pd.DataFrame]]:
     """Creates pandas DataFrame(s) from a file in the dataset
 
     Args:
         handle: (string) The dataset handle
         path: (string) Path to a file within the dataset
-        columns:
-            (list) Optional subset of columns to load from the file. Only used for CSV, TSV, Excel-like, feather,
-            and parquet files.
-        sheet_name:
-            (string, int, list, or None) Optional argument to be used for Excel-like files.
-            Defaults to 0 to select the first sheet. See pandas documentation for details:
-            https://pandas.pydata.org/docs/reference/api/pandas.read_excel.html
+        pandas_kwargs:
+            (dict) Optional set of kwargs to pass to the pandas `read_*` method while constructing the DataFrame(s)
         sql_query:
-            (string) Optional argument to be used for SQLite files. See pandas documentation for details:
-            https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html
+            (string) Argument to be used for SQLite files. Required when reading a SQLite file. See pandas documentation
+            for details: https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html
 
     Returns:
         - dict[int | str, DataFrame] for Excel-like files with multiple sheets
@@ -96,6 +82,7 @@ def load_pandas_dataset(
     Raises:
         ValueError: If the file extension is not supported or the file fails to read
     """
+    pandas_kwargs = {} if pandas_kwargs is None else pandas_kwargs
     file_extension = os.path.splitext(path)[1]
     read_function = _validate_read_function(file_extension, sql_query)
 
@@ -104,7 +91,7 @@ def load_pandas_dataset(
     try:
         result = read_function(
             *_build_args(read_function, filepath, sql_query),
-            **_build_kwargs(read_function, file_extension, columns, sheet_name),
+            **_build_kwargs(file_extension, pandas_kwargs),
         )
     except Exception as e:
         read_error_message = f"Error reading file: {e}"
@@ -113,7 +100,7 @@ def load_pandas_dataset(
     return result
 
 
-def _validate_read_function(file_extension: str, sql_query: Optional[str] = None) -> Callable:
+def _validate_read_function(file_extension: str, sql_query: Optional[str]) -> Callable:
     if file_extension not in SUPPORTED_READ_FUNCTIONS_BY_EXTENSION:
         extension_error_message = (
             f"Unsupported file extension: '{file_extension}'. "
@@ -128,23 +115,15 @@ def _validate_read_function(file_extension: str, sql_query: Optional[str] = None
     return read_function
 
 
-def _build_args(read_function: Callable, path: str, sql_query: Optional[str] = None) -> list:
+def _build_args(read_function: Callable, path: str, sql_query: Optional[str]) -> list:
+    # The presence of the sql_query arg was already validated in _validate_read_function
     return [path] if read_function != wrapped_read_sql_query else [sql_query, path]
 
 
-def _build_kwargs(
-    read_function: Callable,
-    file_extension: str,
-    columns: Optional[list] = None,
-    sheet_name: Union[str, int, list, None] = 0,
-) -> dict:
-    additional_kwargs: dict[str, Any] = (
+def _build_kwargs(file_extension: str, pandas_kwargs: Any) -> dict:  # noqa: ANN401
+    static_kwargs: dict[str, Any] = (
         {} if file_extension not in STATIC_KWARGS_BY_EXTENSION else STATIC_KWARGS_BY_EXTENSION[file_extension]
     )
-    if read_function is pd.read_excel:
-        additional_kwargs["sheet_name"] = sheet_name
-
-    if read_function in COLUMNS_KWARG_NAME_BY_READ_FUNCTION:
-        additional_kwargs[COLUMNS_KWARG_NAME_BY_READ_FUNCTION[read_function]] = columns
-
-    return additional_kwargs
+    # NOTE: Order matters here as we're letting users override the static args. This may be valuable in the edge case
+    # that a CSV/TSV has some other separator than what the extension indicates (we see this in real datasets).
+    return {**static_kwargs, **pandas_kwargs}

@@ -43,7 +43,10 @@ dependencies = [
   "pytest",
   "flask",
   "flask-jwt-extended",
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
 ]
+features = ["hf-datasets"]
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]

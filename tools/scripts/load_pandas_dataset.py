@@ -6,5 +6,5 @@ dataset = load_dataset(
     "nba.sqlite",
     sql_query="SELECT person_id, player_name FROM draft_history",
 )
-print("Records in dataset: ", dataset.shape)  # noqa: T201
-print(dataset.head())  # noqa: T201
+print("Records in dataset: ", dataset.shape)
+print(dataset.head())

@@ -80,12 +80,9 @@ def load_dataset(
     handle: str,
     path: str,
     *,
-    # Kaggle doesn't currently support test/train splits natively like Hugging Face does, so users
-    # would specify here if they select the 'hugging_face' adapter.
-    train_split_percent: float = 0.8,
-    columns: Optional[list] = None,
-    sheet_name: Union[str, int, list, None] = 0,
+    pandas_kwargs: Any = None,  # noqa: ANN401
     sql_query: Optional[str] = None,
+    hf_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     """Load a Kaggle Dataset into a python object based on the selected adapter
 
@@ -93,35 +90,34 @@ def load_dataset(
         adapter: (KaggleDatasetAdapter) The adapter used to load the dataset
         handle: (string) The dataset handle
         path: (string) Path to a file within the dataset
-        train_split_percent:
-            (float) Optional split for train vs test data, defaults to 0.8. Only used for the 'hugging_face' adapter
-        columns:
-            (list) Optional subset of columns to load from the file. Only used for CSV, TSV, Excel-like, feather,
-            and parquet files.
-        sheet_name:
-            (string, int, list, or None) Optional argument to be used for Excel-like files.
-            Defaults to 0 to select the first sheet. See pandas documentation for details:
-            https://pandas.pydata.org/docs/reference/api/pandas.read_excel.html
+        pandas_kwargs:
+            (dict) Optional set of kwargs to pass to the pandas `read_*` method while constructing the DataFrame(s)
         sql_query:
-            (string) Optional argument to be used for SQLite files. See pandas documentation for details:
-            https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html
+            (string) Argument to be used for SQLite files. Required when reading a SQLite file. See pandas documentation
+            for details: https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html
+        hf_kwargs:
+            (dict) Optional set of kwargs to pass to Dataset.from_pandas() while constructing the Dataset
     Returns:
         A python object based on the selected adapter:
-            - 'hugging_face': A DatasetDict with test and train splits according to the provided train_split_percent
             - 'pandas': A DataFrame (or dict[int | str, DataFrame] for Excel-like files with multiple sheets)
+            - 'hugging_face': A Huggingface Dataset (via pandas)
     """
     try:
         if adapter is KaggleDatasetAdapter.HUGGING_FACE:
             import kagglehub.hf_datasets
 
             return kagglehub.hf_datasets.load_hf_dataset(
-                handle, path, train_split_percent, columns=columns, sheet_name=sheet_name, sql_query=sql_query
+                handle,
+                path,
+                pandas_kwargs=pandas_kwargs,
+                sql_query=sql_query,
+                hf_kwargs=hf_kwargs,
             )
         elif adapter is KaggleDatasetAdapter.PANDAS:
             import kagglehub.pandas_datasets
 
             return kagglehub.pandas_datasets.load_pandas_dataset(
-                handle, path, columns=columns, sheet_name=sheet_name, sql_query=sql_query
+                handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query
             )
         else:
             not_implemented_error_message = f"{adapter} is not yet implemented"
