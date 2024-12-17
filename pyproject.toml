@@ -85,12 +85,20 @@ all = [
 
 # Set up a separate hatch environment that has the added hf-datasets dependencies
 [tool.hatch.envs.hf-datasets]
+dependencies = [
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
+]
 features = [
   "hf-datasets",
 ]
 
 # Set up a separate hatch environment that has the added pandas-datasets dependencies
 [tool.hatch.envs.pandas-datasets]
+dependencies = [
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
+]
 features = [
   "pandas-datasets",
 ]
