@@ -120,7 +120,11 @@ class TestLoadPandasDataset(BaseTestCase):
             )
             self.assertIn(f"Unsupported file extension: '{os.path.basename(TEXT_FILE)}'", e.msg or "")
 
-    def _load_pandas_simple_dataset_and_assert_loaded(self, file_extension: str, pandas_kwargs: Any = None) -> None:  # noqa: ANN401
+    def _load_pandas_simple_dataset_and_assert_loaded(
+        self,
+        file_extension: str,
+        pandas_kwargs: Any = None,  # noqa: ANN401
+    ) -> None:
         df = load_dataset(
             KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, f"shapes.{file_extension}", pandas_kwargs=pandas_kwargs
         )
