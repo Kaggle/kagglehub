@@ -101,6 +101,133 @@ kagglehub.model_upload(handle, local_model_dir, license_name='Apache 2.0')
 kagglehub.model_upload(handle, local_model_dir, ignore_patterns=["original/", "*.tmp"])
 ```
 
+### Load Dataset
+
+Loads a file from a Kaggle Dataset into a python object based on the selected `KaggleDatasetAdapter`:
+- `KaggleDatasetAdapter.PANDAS` &rarr; [pandas DataFrame](https://pandas.pydata.org/docs/reference/frame.html)
+  (or multiple given certain files/settings)
+- `KaggleDatasetAdapter.HUGGING_FACE`&rarr; 
+  [Hugging Face Dataset](https://huggingface.co/docs/datasets/main/en/package_reference/main_classes#datasets.Dataset)
+
+**NOTE: To use these adapters, you must install the optional dependencies (or already have them available in your environment)**
+- `KaggleDatasetAdapter.PANDAS` &rarr; `pip install kagglehub[pandas-datasets]`
+- `KaggleDatasetAdapter.HUGGING_FACE`&rarr; `pip install kagglehub[hf-datasets]`
+
+#### `KaggleDatasetAdapter.PANDAS`
+
+This adapter supports the following file types, which map to a corresponding `pandas.read_*` method:
+| File Extension                                  | `pandas` Method                                                                                    |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| .csv, .tsv[^1]                                  | [`pandas.read_csv`](https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html)             |
+| .json, .jsonl[^2]                               | [`pandas.read_json`](https://pandas.pydata.org/docs/reference/api/pandas.read_json.html)           |
+| .xml                                            | [`pandas.read_xml`](https://pandas.pydata.org/docs/reference/api/pandas.read_xml.html)             |
+| .parquet                                        | [`pandas.read_parquet`](https://pandas.pydata.org/docs/reference/api/pandas.read_parquet.html)     |
+| .feather                                        | [`pandas.read_feather`](https://pandas.pydata.org/docs/reference/api/pandas.read_feather.html)     |
+| .sqlite, .sqlite3, .db, .db3, .s3db, .dl3[^3]   | [`pandas.read_sql_query`](https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html) |
+| .xls, .xlsx, .xlsm, .xlsb, .odf, .ods, .odt[^4] | [`pandas.read_excel`](https://pandas.pydata.org/docs/reference/api/pandas.read_excel.html)         |
+
+[^1]: For TSV files, `\t` is automatically supplied for the `sep` parameter, but may be overridden with `pandas_kwargs`
+
+[^2]: For JSONL files, `True` is supplied for the `lines` parameter
+
+[^3]: For SQLite files, a `sql_query` must be provided to generate the `DataFrame`(s)
+
+[^4]: The specific file extension will dictate which optional `engine` dependency needs to be installed to read the file
+
+`load_dataset` also supports `pandas_kwargs` which will be passed as keyword arguments to the `pandas.read_*` method. Some examples include:
+
+```python
+import kagglehub
+from kagglehub import KaggleDatasetAdapter
+
+# Load a DataFrame with a specific version of a CSV
+df = kagglehub.load_dataset(
+    KaggleDatasetAdapter.PANDAS,
+    "unsdsn/world-happiness/versions/1",
+    "2016.csv",
+)
+
+# Load a DataFrame with specific columns from a parquet file
+df = kagglehub.load_dataset(
+    KaggleDatasetAdapter.PANDAS,
+    "robikscube/textocr-text-extraction-from-images-dataset",
+    "annot.parquet",
+    pandas_kwargs={"columns": ["image_id", "bbox", "points", "area"]}
+)
+
+# Load a dictionary of DataFrames from an Excel file where the keys are sheet names 
+# and the values are DataFrames for each sheet's data. NOTE: As written, this requires 
+# installing the default openpyxl engine.
+df_dict = kagglehub.load_dataset(
+    KaggleDatasetAdapter.PANDAS,
+    "theworldbank/education-statistics",
+    "edstats-excel-zip-72-mb-/EdStatsEXCEL.xlsx",
+    pandas_kwargs={"sheet_name": None},
+)
+
+# Load a DataFrame using an XML file (with the natively available etree parser)
+df = load_dataset(
+    KaggleDatasetAdapter.PANDAS,
+    "parulpandey/covid19-clinical-trials-dataset",
+    "COVID-19 CLinical trials studies/COVID-19 CLinical trials studies/NCT00571389.xml",
+    pandas_kwargs={"parser": "etree"},
+)
+
+# Load a DataFrame by executing a SQL query against a SQLite DB
+df = kagglehub.load_dataset(
+    KaggleDatasetAdapter.PANDAS,
+    "wyattowalsh/basketball",
+    "nba.sqlite",
+    sql_query="SELECT person_id, player_name FROM draft_history",
+)
+```
+
+#### `KaggleDatasetAdapter.HUGGING_FACE`
+
+The Hugging Face `Dataset` provided by this adapater is built exclusively using 
+[`Dataset.from_pandas`](https://huggingface.co/docs/datasets/main/en/package_reference/main_classes#datasets.Dataset.from_pandas). 
+As a result, all of the file type and `pandas_kwargs` support is the same as 
+[`KaggleDatasetAdapter.PANDAS`](#kaggledatasetadapterpandas). Some important things to note about this:
+
+1. Because `Dataset.from_pandas` cannot accept a collection of `DataFrame`s, any attempts to load a file with `pandas_kwargs`
+   that produce a collection of `DataFrame`s will result in a raised exception
+2. `hf_kwargs` may be provided, which will be passed as keyword arguments to `Dataset.from_pandas`
+2. Because the use of `pandas` is transparent when `pandas_kwargs` are not needed, we default to `False` for `preserve_index`&mdash;this 
+   can be overridden using `hf_kwargs`
+
+Some examples include:
+
+```python
+import kagglehub
+from kagglehub import KaggleDatasetAdapter
+
+# Load a DataFrame with a specific version of a CSV, then remove a column
+dataset = kagglehub.load_dataset(
+    KaggleDatasetAdapter.HUGGING_FACE,
+    "unsdsn/world-happiness/versions/1",
+    "2016.csv",
+)
+dataset = dataset.remove_columns('Region')
+
+# Load a DataFrame with specific columns from a parquet file, then split into test/train splits
+dataset = kagglehub.load_dataset(
+    KaggleDatasetAdapter.HUGGING_FACE,
+    "robikscube/textocr-text-extraction-from-images-dataset",
+    "annot.parquet",
+    pandas_kwargs={"columns": ["image_id", "bbox", "points", "area"]}
+)
+dataset_with_splits = dataset.train_test_split(test_size=0.8, train_size=0.2)
+
+# Load a DataFrame by executing a SQL query against a SQLite DB, then rename a column
+dataset = kagglehub.load_dataset(
+    KaggleDatasetAdapter.HUGGING_FACE,
+    "wyattowalsh/basketball",
+    "nba.sqlite",
+    sql_query="SELECT person_id, player_name FROM draft_history",
+)
+dataset = dataset.rename_column('season', 'year')
+```
+
 ### Download Dataset
 
 The following examples download the `Spotify Recommendation` Kaggle dataset: https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
@@ -302,7 +429,7 @@ The kagglehub library has configured automatic logging for console. For file bas
 
 The table below contains possible locations:
 | os      | log path                                         |
-|---------|--------------------------------------------------|
+| ------- | ------------------------------------------------ |
 | osx     | /user/$USERNAME/.kaggle/logs/kagglehub.log       |
 | linux   | ~/.kaggle/logs/kagglehub.log                     |
 | windows | C:\Users\\%USERNAME%\\.kaggle\logs\kagglehub.log |
