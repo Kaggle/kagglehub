@@ -30,6 +30,10 @@ dependencies = [
 "Homepage" = "https://github.com/Kaggle/kagglehub"
 "Bug Tracker" = "https://github.com/Kaggle/kagglehub/issues"
 
+[project.optional-dependencies]
+hf-datasets = ["datasets", "kagglehub[pandas-datasets]"]
+pandas-datasets = ["pandas"]
+
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
 
@@ -39,7 +43,10 @@ dependencies = [
   "pytest",
   "flask",
   "flask-jwt-extended",
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
 ]
+features = ["hf-datasets"]
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
@@ -74,6 +81,26 @@ fmt = [
 all = [
   "style",
   "typing",
+]
+
+# Set up a separate hatch environment that has the added hf-datasets dependencies
+[tool.hatch.envs.hf-datasets]
+dependencies = [
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
+]
+features = [
+  "hf-datasets",
+]
+
+# Set up a separate hatch environment that has the added pandas-datasets dependencies
+[tool.hatch.envs.pandas-datasets]
+dependencies = [
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
+]
+features = [
+  "pandas-datasets",
 ]
 
 [tool.black]
@@ -170,3 +197,6 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[tool.mypy]
+mypy_path = "./stubs"

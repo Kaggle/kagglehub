@@ -1,5 +1,6 @@
 import logging
-from typing import Optional, Union
+from enum import Enum
+from typing import Any, Optional, Union
 
 from kagglehub import registry
 from kagglehub.datasets_helpers import create_dataset_or_version
@@ -9,8 +10,19 @@ from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 
 logger = logging.getLogger(__name__)
 
+
+class KaggleDatasetAdapter(Enum):
+    HUGGING_FACE = "hugging_face"
+    PANDAS = "pandas"
+
+
 # Patterns that are always ignored for dataset uploading.
 DEFAULT_IGNORE_PATTERNS = [".git/", "*/.git/", ".cache/", ".huggingface/"]
+# Mapping of adapters to the optional dependencies required to run them
+LOAD_DATASET_ADAPTER_OPTIONAL_DEPENDENCIES_MAP = {
+    KaggleDatasetAdapter.HUGGING_FACE: "hf-datasets",
+    KaggleDatasetAdapter.PANDAS: "pandas-datasets",
+}
 
 
 def dataset_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
@@ -60,3 +72,61 @@ def dataset_upload(
     )
 
     create_dataset_or_version(h, tokens, version_notes)
+
+
+def load_dataset(
+    adapter: KaggleDatasetAdapter,
+    # In the form of {owner_slug}/{dataset_slug} or {owner_slug}/{dataset_slug}/versions/{version_number}
+    handle: str,
+    path: str,
+    *,
+    pandas_kwargs: Any = None,  # noqa: ANN401
+    sql_query: Optional[str] = None,
+    hf_kwargs: Any = None,  # noqa: ANN401
+) -> Any:  # noqa: ANN401
+    """Load a Kaggle Dataset into a python object based on the selected adapter
+
+    Args:
+        adapter: (KaggleDatasetAdapter) The adapter used to load the dataset
+        handle: (string) The dataset handle
+        path: (string) Path to a file within the dataset
+        pandas_kwargs:
+            (dict) Optional set of kwargs to pass to the pandas `read_*` method while constructing the DataFrame(s)
+        sql_query:
+            (string) Argument to be used for SQLite files. Required when reading a SQLite file. See pandas documentation
+            for details: https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html
+        hf_kwargs:
+            (dict) Optional set of kwargs to pass to Dataset.from_pandas() while constructing the Dataset
+    Returns:
+        A python object based on the selected adapter:
+            - 'pandas': A DataFrame (or dict[int | str, DataFrame] for Excel-like files with multiple sheets)
+            - 'hugging_face': A Huggingface Dataset (via pandas)
+    """
+    try:
+        if adapter is KaggleDatasetAdapter.HUGGING_FACE:
+            import kagglehub.hf_datasets
+
+            return kagglehub.hf_datasets.load_hf_dataset(
+                handle,
+                path,
+                pandas_kwargs=pandas_kwargs,
+                sql_query=sql_query,
+                hf_kwargs=hf_kwargs,
+            )
+        elif adapter is KaggleDatasetAdapter.PANDAS:
+            import kagglehub.pandas_datasets
+
+            return kagglehub.pandas_datasets.load_pandas_dataset(
+                handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query
+            )
+        else:
+            not_implemented_error_message = f"{adapter} is not yet implemented"
+            raise NotImplementedError(not_implemented_error_message)
+    except ImportError:
+        adapter_optional_dependency = LOAD_DATASET_ADAPTER_OPTIONAL_DEPENDENCIES_MAP[adapter]
+        import_warning_message = (
+            f"The 'load_dataset' function requires the '{adapter_optional_dependency}' extras. "
+            f"Install them with 'pip install kagglehub[{adapter_optional_dependency}]'"
+        )
+        # Inform the user if we detect that they didn't install everything
+        raise ImportError(import_warning_message) from None
