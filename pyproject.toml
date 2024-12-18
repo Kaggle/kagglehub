@@ -24,6 +24,7 @@ dependencies = [
   "requests", 
   "tqdm",
   "packaging",
+  "model_signing",
 ]
 
 [project.urls]
@@ -39,6 +40,7 @@ dependencies = [
   "pytest",
   "flask",
   "flask-jwt-extended",
+  "pyjwt[crypto]",
 ]
 
 [[tool.hatch.envs.hatch-test.matrix]]

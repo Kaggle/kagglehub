@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
+
+from model_signing.api import SigningConfig
 
 from kagglehub.exceptions import BackendError
 from kagglehub.gcs_upload import MAX_FILES_TO_UPLOAD, TEMP_ARCHIVE_FILE
@@ -117,6 +120,22 @@ class TestModelUpload(BaseTestCase):
 
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn("single_dummy_file.txt", stub.shared_data.files)
+
+    def test_model_signing(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            root_temp_dir = Path(temp_dir)
+            models_dir = root_temp_dir / "models"
+            models_dir.mkdir(exist_ok=True, parents=True)
+            (models_dir / "my-model.txt").touch()
+
+            def mock_sign(model_path: Path, metadata_file_path: Path) -> None:
+                model_path.mkdir(exist_ok=True, parents=True)
+                metadata_file_path.touch()
+
+            with mock.patch.object(SigningConfig, "sign", side_effect=mock_sign):
+                model_upload("meta/llama3.2/pytorch/70b", models_dir, publish_transparency_log=True)
+                expected_files = ["my-model.txt", "signing.json"]
+                self.assertCountEqual(set(stub.shared_data.files), expected_files)
 
     def test_model_upload_with_directory_structure(self) -> None:
         with TemporaryDirectory() as temp_dir:

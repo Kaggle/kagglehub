@@ -119,7 +119,6 @@ def signing_token(owner_slug: str, model_slug: str) -> Optional[str]:
     "Returns a JWT for signing if authorized for /{owner_slug}/{model_slug}"
     try:
         api_client = KaggleApiV1Client()
-        # TODO: payload property name casing is unstable
         resp = api_client.post("/models/signing/token", {"OwnerSlug": owner_slug, "ModelSlug": model_slug})
         return resp.get("id_token")
     except KaggleApiHTTPError as e:
