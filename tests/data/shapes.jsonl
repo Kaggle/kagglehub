@@ -1,0 +1,3 @@
+{"shape": "square", "degrees": 360, "sides": 4.0, "color": "blue", "date": "2024-12-17"}
+{"shape": "circle", "degrees": 360, "sides": null, "color": "red", "date": "2023-08-01"}
+{"shape": "triangle", "degrees": 180, "sides": 3.0, "color": "green", "date": "2022-01-05"}

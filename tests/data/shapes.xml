@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+  <row>
+    <shape>square</shape>
+    <degrees>360</degrees>
+    <sides>4.0</sides>
+    <color>blue</color>
+    <date>2024-12-17</date>
+  </row>
+  <row>
+    <shape>circle</shape>
+    <degrees>360</degrees>
+    <sides/>
+    <color>red</color>
+    <date>2023-08-01</date>
+  </row>
+  <row>
+    <shape>triangle</shape>
+    <degrees>180</degrees>
+    <sides>3.0</sides>
+    <color>green</color>
+    <date>2022-01-05</date>  
+  </row>
+</data>

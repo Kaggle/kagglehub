@@ -17,10 +17,11 @@ INVALID_ARCHIVE_COMPETITION_HANDLE = "invalid/invalid"
 COMPETITION_HANDLE = "titanic"
 TEST_FILEPATH = "foo.txt"
 TEST_CONTENTS = "foo"
-AUTO_COMPRESSED_CONTENTS = """column_1,column_2
-1,a
-2,b
-3,c"""
+AUTO_COMPRESSED_CONTENTS = """"shape","degrees","sides","color","date"
+"square",360,4,"blue","2024-12-17"
+"circle",360,,"red","2023-08-01"
+"triangle",180,3,"green","2022-01-05"
+"""
 
 EXPECTED_COMPETITION_SUBDIR = os.path.join(COMPETITIONS_CACHE_SUBFOLDER, "titanic")
 EXPECTED_COMPETITION_SUBPATH = os.path.join(

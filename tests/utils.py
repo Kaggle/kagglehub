@@ -16,7 +16,7 @@ from kagglehub.handle import ResourceHandle
 from kagglehub.integrity import GCS_HASH_HEADER, to_b64_digest
 
 MOCK_GCS_BUCKET_BASE_PATH = "/mock-gcs-bucket/file-path"
-AUTO_COMPRESSED_FILE_NAME = "dummy.csv"
+AUTO_COMPRESSED_FILE_NAME = "shapes.csv"
 LOCATION_HEADER = "Location"
 CONTENT_LENGTH_HEADER = "Content-Length"
 

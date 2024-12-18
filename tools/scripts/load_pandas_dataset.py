@@ -1,6 +1,7 @@
-from kagglehub.datasets import KaggleDatasetAdapter, load_dataset
+import kagglehub
+from kagglehub import KaggleDatasetAdapter
 
-dataset = load_dataset(
+dataset = kagglehub.load_dataset(
     KaggleDatasetAdapter.PANDAS,
     "wyattowalsh/basketball",
     "nba.sqlite",
