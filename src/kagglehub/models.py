@@ -1,4 +1,5 @@
 import logging
+from shutil import copytree
 from typing import Optional, Union
 
 from kagglehub import registry
@@ -13,22 +14,44 @@ logger = logging.getLogger(__name__)
 DEFAULT_IGNORE_PATTERNS = [".git/", "*/.git/", ".cache/", ".huggingface/"]
 
 
-def model_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+def model_download(
+    handle: str,
+    path: Optional[str] = None,
+    *,
+    force_download: Optional[bool] = False,
+    output_dir: Optional[str] = None) -> str:
     """Download model files.
 
     Args:
         handle: (string) the model handle.
         path: (string) Optional path to a file within the model bundle.
         force_download: (bool) Optional flag to force download a model, even if it's cached.
-
+        output_dir: (string) Optional path to copy model files to after successful download.
 
     Returns:
         A string representing the path to the requested model files.
     """
     h = parse_model_handle(handle)
     logger.info(f"Downloading Model: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    return registry.model_resolver(h, path, force_download=force_download)
+    cached_dir = registry.model_resolver(h, path, force_download=force_download)
 
+    if output_dir is None or output_dir == cached_dir:
+        return cached_dir
+
+    try:
+        # only copying so that we can maintain the cached files
+        logger.info(
+            f"Copying model files to requested directory: {output_dir} ...",
+            extra={**EXTRA_CONSOLE_BLOCK}
+        )
+        true_output_dir = copytree(cached_dir, output_dir, dirs_exist_ok=True)
+        return true_output_dir
+    except Exception as e:
+        logger.warn(
+            f"Successfully downloaded {handle}, but failed to copy from {cached_dir} "
+            f"to requested output directory {output_dir}. Encountered error: {e}"
+        )
+        return cached_dir
 
 def model_upload(
     handle: str,
