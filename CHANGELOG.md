@@ -4,7 +4,7 @@
 
 * Add `kagglehub.load_dataset(...)` ([#192](https://github.com/Kaggle/kagglehub/pull/192), [#197](https://github.com/Kaggle/kagglehub/pull/197))
 * Fix auto-compressed dataset downloads ([#194](https://github.com/Kaggle/kagglehub/pull/194), [#195](https://github.com/Kaggle/kagglehub/pull/195))
-* Include server-side errors if present ([#193](https://github.com/Kaggle/kagglehub/pull/193))
+* Update `docker-hatch` and documentation ([#193](https://github.com/Kaggle/kagglehub/pull/193))
 
 ## v0.3.5 (December 10th, 2024)
 
