@@ -7,6 +7,8 @@ from kagglehub.competition import competition_download
 from kagglehub.datasets import KaggleDatasetAdapter, dataset_download, dataset_upload, load_dataset
 from kagglehub.models import model_download, model_upload
 from kagglehub.notebooks import notebook_output_download
+from kagglehub.packages import PackageScope, get_package_asset_path, package_import
+from kagglehub.requirements import read_requirements, write_requirements
 
 registry.model_resolver.add_implementation(http_resolver.ModelHttpResolver())
 registry.model_resolver.add_implementation(kaggle_cache_resolver.ModelKaggleCacheResolver())
