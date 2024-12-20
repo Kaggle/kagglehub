@@ -18,6 +18,8 @@ from kagglehub.cache import (
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import UnauthenticatedError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
+from kagglehub.packages import get_package_datasource_version_number
+from kagglehub.requirements import register_accessed_datasource
 from kagglehub.resolver import Resolver
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
@@ -45,6 +47,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
 
         if not api_client.has_credentials():
             if cached_path:
+                register_accessed_datasource(h, None)
                 return cached_path
             raise UnauthenticatedError()
 
@@ -60,10 +63,12 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 )
             except requests.exceptions.ConnectionError:
                 if cached_path:
+                    register_accessed_datasource(h, None)
                     return cached_path
                 raise
 
             if not download_needed and cached_path:
+                register_accessed_datasource(h, None)
                 return cached_path
         else:
             # Download, extract, then delete the archive.
@@ -77,12 +82,14 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 if cached_path:
                     if os.path.exists(archive_path):
                         os.remove(archive_path)
+                    register_accessed_datasource(h, None)
                     return cached_path
                 raise
 
             if not download_needed and cached_path:
                 if os.path.exists(archive_path):
                     os.remove(archive_path)
+                register_accessed_datasource(h, None)
                 return cached_path
 
             os.makedirs(out_path, exist_ok=True)
@@ -90,6 +97,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
+        register_accessed_datasource(h, None)
         return out_path
 
 
@@ -101,11 +109,13 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
     def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
+        original_h = h
         if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
+            h = h.with_version(_get_current_version(api_client, h))
 
         dataset_path = load_from_cache(h, path)
         if dataset_path and not force_download:
+            register_accessed_datasource(original_h, h.version)
             return dataset_path  # Already cached
         elif dataset_path and force_download:
             delete_from_cache(h, path)
@@ -136,6 +146,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
+        register_accessed_datasource(original_h, h.version)
         return out_path
 
 
@@ -147,11 +158,13 @@ class ModelHttpResolver(Resolver[ModelHandle]):
     def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
+        original_h = h
         if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
+            h = h.with_version(_get_current_version(api_client, h))
 
         model_path = load_from_cache(h, path)
         if model_path and not force_download:
+            register_accessed_datasource(original_h, h.version)
             return model_path  # Already cached
         elif model_path and force_download:
             delete_from_cache(h, path)
@@ -199,6 +212,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 )
 
         mark_as_complete(h, path)
+        register_accessed_datasource(original_h, h.version)
         return out_path
 
 
@@ -212,6 +226,7 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
 
         cached_response = load_from_cache(h, path)
         if cached_response and not force_download:
+            register_accessed_datasource(h, None)
             return cached_response  # Already cached
         elif cached_response and force_download:
             delete_from_cache(h, path)
@@ -249,6 +264,7 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         mark_as_complete(h, path)
 
         # TODO(b/377510971): when notebook is a Kaggle utility script, update sys.path
+        register_accessed_datasource(h, None)
         return str(output_root)
 
     def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
@@ -278,6 +294,11 @@ def _extract_archive(archive_path: str, out_path: str) -> None:
 
 
 def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> int:
+    # Check if there's a Package in scope which has stored a version number used when it was created.
+    version_from_package = get_package_datasource_version_number(h)
+    if version_from_package is not None:
+        return version_from_package
+
     if isinstance(h, ModelHandle):
         json_response = api_client.get(_build_get_instance_url_path(h), h)
         if MODEL_INSTANCE_VERSION_FIELD not in json_response:

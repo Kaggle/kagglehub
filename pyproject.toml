@@ -24,6 +24,7 @@ dependencies = [
   "requests", 
   "tqdm",
   "packaging",
+  "pyyaml",
 ]
 
 [project.urls]

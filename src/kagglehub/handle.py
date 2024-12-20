@@ -1,7 +1,7 @@
 """Functions to parse resource handles."""
 
 import abc
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Optional
 
 from kagglehub.config import get_kaggle_api_endpoint
@@ -15,7 +15,7 @@ NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 NUM_UNVERSIONED_NOTEBOOK_PARTS = 2  # e.g.: <owner>/<notebook>
 
 
-@dataclass
+@dataclass(frozen=True)
 class ResourceHandle:
     @abc.abstractmethod
     def to_url(self) -> str:
@@ -23,7 +23,7 @@ class ResourceHandle:
         pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class ModelHandle(ResourceHandle):
     owner: str
     model: str
@@ -33,6 +33,11 @@ class ModelHandle(ResourceHandle):
 
     def is_versioned(self) -> bool:
         return self.version is not None and self.version > 0
+
+    def with_version(self, version: int):  # noqa: ANN201
+        return ModelHandle(
+            owner=self.owner, model=self.model, framework=self.framework, variation=self.variation, version=version
+        )
 
     def __str__(self) -> str:
         handle_str = f"{self.owner}/{self.model}/{self.framework}/{self.variation}"
@@ -48,7 +53,7 @@ class ModelHandle(ResourceHandle):
             return f"{endpoint}/models/{self.owner}/{self.model}/{self.framework}/{self.variation}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class DatasetHandle(ResourceHandle):
     owner: str
     dataset: str
@@ -56,6 +61,9 @@ class DatasetHandle(ResourceHandle):
 
     def is_versioned(self) -> bool:
         return self.version is not None and self.version > 0
+
+    def with_version(self, version: int):  # noqa: ANN201
+        return DatasetHandle(owner=self.owner, dataset=self.dataset, version=version)
 
     def __str__(self) -> str:
         handle_str = f"{self.owner}/{self.dataset}"
@@ -71,7 +79,7 @@ class DatasetHandle(ResourceHandle):
         return base_url
 
 
-@dataclass
+@dataclass(frozen=True)
 class CompetitionHandle(ResourceHandle):
     competition: str
 
@@ -85,10 +93,11 @@ class CompetitionHandle(ResourceHandle):
         return base_url
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotebookHandle(ResourceHandle):
     owner: str
     notebook: str
+    version: Optional[int] = None
 
     def __str__(self) -> str:
         handle_str = f"{self.owner}/{self.notebook}"
@@ -98,6 +107,10 @@ class NotebookHandle(ResourceHandle):
         endpoint = get_kaggle_api_endpoint()
         base_url = f"{endpoint}/code/{self.owner}/{self.notebook}"
         return base_url
+
+
+class PackageHandle(NotebookHandle):
+    pass
 
 
 def parse_dataset_handle(handle: str) -> DatasetHandle:
@@ -177,3 +190,8 @@ def parse_notebook_handle(handle: str) -> NotebookHandle:
         msg = f"Invalid notebook handle: {handle}"
         raise ValueError(msg)
     return NotebookHandle(owner=parts[0], notebook=parts[1])
+
+
+def parse_package_handle(handle: str) -> PackageHandle:
+    notebook_handle = parse_notebook_handle(handle)
+    return PackageHandle(**asdict(notebook_handle))
