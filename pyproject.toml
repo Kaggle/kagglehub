@@ -34,6 +34,15 @@ dependencies = [
 hf-datasets = ["datasets", "kagglehub[pandas-datasets]"]
 pandas-datasets = ["pandas"]
 
+
+# twine 6.0.1 doesn't support metadata-version 2.4.
+# remove `core-metadata-version` pin once twine release a new version with: https://github.com/pypa/twine/pull/1180
+[tool.hatch.build.targets.wheel]
+core-metadata-version = "2.3" 
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.3"
+
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
 
