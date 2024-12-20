@@ -120,6 +120,6 @@ steps:
 
 substitutions:
   _GITHUB_REPOSITORY: kagglehub
-  _PYTHON_VERSION: 3.9.18
+  _PYTHON_VERSION: 3.9.19
   _NEW_VERSION: default
 
