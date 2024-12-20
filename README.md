@@ -201,7 +201,7 @@ Some examples include:
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
-# Load a DataFrame with a specific version of a CSV, then remove a column
+# Load a Dataset with a specific version of a CSV, then remove a column
 dataset = kagglehub.load_dataset(
     KaggleDatasetAdapter.HUGGING_FACE,
     "unsdsn/world-happiness/versions/1",
@@ -209,7 +209,7 @@ dataset = kagglehub.load_dataset(
 )
 dataset = dataset.remove_columns('Region')
 
-# Load a DataFrame with specific columns from a parquet file, then split into test/train splits
+# Load a Dataset with specific columns from a parquet file, then split into test/train splits
 dataset = kagglehub.load_dataset(
     KaggleDatasetAdapter.HUGGING_FACE,
     "robikscube/textocr-text-extraction-from-images-dataset",
@@ -218,7 +218,7 @@ dataset = kagglehub.load_dataset(
 )
 dataset_with_splits = dataset.train_test_split(test_size=0.8, train_size=0.2)
 
-# Load a DataFrame by executing a SQL query against a SQLite DB, then rename a column
+# Load a Dataset by executing a SQL query against a SQLite DB, then rename a column
 dataset = kagglehub.load_dataset(
     KaggleDatasetAdapter.HUGGING_FACE,
     "wyattowalsh/basketball",
