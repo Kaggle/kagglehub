@@ -12,7 +12,7 @@ import requests
 import requests.auth
 from packaging.version import parse
 from requests.auth import HTTPBasicAuth
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 import kagglehub
 from kagglehub.cache import delete_from_cache, get_cached_archive_path
