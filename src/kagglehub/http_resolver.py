@@ -21,6 +21,7 @@ from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, Note
 from kagglehub.resolver import Resolver
 
 DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
+NOTEBOOK_CURRENT_VERSION_FIELD = "currentVersionNumber"
 
 MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
@@ -210,13 +211,16 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
     def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
+        if not h.is_versioned():
+            h.version = _get_current_version(api_client, h)
+
         cached_response = load_from_cache(h, path)
         if cached_response and not force_download:
             return cached_response  # Already cached
         elif cached_response and force_download:
             delete_from_cache(h, path)
 
-        download_url_root = f"kernels/output/download/{h.owner}/{h.notebook}"
+        download_url_root = _build_get_notebook_url_path(h)
         output_root = Path(get_cached_path(h, path))
 
         # List the files and decide how to download them:
@@ -294,6 +298,14 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
 
         return json_response[DATASET_CURRENT_VERSION_FIELD]
 
+    elif isinstance(h, NotebookHandle):
+        json_response = api_client.get(_build_get_notebook_url_path(h), h)
+        if NOTEBOOK_CURRENT_VERSION_FIELD not in json_response:
+            msg = f"Invalid GetKernel API response. Expected to include a {NOTEBOOK_CURRENT_VERSION_FIELD} field"
+            raise ValueError(msg)
+        
+        return json_response[NOTEBOOK_CURRENT_VERSION_FIELD]
+
     else:
         msg = f"Invalid ResourceHandle type {h}"
         raise ValueError(msg)
@@ -329,6 +341,9 @@ def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
 
 def _build_get_dataset_url_path(h: DatasetHandle) -> str:
     return f"datasets/view/{h.owner}/{h.dataset}"
+
+def _build_get_notebook_url_path(h: NotebookHandle) -> str:
+    return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
 
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
