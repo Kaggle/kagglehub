@@ -20,4 +20,4 @@ registry.competition_resolver.add_implementation(http_resolver.CompetitionHttpRe
 registry.competition_resolver.add_implementation(kaggle_cache_resolver.CompetitionKaggleCacheResolver())
 
 registry.notebook_output_resolver.add_implementation(http_resolver.NotebookOutputHttpResolver())
-registry.notebook_output_resolver.add_implementation(kaggle_cache_resolver.NotebookKaggleCacheResolver())
+registry.notebook_output_resolver.add_implementation(kaggle_cache_resolver.NotebookOutputKaggleCacheResolver())

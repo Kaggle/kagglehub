@@ -226,7 +226,7 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         return cached_path
 
 
-class NotebookKaggleCacheResolver(Resolver[NotebookHandle]):
+class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
         if is_kaggle_cache_disabled():
             return False
@@ -247,6 +247,7 @@ class NotebookKaggleCacheResolver(Resolver[NotebookHandle]):
             "OwnerSlug": h.owner,
             "KernelSlug": h.notebook,
         }
+        # TODO: Add VersionNumber once supported
 
         result = client.post(
             ATTACH_DATASOURCE_REQUEST_NAME,
@@ -276,6 +277,9 @@ class NotebookKaggleCacheResolver(Resolver[NotebookHandle]):
                 f"Attaching model '{h}' to your Kaggle notebook...",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
+
+        while not os.path.exists(cached_path):
+            time.sleep(5)
 
         if path:
             cached_filepath = f"{cached_path}/{path}"
