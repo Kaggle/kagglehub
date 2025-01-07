@@ -1,7 +1,7 @@
 """Functions to parse resource handles."""
 
 import abc
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Optional
 
 from kagglehub.config import get_kaggle_api_endpoint
@@ -100,6 +100,10 @@ class NotebookHandle(ResourceHandle):
         return base_url
 
 
+class UtilityScriptHandle(NotebookHandle):
+    pass
+
+
 def parse_dataset_handle(handle: str) -> DatasetHandle:
     parts = handle.split("/")
 
@@ -177,3 +181,8 @@ def parse_notebook_handle(handle: str) -> NotebookHandle:
         msg = f"Invalid notebook handle: {handle}"
         raise ValueError(msg)
     return NotebookHandle(owner=parts[0], notebook=parts[1])
+
+
+def parse_utility_script_handle(handle: str) -> UtilityScriptHandle:
+    notebook_handle = parse_notebook_handle(handle)
+    return UtilityScriptHandle(**asdict(notebook_handle))
