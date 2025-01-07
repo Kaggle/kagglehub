@@ -12,6 +12,7 @@ from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
+from kagglehub.requirements import register_accessed_datasource
 from kagglehub.resolver import Resolver
 
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
@@ -86,7 +87,9 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
                     f"You can acces the other files othe attached competition at '{cached_path}'"
                 )
                 raise ValueError(msg)
+            register_accessed_datasource(h, None)
             return cached_filepath
+        register_accessed_datasource(h, None)
         return cached_path
 
 
@@ -127,6 +130,7 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
 
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
+        version_number = result.get("versionNumber")  # None if missing
 
         if not os.path.exists(cached_path):
             # Only print this if the dataset is not already mounted.
@@ -153,7 +157,9 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
                     f"You can acces the other files othe attached dataset at '{cached_path}'"
                 )
                 raise ValueError(msg)
+            register_accessed_datasource(h, version_number)
             return cached_filepath
+        register_accessed_datasource(h, version_number)
         return cached_path
 
 
@@ -196,6 +202,7 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
 
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
+        version_number = result.get("versionNumber")  # None if missing
 
         if not os.path.exists(cached_path):
             # Only print this if the model is not already mounted.
@@ -222,7 +229,9 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
                     f"You can access the other files of the attached model at '{cached_path}'"
                 )
                 raise ValueError(msg)
+            register_accessed_datasource(h, version_number)
             return cached_filepath
+        register_accessed_datasource(h, version_number)
         return cached_path
 
 
