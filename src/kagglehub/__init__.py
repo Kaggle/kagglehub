@@ -19,5 +19,5 @@ registry.dataset_resolver.add_implementation(colab_cache_resolver.DatasetColabCa
 registry.competition_resolver.add_implementation(http_resolver.CompetitionHttpResolver())
 registry.competition_resolver.add_implementation(kaggle_cache_resolver.CompetitionKaggleCacheResolver())
 
-# TODO(b/380340624): implement a kaggle_cache_resolver for notebook outputs
 registry.notebook_output_resolver.add_implementation(http_resolver.NotebookOutputHttpResolver())
+registry.notebook_output_resolver.add_implementation(kaggle_cache_resolver.NotebookOutputKaggleCacheResolver())

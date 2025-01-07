@@ -20,6 +20,7 @@ app = Flask(__name__)
 
 LATEST_MODEL_VERSION = 2
 LATEST_DATASET_VERSION = 2
+LATEST_KERNEL_VERSION = 2
 
 
 @app.route("/", methods=["HEAD"])
@@ -42,7 +43,7 @@ def attach_datasource_using_jwt_request() -> ResponseReturnValue:
         if "VersionNumber" in model_ref:
             version_number = model_ref["VersionNumber"]
         mount_slug = f"{model_ref['ModelSlug']}/{model_ref['Framework']}/{model_ref['InstanceSlug']}/{version_number}"
-        # # Load the files
+        # Load the files
         cache_mount_folder = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
         base_path = f"{cache_mount_folder}/{mount_slug}"
         os.makedirs(base_path, exist_ok=True)
@@ -63,7 +64,7 @@ def attach_datasource_using_jwt_request() -> ResponseReturnValue:
         if "VersionNumber" in dataset_ref:
             version_number = dataset_ref["VersionNumber"]
         mount_slug = f"{dataset_ref['DatasetSlug']}"
-        # # Load the files
+        # Load the files
         cache_mount_folder = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
         base_path = f"{cache_mount_folder}/{mount_slug}"
         os.makedirs(base_path, exist_ok=True)
@@ -81,12 +82,33 @@ def attach_datasource_using_jwt_request() -> ResponseReturnValue:
     elif "competitionRef" in data:
         competition_ref = data["competitionRef"]
         mount_slug = f"{competition_ref['CompetitionSlug']}"
-        # # Load the files
+        # Load the files
         cache_mount_folder = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
         base_path = f"{cache_mount_folder}/{mount_slug}"
         os.makedirs(base_path, exist_ok=True)
         Path(f"{base_path}/foo.txt").touch()
         Path(f"{base_path}/bar.csv").touch()
+        data = {
+            "wasSuccessful": True,
+            "result": {
+                "mountSlug": mount_slug,
+            },
+        }
+        return jsonify(data), 200
+    elif "kernelRef" in data:
+        kernel_ref = data["kernelRef"]
+        version_number = LATEST_KERNEL_VERSION
+        if "VersionNumber" in kernel_ref:
+            version_number = kernel_ref["VersionNumber"]
+        mount_slug = f"{kernel_ref['KernelSlug']}"
+        # Load the files
+        cache_mount_folder = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
+        base_path = f"{cache_mount_folder}/{mount_slug}"
+        os.makedirs(base_path, exist_ok=True)
+        Path(f"{base_path}/foo.txt").touch()
+        if version_number == LATEST_KERNEL_VERSION:
+            # The latest version has an extra file.
+            Path(f"{base_path}/bar.csv").touch()
         data = {
             "wasSuccessful": True,
             "result": {
