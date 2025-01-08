@@ -32,10 +32,7 @@ def head() -> ResponseReturnValue:
 def notebook_get() -> ResponseReturnValue:
     user_name = request.args.get("user_name")
     kernel_slug = request.args.get("kernel_slug")
-    data = {
-        "message": f"Notebook exists {user_name}/{kernel_slug} !",
-        NOTEBOOK_CURRENT_VERSION_FIELD: 2,
-    }
+    data = {"message": f"Notebook exists {user_name}/{kernel_slug} !", "metadata": {NOTEBOOK_CURRENT_VERSION_FIELD: 2}}
     return jsonify(data), 200
 
 
