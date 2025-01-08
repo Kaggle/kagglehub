@@ -300,11 +300,11 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
 
     elif isinstance(h, NotebookHandle):
         json_response = api_client.get(_build_get_notebook_url_path(h), h)
-        if NOTEBOOK_CURRENT_VERSION_FIELD not in json_response:
+        if NOTEBOOK_CURRENT_VERSION_FIELD not in json_response["metadata"]:
             msg = f"Invalid GetKernel API response. Expected to include a {NOTEBOOK_CURRENT_VERSION_FIELD} field"
             raise ValueError(msg)
 
-        return json_response[NOTEBOOK_CURRENT_VERSION_FIELD]
+        return json_response["metadata"][NOTEBOOK_CURRENT_VERSION_FIELD]
 
     else:
         msg = f"Invalid ResourceHandle type {h}"
@@ -352,7 +352,7 @@ def _build_dataset_download_url_path(h: DatasetHandle) -> str:
 
 
 def _build_notebook_download_url_path(h: NotebookHandle) -> str:
-    return f"kernels/output/download/{h.owner}/{h.notebook}"
+    return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
 
 
 def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
