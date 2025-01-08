@@ -11,7 +11,7 @@ from .server_stubs import serv
 from .utils import create_test_cache
 
 INVALID_ARCHIVE_NOTEBOOK_OUTPUT_HANDLE = "invalid/invalid/invalid/invalid/invalid"
-VERSIONED_NOTEBOOK_OUTPUT_HANDLE = "jeward/testingNotebookOutput/versions/2"
+VERSIONED_NOTEBOOK_OUTPUT_HANDLE = "khsamaha/simple-lightgbm-kaggle-sticker-sales-py/versions/2"
 UNVERSIONED_NOTEBOOK_OUTPUT_HANDLE = "khsamaha/simple-lightgbm-kaggle-sticker-sales-py"
 
 EXPECTED_NOTEBOOK_SUBDIR = os.path.join(
@@ -58,4 +58,10 @@ class TestHttpNotebookOutputDownload(BaseTestCase):
         with create_test_cache() as d:
             self._download_notebook_output_and_assert_downloaded(
                 d, UNVERSIONED_NOTEBOOK_OUTPUT_HANDLE, EXPECTED_NOTEBOOK_SUBDIR
+            )
+
+    def test_versioned_notebook_output_download(self) -> None:
+        with create_test_cache() as d:
+            self._download_notebook_output_and_assert_downloaded(
+                d, VERSIONED_NOTEBOOK_OUTPUT_HANDLE, EXPECTED_NOTEBOOK_SUBDIR
             )

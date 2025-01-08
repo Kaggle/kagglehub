@@ -195,7 +195,7 @@ def parse_notebook_handle(handle: str) -> NotebookHandle:
             raise ValueError(msg) from err
         return NotebookHandle(
             owner=parts[0],
-            dataset=parts[1],
+            notebook=parts[1],
             version=version,
         )
 
