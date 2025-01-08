@@ -1,13 +1,13 @@
 import os
 from typing import Optional
 
+import kagglehub
+from kagglehub.cache import NOTEBOOKS_CACHE_SUBFOLDER, get_cached_archive_path
+from kagglehub.handle import parse_notebook_handle
 from tests.fixtures import BaseTestCase
 
-import kagglehub
-from kagglehub.handle import parse_notebook_handle
 from .server_stubs import notebook_output_download_stub as stub
 from .server_stubs import serv
-from kagglehub.cache import NOTEBOOKS_CACHE_SUBFOLDER, get_cached_archive_path
 from .utils import create_test_cache
 
 INVALID_ARCHIVE_NOTEBOOK_OUTPUT_HANDLE = "invalid/invalid/invalid/invalid/invalid"
@@ -20,7 +20,7 @@ EXPECTED_NOTEBOOK_SUBDIR = os.path.join(
 
 
 class TestHttpNotebookOutputDownload(BaseTestCase):
-    
+
     @classmethod
     def setUpClass(cls):
         cls.server = serv.start_server(stub.app)
@@ -39,8 +39,6 @@ class TestHttpNotebookOutputDownload(BaseTestCase):
     ) -> None:
         # Download the full notebook output and ensure all files are there.
         notebook_path = kagglehub.notebook_output_download(notebook_handle, **kwargs)
-        print(f"Notebook path: {notebook_path}")
-        print(f"Expected path: {os.path.join(d, expected_subdir_or_subpath)}")
         self.assertEqual(os.path.join(d, expected_subdir_or_subpath), notebook_path)
 
         if not expected_files:
@@ -58,4 +56,6 @@ class TestHttpNotebookOutputDownload(BaseTestCase):
 
     def test_unversioned_notebook_output_download(self) -> None:
         with create_test_cache() as d:
-            self._download_notebook_output_and_assert_downloaded(d, UNVERSIONED_NOTEBOOK_OUTPUT_HANDLE, EXPECTED_NOTEBOOK_SUBDIR)
+            self._download_notebook_output_and_assert_downloaded(
+                d, UNVERSIONED_NOTEBOOK_OUTPUT_HANDLE, EXPECTED_NOTEBOOK_SUBDIR
+            )

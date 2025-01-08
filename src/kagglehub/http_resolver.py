@@ -303,7 +303,7 @@ def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> in
         if NOTEBOOK_CURRENT_VERSION_FIELD not in json_response:
             msg = f"Invalid GetKernel API response. Expected to include a {NOTEBOOK_CURRENT_VERSION_FIELD} field"
             raise ValueError(msg)
-        
+
         return json_response[NOTEBOOK_CURRENT_VERSION_FIELD]
 
     else:
@@ -342,12 +342,14 @@ def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
 def _build_get_dataset_url_path(h: DatasetHandle) -> str:
     return f"datasets/view/{h.owner}/{h.dataset}"
 
+
 def _build_get_notebook_url_path(h: NotebookHandle) -> str:
     return f"kernels/pull?user_name={h.owner}&kernel_slug={h.notebook}"
 
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
     return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+
 
 def _build_notebook_download_url_path(h: NotebookHandle) -> str:
     return f"kernels/output/download/{h.owner}/{h.notebook}"
