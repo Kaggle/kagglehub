@@ -13,7 +13,7 @@ NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
 NUM_UNVERSIONED_NOTEBOOK_PARTS = 2  # e.g.: <owner>/<notebook>
-NUM_VERSION_NOTEBOOK_PARTS = 4  # e.g.: <owner>/<notebook>/versions/<version>
+NUM_VERSIONED_NOTEBOOK_PARTS = 4  # e.g.: <owner>/<notebook>/versions/<version>
 
 
 @dataclass
@@ -185,7 +185,7 @@ def parse_competition_handle(handle: str) -> CompetitionHandle:
 def parse_notebook_handle(handle: str) -> NotebookHandle:
     parts = handle.split("/")
 
-    if len(parts) == NUM_VERSION_NOTEBOOK_PARTS:
+    if len(parts) == NUM_VERSIONED_NOTEBOOK_PARTS:
         # Versioned handle
         # e.g.: <owner>/<notebook>/versions/<version>
         try:
