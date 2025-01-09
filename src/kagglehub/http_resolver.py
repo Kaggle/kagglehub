@@ -355,6 +355,7 @@ def _build_dataset_download_url_path(h: DatasetHandle) -> str:
 def _build_notebook_download_url_path_with_version(h: NotebookHandle) -> str:
     return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
 
+
 def _build_notebook_download_url_path(h: NotebookHandle) -> str:
     return f"kernels/output/download/{h.owner}/{h.notebook}"
 
