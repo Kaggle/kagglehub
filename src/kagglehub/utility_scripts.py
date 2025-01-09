@@ -31,7 +31,7 @@ def utility_script_install(handle: str, *, force_download: Optional[bool] = Fals
 
     if not _is_notebook_utility_script(h):
         logger.info(
-            f"Notebook '{h.notebook}' by user '{h.notebook}is not an Utility Script"
+            f"Notebook '{h.notebook}' by user '{h.notebook} is not a Utility Script"
             "\n and will not be added to system path"
         )
         return utility_script_path
