@@ -24,13 +24,22 @@ class TestUtilityScriptInstall(unittest.TestCase):
             self.response_path = response_path
 
             self.assertIn(response_path, sys.path)
-            expected_files = ["submission.csv"]
+            expected_files = ["private_utility_script.csv"]
             assert_files(self, expected_files, expected_files)
+
+    def test_download_non_utility_script_sys_path_not_updated(self) -> None:
+        with create_test_cache():
+            response_path = utility_script_install("alexisbcook/titanic-tutorial")
+            self.response_path = response_path
+
+            self.assertNotIn(response_path, sys.path)
+            expected_files = ["submission.csv"]
+            assert_files(self, response_path, expected_files)
 
     def test_download_non_existent_utility_script_fails(self) -> None:
         with create_test_cache(), self.assertRaises(HTTPError):
             utility_script_install("integrationtester/i-dont-exist")
 
     def tearDown(self) -> None:
-        if hasattr(self, "response_path"):
+        if hasattr(self, "response_path") and self.response_path in sys.path:
             sys.path.remove(self.response_path)
