@@ -29,7 +29,7 @@ def utility_script_install(handle: str, *, force_download: Optional[bool] = Fals
     logger.info(f"Downloading Utility Script: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
     utility_script_path = registry.notebook_output_resolver(h, path=None, force_download=force_download)
 
-    if not _is_notebook_utility_script:
+    if not _is_notebook_utility_script(h):
         logger.info(
             f"Notebook '{h.notebook}' by user '{h.notebook}is not an Utility Script"
             "\n and will not be added to system path"
