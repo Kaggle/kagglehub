@@ -211,8 +211,10 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
     def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
-        if not h.is_versioned():
-            h.version = _get_current_version(api_client, h)
+        download_url_root = _build_notebook_download_url_path(h)
+
+        if h.is_versioned():
+            download_url_root = _build_notebook_download_url_path_with_version(h)
 
         cached_response = load_from_cache(h, path)
         if cached_response and not force_download:
@@ -220,7 +222,6 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         elif cached_response and force_download:
             delete_from_cache(h, path)
 
-        download_url_root = _build_notebook_download_url_path(h)
         output_root = Path(get_cached_path(h, path))
 
         # List the files and decide how to download them:
@@ -351,8 +352,11 @@ def _build_dataset_download_url_path(h: DatasetHandle) -> str:
     return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
 
 
-def _build_notebook_download_url_path(h: NotebookHandle) -> str:
+def _build_notebook_download_url_path_with_version(h: NotebookHandle) -> str:
     return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
+
+def _build_notebook_download_url_path(h: NotebookHandle) -> str:
+    return f"kernels/output/download/{h.owner}/{h.notebook}"
 
 
 def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
