@@ -24,8 +24,8 @@ class TestUtilityScriptInstall(unittest.TestCase):
             self.response_path = response_path
 
             self.assertIn(response_path, sys.path)
-            expected_files = ["private_utility_script.csv"]
-            assert_files(self, expected_files, expected_files)
+            expected_files = ["private_utility_script.py"]
+            assert_files(self, response_path, expected_files)
 
     def test_download_non_utility_script_sys_path_not_updated(self) -> None:
         with create_test_cache():
