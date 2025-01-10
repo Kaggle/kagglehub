@@ -15,6 +15,13 @@ class TestModelDownload(unittest.TestCase):
             expected_files = ["submission.csv"]
             assert_files(self, actual_path, expected_files)
 
+    def test_notebook_versioned_succeeds(self) -> None:
+        with create_test_cache():
+            actual_path = notebook_output_download("alexisbcook/titanic-tutorial/versions/1")
+
+            expected_file = ["my_submission.csv"]
+            assert_files(self, actual_path, expected_file)
+
     def test_download_public_notebook_output_as_unauthenticated_succeeds(self) -> None:
         with create_test_cache():
             with unauthenticated():
