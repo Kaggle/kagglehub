@@ -4,6 +4,7 @@ import tarfile
 import zipfile
 from pathlib import Path
 from typing import Optional
+import mimetypes
 
 import requests
 from tqdm.contrib.concurrent import thread_map
@@ -211,50 +212,85 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
     def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
-        download_url_root = _build_notebook_download_url_path(h)
-
-        if h.is_versioned():
-            download_url_root = _build_notebook_download_url_path_with_version(h)
-
-        cached_response = load_from_cache(h, path)
-        if cached_response and not force_download:
-            return cached_response  # Already cached
-        elif cached_response and force_download:
+        notebook_path = load_from_cache(h, path)
+        if notebook_path and not force_download:
+            return notebook_path  # Already cached
+        elif notebook_path and force_download:
             delete_from_cache(h, path)
 
-        output_root = Path(get_cached_path(h, path))
+        url_path = _build_notebook_download_url_path(h)
+        if h.is_versioned():
+            url_path = f"{url_path}?version_number={h.version}"
+        print(url_path)
+        out_path = get_cached_path(h, path)
 
-        # List the files and decide how to download them:
-        # - <= 25 files: Download files in parallel
-        # > 25 files: Download the archive and uncompress
-        (files, has_more) = self._list_files(api_client, h) if not path else ([path], False)
-        if has_more:
-            # TODO(b/379761520): add support for .tar.gz archived downloads
-            logger.warning(
-                f"Too many files in {h} (capped at {MAX_NUM_FILES_DIRECT_DOWNLOAD}). "
-                "Unable to download notebook output."
-            )
-            return ""
+        if path:
+            # Downloading a single file
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            download_path = url_path + "&file_path=" + path
+            api_client.download_file(download_path, out_path, h, extract_auto_compressed_file=True)
+        else:
+            archive_path = get_cached_archive_path(h)
+            print(archive_path)
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+            
+            # First, we download the archive.
+            api_client.download_file(url_path, archive_path, h)
 
-        # Download files individually in parallel
-        def _inner_download_file(filepath: str) -> None:
-            download_url_path = f"{download_url_root}/{filepath}"
-            full_output_filepath = output_root / filepath
+            # Create the directory to extract the archive to.
+            os.makedirs(out_path, exist_ok=True)
 
-            os.makedirs(os.path.dirname(full_output_filepath), exist_ok=True)
-            api_client.download_file(download_url_path, str(full_output_filepath), h)
+            _extract_archive(archive_path, out_path)
 
-        thread_map(
-            _inner_download_file,
-            files,
-            desc=f"Downloading {len(files)} files",
-            max_workers=8,  # Never use more than 8 threads in parallel to download files.
-        )
+            # Delete the archive
+            os.remove(archive_path)
+
+        # Commenting out other method for now.
+        # download_url_root = _build_notebook_download_url_path(h)
+
+        # cached_response = load_from_cache(h, path)
+        # if cached_response and not force_download:
+        #     return cached_response  # Already cached
+        # elif cached_response and force_download:
+        #     delete_from_cache(h, path)
+
+        # output_root = Path(get_cached_path(h, path))
+
+        # # List the files and decide how to download them:
+        # # - <= 25 files: Download files in parallel
+        # # > 25 files: Download the archive and uncompress
+        # (files, has_more) = self._list_files(api_client, h) if not path else ([path], False)
+        # if has_more:
+        #     # TODO(b/379761520): add support for .tar.gz archived downloads
+        #     logger.warning(
+        #         f"Too many files in {h} (capped at {MAX_NUM_FILES_DIRECT_DOWNLOAD}). "
+        #         "Unable to download notebook output."
+        #     )
+        #     return ""
+
+        # # Download files individually in parallel
+        # def _inner_download_file(filepath: str) -> None:
+        #     download_url_path = f"{download_url_root}/{filepath}"
+        #     print(download_url_path)
+        #     if h.is_versioned():
+        #         download_url_path = f"{download_url_path}?version_number={h.version}"
+        #     print(download_url_path)
+        #     full_output_filepath = output_root / filepath
+
+        #     os.makedirs(os.path.dirname(full_output_filepath), exist_ok=True)
+        #     api_client.download_file(download_url_path, str(full_output_filepath), h)
+
+        # thread_map(
+        #     _inner_download_file,
+        #     files,
+        #     desc=f"Downloading {len(files)} files",
+        #     max_workers=8,  # Never use more than 8 threads in parallel to download files.
+        # )
 
         mark_as_complete(h, path)
 
         # TODO(b/377510971): when notebook is a Kaggle utility script, update sys.path
-        return str(output_root)
+        return out_path
 
     def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
         query = f"kernels/output/list/{h.owner}/{h.notebook}?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"

@@ -156,6 +156,7 @@ class KaggleApiV1Client:
             stream=True,
             auth=self._get_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+            allow_redirects=False
         ) as response:
             kaggle_api_raise_for_status(response, resource_handle)
             total_size = int(response.headers["Content-Length"])

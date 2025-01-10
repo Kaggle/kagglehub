@@ -40,33 +40,33 @@ def notebook_get() -> ResponseReturnValue:
 def notebook_output_download(owner_slug: str, kernel_slug: str) -> ResponseReturnValue:
     handle = f"{owner_slug}/{kernel_slug}"
 
-    test_file_path = get_test_file_path("foo.txt")
-    content_type = "application/zip"
+    # First, determine if we're fetching a file or the whole notebook output
+    file_name_query_param = request.args.get("file_path")
+    if file_name_query_param:
+        # This mimics behavior for our file downloads, where users request a file, but
+        # receive a zipped version of the file from GCS.
+        test_file_name = (
+            f"{AUTO_COMPRESSED_FILE_NAME}.zip"
+            if file_name_query_param == AUTO_COMPRESSED_FILE_NAME
+            else file_name_query_param
+        )
+    # Check a special case to handle tar.gz
+    elif handle in TARGZ_ARCHIVE_HANDLE:
+        test_file_name = "archive.tar.gz"
+    else:
+        test_file_name = "foo.txt.zip"
 
-    if handle in TARGZ_ARCHIVE_HANDLE:
-        test_file_path = get_test_file_path("archive.tar.gz")
-        content_type = "application/x-gzip"
-
-    with open(test_file_path, "rb") as f:
-        content = f.read()
-        file_hash = hashlib.md5()
-        file_hash.update(content)
-        resp = Response()
-        resp.headers[GCS_HASH_HEADER] = f"md5={to_b64_digest(file_hash)}"
-        resp.headers[LAST_MODIFIED] = LAST_MODIFIED_DATE
-        resp.content_type = content_type
-        resp.content_length = os.path.getsize(test_file_path)
-        resp.data = content
-        return resp, 200
+    return get_gcs_redirect_response(test_file_name)
 
 
-@app.route("/api/v1/kernels/output/download/<owner_slug>/<kernel_slug>/<file_path>", methods=["GET"])
-def notebook_output_download_file(owner_slug: str, kernel_slug: str, file_path: str) -> ResponseReturnValue:
-    _ = f"{owner_slug}/{kernel_slug}"
-    # This mimics behavior for our file downloads, where users request a file, but
-    # receive a zipped version of the file from GCS.
-    test_file = f"{file_path}.zip" if file_path is AUTO_COMPRESSED_FILE_NAME else file_path
-    return get_gcs_redirect_response(test_file)
+
+# @app.route("/api/v1/kernels/output/download/<owner_slug>/<kernel_slug>/<file_path>", methods=["GET"])
+# def notebook_output_download_file(owner_slug: str, kernel_slug: str, file_path: str) -> ResponseReturnValue:
+#     _ = f"{owner_slug}/{kernel_slug}"
+#     # This mimics behavior for our file downloads, where users request a file, but
+#     # receive a zipped version of the file from GCS.
+#     test_file = f"{file_path}.zip" if file_path is AUTO_COMPRESSED_FILE_NAME else file_path
+#     return get_gcs_redirect_response(test_file)
 
 
 @app.route("/api/v1/kernels/output/list/<owner_slug>/<kernel_slug>", methods=["GET"])
