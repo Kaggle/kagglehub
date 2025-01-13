@@ -4,7 +4,6 @@ import tarfile
 import zipfile
 from pathlib import Path
 from typing import Optional
-import mimetypes
 
 import requests
 from tqdm.contrib.concurrent import thread_map
@@ -212,28 +211,28 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
     def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
-        notebook_path = load_from_cache(h, path)
-        if notebook_path and not force_download:
-            return notebook_path  # Already cached
-        elif notebook_path and force_download:
+        if not h.is_versioned():
+            h.version = _get_current_version(api_client, h)
+
+        nb_path = load_from_cache(h, path)
+        if nb_path and not force_download:
+            return nb_path  # Already cached
+        elif nb_path and force_download:
             delete_from_cache(h, path)
 
         url_path = _build_notebook_download_url_path(h)
-        if h.is_versioned():
-            url_path = f"{url_path}?version_number={h.version}"
-        print(url_path)
         out_path = get_cached_path(h, path)
-
+        print(url_path)
+        
         if path:
-            # Downloading a single file
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            download_path = url_path + "&file_path=" + path
-            api_client.download_file(download_path, out_path, h, extract_auto_compressed_file=True)
+            api_client.download_file(url_path + "?file_path=" + path, out_path, h, extract_auto_compressed_file=True)
         else:
+            # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
+            # Downloading the full archived bundle.
             archive_path = get_cached_archive_path(h)
-            print(archive_path)
             os.makedirs(os.path.dirname(archive_path), exist_ok=True)
-            
+
             # First, we download the archive.
             api_client.download_file(url_path, archive_path, h)
 
@@ -244,6 +243,9 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
 
             # Delete the archive
             os.remove(archive_path)
+
+        mark_as_complete(h, path)
+        return out_path
 
         # Commenting out other method for now.
         # download_url_root = _build_notebook_download_url_path(h)
@@ -287,10 +289,10 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         #     max_workers=8,  # Never use more than 8 threads in parallel to download files.
         # )
 
-        mark_as_complete(h, path)
+        # mark_as_complete(h, path)
 
-        # TODO(b/377510971): when notebook is a Kaggle utility script, update sys.path
-        return out_path
+        # # TODO(b/377510971): when notebook is a Kaggle utility script, update sys.path
+        # return out_path
 
     def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
         query = f"kernels/output/list/{h.owner}/{h.notebook}?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
@@ -307,6 +309,9 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
 
 def _extract_archive(archive_path: str, out_path: str) -> None:
     logger.info("Extracting files...")
+    # print(zipfile.is_zipfile(archive_path))
+    # print(tarfile.is_tarfile(archive_path))
+    # print()
     if tarfile.is_tarfile(archive_path):
         with tarfile.open(archive_path) as f:
             f.extractall(out_path)
@@ -386,10 +391,6 @@ def _build_get_notebook_url_path(h: NotebookHandle) -> str:
 
 def _build_dataset_download_url_path(h: DatasetHandle) -> str:
     return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
-
-
-def _build_notebook_download_url_path_with_version(h: NotebookHandle) -> str:
-    return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
 
 
 def _build_notebook_download_url_path(h: NotebookHandle) -> str:
