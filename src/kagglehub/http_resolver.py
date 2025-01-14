@@ -152,7 +152,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         elif model_path and force_download:
             delete_from_cache(h, path)
 
-        url_path = _build_download_url_path(h, path)
+        url_path = _build_model_download_url_path(h, path)
         out_path = get_cached_path(h, path)
 
         # Create the intermediary directories
@@ -313,11 +313,12 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/get"
 
 
-def _build_download_url_path(h: ModelHandle, path: Optional[str]) -> str:
+def _build_model_download_url_path(h: ModelHandle, path: Optional[str]) -> str:
+    base_url = f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
     if path:
-        return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download/{path}"
+        return f"{base_url}/{path}"
     else:
-        return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
+        return base_url
 
 
 def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
@@ -334,17 +335,27 @@ def _build_get_notebook_url_path(h: NotebookHandle) -> str:
 
 
 def _build_dataset_download_url_path(h: DatasetHandle, path: Optional[str]) -> str:
+    if not h.is_versioned():
+        msg = "No version provided"
+        raise ValueError(msg)
+    
+    base_url = f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
     if path:
-        return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}&file_name={path}"
+        return f"{base_url}&file_name={path}"
     else:
-        return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+        return base_url
 
 
 def _build_notebook_download_url_path(h: NotebookHandle, path: Optional[str]) -> str:
+    if not h.is_versioned():
+        msg = "No version provided"
+        raise ValueError(msg)
+    
+    base_url =f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
     if path:
-        return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}&file_path={path}"
+        return f"{base_url}&file_path={path}"
     else:
-        return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
+        return base_url
 
 
 def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
