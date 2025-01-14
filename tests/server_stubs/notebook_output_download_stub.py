@@ -1,7 +1,4 @@
-import hashlib
-import os
-
-from flask import Flask, Response, jsonify, request
+from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
 
 from kagglehub.http_resolver import NOTEBOOK_CURRENT_VERSION_FIELD
@@ -9,8 +6,6 @@ from tests.utils import (
     AUTO_COMPRESSED_FILE_NAME,
     add_mock_gcs_route,
     get_gcs_redirect_response,
-    get_test_file_path,
-    to_b64_digest,
 )
 
 app = Flask(__name__)
@@ -57,16 +52,6 @@ def notebook_output_download(owner_slug: str, kernel_slug: str) -> ResponseRetur
         test_file_name = "foo.txt.zip"
 
     return get_gcs_redirect_response(test_file_name)
-
-
-
-# @app.route("/api/v1/kernels/output/download/<owner_slug>/<kernel_slug>/<file_path>", methods=["GET"])
-# def notebook_output_download_file(owner_slug: str, kernel_slug: str, file_path: str) -> ResponseReturnValue:
-#     _ = f"{owner_slug}/{kernel_slug}"
-#     # This mimics behavior for our file downloads, where users request a file, but
-#     # receive a zipped version of the file from GCS.
-#     test_file = f"{file_path}.zip" if file_path is AUTO_COMPRESSED_FILE_NAME else file_path
-#     return get_gcs_redirect_response(test_file)
 
 
 @app.route("/api/v1/kernels/output/list/<owner_slug>/<kernel_slug>", methods=["GET"])

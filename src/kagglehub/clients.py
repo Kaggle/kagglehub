@@ -36,9 +36,8 @@ from kagglehub.exceptions import (
     kaggle_api_raise_for_status,
     process_post_response,
 )
-from kagglehub.handle import CompetitionHandle, ResourceHandle, NotebookHandle
+from kagglehub.handle import CompetitionHandle, NotebookHandle, ResourceHandle
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
-import json
 
 CHUNK_SIZE = 1048576
 # The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
@@ -159,11 +158,11 @@ class KaggleApiV1Client:
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response, resource_handle)
-            
+
             total_size = 0
             if not isinstance(resource_handle, NotebookHandle):
                 total_size = int(response.headers["Content-Length"])
-                
+
             size_read = 0
 
             if isinstance(resource_handle, CompetitionHandle) and not _download_needed(

@@ -2,7 +2,6 @@ import logging
 import os
 import tarfile
 import zipfile
-from pathlib import Path
 from typing import Optional
 
 import requests
@@ -222,8 +221,7 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
 
         url_path = _build_notebook_download_url_path(h)
         out_path = get_cached_path(h, path)
-        print(url_path)
-        
+
         if path:
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
             url_path += "&file_path=" if h.is_versioned() else "?file_path="
@@ -248,7 +246,6 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         mark_as_complete(h, path)
         # TODO(b/377510971): when notebook is a Kaggle utility script, update sys.path
         return out_path
-
 
     def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
         query = f"kernels/output/list/{h.owner}/{h.notebook}?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
