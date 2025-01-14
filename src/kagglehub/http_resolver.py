@@ -338,7 +338,7 @@ def _build_dataset_download_url_path(h: DatasetHandle, path: Optional[str]) -> s
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
-    
+
     base_url = f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
     if path:
         return f"{base_url}&file_name={path}"
@@ -350,8 +350,8 @@ def _build_notebook_download_url_path(h: NotebookHandle, path: Optional[str]) ->
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
-    
-    base_url =f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
+
+    base_url = f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
     if path:
         return f"{base_url}&file_path={path}"
     else:
