@@ -85,7 +85,6 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                     os.remove(archive_path)
                 return cached_path
 
-            os.makedirs(out_path, exist_ok=True)
             _extract_archive(archive_path, out_path)
             os.remove(archive_path)
 
@@ -110,14 +109,14 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         elif dataset_path and force_download:
             delete_from_cache(h, path)
 
-        url_path = _build_dataset_download_url_path(h)
+        url_path = _build_dataset_download_url_path(h, path)
         out_path = get_cached_path(h, path)
 
         # Create the intermediary directories
         if path:
             # Downloading a single file.
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "&file_name=" + path, out_path, h, extract_auto_compressed_file=True)
+            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True)
         else:
             # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
             # Downloading the full archived bundle.
@@ -126,9 +125,6 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
             # First, we download the archive.
             api_client.download_file(url_path, archive_path, h)
-
-            # Create the directory to extract the archive to.
-            os.makedirs(out_path, exist_ok=True)
 
             _extract_archive(archive_path, out_path)
 
@@ -156,14 +152,14 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         elif model_path and force_download:
             delete_from_cache(h, path)
 
-        url_path = _build_download_url_path(h)
+        url_path = _build_model_download_url_path(h, path)
         out_path = get_cached_path(h, path)
 
         # Create the intermediary directories
         if path:
             # Downloading a single file.
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "/" + path, out_path, h, extract_auto_compressed_file=True)
+            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True)
         else:
             # List the files and decide how to download them:
             # - <= 25 files: Download files in parallel
@@ -176,9 +172,6 @@ class ModelHttpResolver(Resolver[ModelHandle]):
 
                 # First, we download the archive.
                 api_client.download_file(url_path, archive_path, h)
-
-                # Create the directory to extract the archive to.
-                os.makedirs(out_path, exist_ok=True)
 
                 _extract_archive(archive_path, out_path)
 
@@ -219,12 +212,12 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         elif nb_path and force_download:
             delete_from_cache(h, path)
 
-        url_path = _build_notebook_download_url_path(h)
+        url_path = _build_notebook_download_url_path(h, path)
         out_path = get_cached_path(h, path)
 
         if path:
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path + "&file_path=" + path, out_path, h, extract_auto_compressed_file=True)
+            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True)
         else:
             # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
             # Downloading the full archived bundle.
@@ -233,9 +226,6 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
 
             # First, we download the archive.
             api_client.download_file(url_path, archive_path, h)
-
-            # Create the directory to extract the archive to.
-            os.makedirs(out_path, exist_ok=True)
 
             _extract_archive(archive_path, out_path)
 
@@ -259,6 +249,9 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
 
 
 def _extract_archive(archive_path: str, out_path: str) -> None:
+    # Create the directory to extract the archive to.
+    os.makedirs(out_path, exist_ok=True)
+
     logger.info("Extracting files...")
     if tarfile.is_tarfile(archive_path):
         with tarfile.open(archive_path) as f:
@@ -320,8 +313,12 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/get"
 
 
-def _build_download_url_path(h: ModelHandle) -> str:
-    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
+def _build_model_download_url_path(h: ModelHandle, path: Optional[str]) -> str:
+    base_url = f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
+    if path:
+        return f"{base_url}/{path}"
+    else:
+        return base_url
 
 
 def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
@@ -337,12 +334,28 @@ def _build_get_notebook_url_path(h: NotebookHandle) -> str:
     return f"kernels/pull?user_name={h.owner}&kernel_slug={h.notebook}"
 
 
-def _build_dataset_download_url_path(h: DatasetHandle) -> str:
-    return f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+def _build_dataset_download_url_path(h: DatasetHandle, path: Optional[str]) -> str:
+    if not h.is_versioned():
+        msg = "No version provided"
+        raise ValueError(msg)
+
+    base_url = f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+    if path:
+        return f"{base_url}&file_name={path}"
+    else:
+        return base_url
 
 
-def _build_notebook_download_url_path(h: NotebookHandle) -> str:
-    return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
+def _build_notebook_download_url_path(h: NotebookHandle, path: Optional[str]) -> str:
+    if not h.is_versioned():
+        msg = "No version provided"
+        raise ValueError(msg)
+
+    base_url = f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
+    if path:
+        return f"{base_url}&file_path={path}"
+    else:
+        return base_url
 
 
 def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
