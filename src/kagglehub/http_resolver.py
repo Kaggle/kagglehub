@@ -220,6 +220,8 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
             delete_from_cache(h, path)
 
         url_path = _build_notebook_download_url_path(h)
+        if h.is_versioned():
+            url_path += f"?version_number={h.version}"
         out_path = get_cached_path(h, path)
 
         if path:
@@ -344,7 +346,7 @@ def _build_dataset_download_url_path(h: DatasetHandle) -> str:
 
 
 def _build_notebook_download_url_path(h: NotebookHandle) -> str:
-    return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
+    return f"kernels/output/download/{h.owner}/{h.notebook}"
 
 
 def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
