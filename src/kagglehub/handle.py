@@ -13,6 +13,7 @@ NUM_VERSIONED_MODEL_PARTS = 5  # e.g.: <owner>/<model>/<framework>/<variation>/<
 NUM_UNVERSIONED_MODEL_PARTS = 4  # e.g.: <owner>/<model>/<framework>/<variation>
 
 NUM_UNVERSIONED_NOTEBOOK_PARTS = 2  # e.g.: <owner>/<notebook>
+NUM_VERSIONED_NOTEBOOK_PARTS = 4  # e.g.: <owner>/<notebook>/versions/<version>
 
 
 @dataclass
@@ -89,14 +90,22 @@ class CompetitionHandle(ResourceHandle):
 class NotebookHandle(ResourceHandle):
     owner: str
     notebook: str
+    version: Optional[int] = None
+
+    def is_versioned(self) -> bool:
+        return self.version is not None and self.version > 0
 
     def __str__(self) -> str:
         handle_str = f"{self.owner}/{self.notebook}"
+        if self.is_versioned():
+            return f"{handle_str}/versions/{self.version}"
         return handle_str
 
     def to_url(self) -> str:
         endpoint = get_kaggle_api_endpoint()
         base_url = f"{endpoint}/code/{self.owner}/{self.notebook}"
+        if self.is_versioned():
+            return f"{base_url}/versions/{self.version}"
         return base_url
 
 
@@ -177,10 +186,32 @@ def parse_competition_handle(handle: str) -> CompetitionHandle:
 
 def parse_notebook_handle(handle: str) -> NotebookHandle:
     parts = handle.split("/")
-    if len(parts) != NUM_UNVERSIONED_NOTEBOOK_PARTS:
-        msg = f"Invalid notebook handle: {handle}"
-        raise ValueError(msg)
-    return NotebookHandle(owner=parts[0], notebook=parts[1])
+
+    if len(parts) == NUM_VERSIONED_NOTEBOOK_PARTS:
+        # Versioned handle
+        # e.g.: <owner>/<notebook>/versions/<version>
+        try:
+            version = int(parts[3])
+        except ValueError as err:
+            msg = f"Invalid version number: {parts[3]}"
+            raise ValueError(msg) from err
+        return NotebookHandle(
+            owner=parts[0],
+            notebook=parts[1],
+            version=version,
+        )
+
+    elif len(parts) == NUM_UNVERSIONED_NOTEBOOK_PARTS:
+        # Unversioned handle
+        # e.g.: <owner>/<notebook>
+        return NotebookHandle(
+            owner=parts[0],
+            notebook=parts[1],
+            version=None,
+        )
+
+    msg = f"Invalid notebook handle: {handle}"
+    raise ValueError(msg)
 
 
 def parse_utility_script_handle(handle: str) -> UtilityScriptHandle:

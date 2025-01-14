@@ -158,7 +158,8 @@ class KaggleApiV1Client:
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response, resource_handle)
-            total_size = int(response.headers["Content-Length"])
+
+            total_size = int(response.headers["Content-Length"]) if "Content-Length" in response.headers else None
             size_read = 0
 
             if isinstance(resource_handle, CompetitionHandle) and not _download_needed(
@@ -169,7 +170,7 @@ class KaggleApiV1Client:
             expected_md5_hash = get_md5_checksum_from_response(response)
             hash_object = hashlib.md5() if expected_md5_hash else None
 
-            if _is_resumable(response) and os.path.isfile(out_file):
+            if _is_resumable(response) and total_size and os.path.isfile(out_file):
                 size_read = os.path.getsize(out_file)
                 update_hash_from_file(hash_object, out_file)
 
@@ -243,18 +244,25 @@ def _download_file(
     response: requests.Response,
     out_file: str,
     size_read: int,
-    total_size: int,
+    total_size: Optional[int],
     hash_object,  # noqa: ANN001 - no public type for hashlib hash
 ) -> None:
     open_mode = "ab" if size_read > 0 else "wb"
-    with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
+    if total_size is not None:
+        with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
+            with open(out_file, open_mode) as f:
+                for chunk in response.iter_content(CHUNK_SIZE):
+                    f.write(chunk)
+                    if hash_object:
+                        hash_object.update(chunk)
+                    size_read = min(total_size, size_read + CHUNK_SIZE)
+                    progress_bar.update(len(chunk))
+    else:
         with open(out_file, open_mode) as f:
             for chunk in response.iter_content(CHUNK_SIZE):
                 f.write(chunk)
                 if hash_object:
                     hash_object.update(chunk)
-                size_read = min(total_size, size_read + CHUNK_SIZE)
-                progress_bar.update(len(chunk))
 
 
 def _download_needed(response: requests.Response, h: ResourceHandle, cached_path: Optional[str] = None) -> bool:

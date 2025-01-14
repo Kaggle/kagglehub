@@ -247,7 +247,8 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
             "OwnerSlug": h.owner,
             "KernelSlug": h.notebook,
         }
-        # TODO: Add VersionNumber once supported
+        if h.is_versioned():
+            kernel_ref["VersionNumber"] = str(h.version)
 
         result = client.post(
             ATTACH_DATASOURCE_REQUEST_NAME,
