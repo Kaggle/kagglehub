@@ -97,6 +97,8 @@ class NotebookHandle(ResourceHandle):
 
     def __str__(self) -> str:
         handle_str = f"{self.owner}/{self.notebook}"
+        if self.is_versioned():
+            return f"{handle_str}/versions/{self.version}"
         return handle_str
 
     def to_url(self) -> str:

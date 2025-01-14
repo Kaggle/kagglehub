@@ -1,5 +1,5 @@
 import os
-from unittest import mock, skip
+from unittest import mock
 
 import requests
 
@@ -12,8 +12,8 @@ from .server_stubs import jwt_stub as stub
 from .server_stubs import serv
 
 INVALID_ARCHIVE_NOTEBOOK_HANDLE = "invalid/invalid/invalid/invalid/invalid"
-VERSIONED_NOTEBOOK_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with-metadata/versions/1"
-UNVERSIONED_NOTEBOOK_HANDLE = "sarahjeffreson/featured-spotify-artiststracks-with-metadata"
+VERSIONED_NOTEBOOK_HANDLE = "alexisbcook/titanic-tutorial/versions/1"
+UNVERSIONED_NOTEBOOK_HANDLE = "alexisbcook/titanic-tutorial"
 TEST_FILEPATH = "foo.txt"
 
 
@@ -32,13 +32,11 @@ class TestKaggleCacheNotebookOutputDownload(BaseTestCase):
             notebook_path = kagglehub.notebook_output_download(UNVERSIONED_NOTEBOOK_HANDLE)
             self.assertEqual(["bar.csv", "foo.txt"], sorted(os.listdir(notebook_path)))
 
-    @skip("TODO: Enable when adding version support to notebook_output_download")
     def test_versioned_notebook_output_download(self) -> None:
         with stub.create_env():
             notebook_path = kagglehub.notebook_output_download(VERSIONED_NOTEBOOK_HANDLE)
             self.assertEqual(["foo.txt"], sorted(os.listdir(notebook_path)))
 
-    @skip("TODO: Enable when adding version support to notebook_output_download")
     def test_versioned_notebook_output_download_with_path(self) -> None:
         with stub.create_env():
             notebook_file_path = kagglehub.notebook_output_download(VERSIONED_NOTEBOOK_HANDLE, "foo.txt")
@@ -51,7 +49,6 @@ class TestKaggleCacheNotebookOutputDownload(BaseTestCase):
             self.assertTrue(notebook_file_path.endswith("bar.csv"))
             self.assertTrue(os.path.isfile(notebook_file_path))
 
-    @skip("TODO: Enable when adding version support to notebook_output_download")
     def test_versioned_notebook_output_download_with_missing_file_raises(self) -> None:
         with stub.create_env():
             with self.assertRaises(ValueError):
@@ -73,7 +70,6 @@ class TestKaggleCacheNotebookOutputDownload(BaseTestCase):
         with self.assertRaises(ValueError):
             kagglehub.notebook_output_download("bad handle")
 
-    @skip("TODO: Enable when adding version support to notebook_output_download")
     def test_versioned_notebook_output_download_with_force_download(self) -> None:
         with stub.create_env():
             notebook_path = kagglehub.notebook_output_download(VERSIONED_NOTEBOOK_HANDLE)
@@ -83,7 +79,6 @@ class TestKaggleCacheNotebookOutputDownload(BaseTestCase):
             self.assertEqual(["foo.txt"], sorted(os.listdir(notebook_path_forced)))
             self.assertEqual(notebook_path, notebook_path_forced)
 
-    @skip("TODO: Enable when adding version support to notebook_output_download")
     def test_versioned_notebook_output_download_with_force_download_explicitly_false(self) -> None:
         with stub.create_env():
             notebook_path = kagglehub.notebook_output_download(VERSIONED_NOTEBOOK_HANDLE, force_download=False)

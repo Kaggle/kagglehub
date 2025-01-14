@@ -220,14 +220,11 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
             delete_from_cache(h, path)
 
         url_path = _build_notebook_download_url_path(h)
-        if h.is_versioned():
-            url_path += f"?version_number={h.version}"
         out_path = get_cached_path(h, path)
 
         if path:
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            url_path += "&file_path=" if h.is_versioned() else "?file_path="
-            api_client.download_file(url_path + path, out_path, h, extract_auto_compressed_file=True)
+            api_client.download_file(url_path + "&file_path=" + path, out_path, h, extract_auto_compressed_file=True)
         else:
             # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
             # Downloading the full archived bundle.
@@ -246,7 +243,6 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
-        # TODO(b/377510971): when notebook is a Kaggle utility script, update sys.path
         return out_path
 
     def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
@@ -346,7 +342,7 @@ def _build_dataset_download_url_path(h: DatasetHandle) -> str:
 
 
 def _build_notebook_download_url_path(h: NotebookHandle) -> str:
-    return f"kernels/output/download/{h.owner}/{h.notebook}"
+    return f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
 
 
 def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
