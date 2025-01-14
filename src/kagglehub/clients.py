@@ -244,7 +244,7 @@ def _download_file(
     response: requests.Response,
     out_file: str,
     size_read: int,
-    total_size: int,
+    total_size: int | None,
     hash_object,  # noqa: ANN001 - no public type for hashlib hash
 ) -> None:
     open_mode = "ab" if size_read > 0 else "wb"
