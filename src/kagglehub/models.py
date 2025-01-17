@@ -28,7 +28,6 @@ def model_download(
         handle: (string) the model handle.
         path: (string) Optional path to a file within the model bundle.
         force_download: (bool) Optional flag to force download a model, even if it's cached.
-        publish_transparency_log: (bool) Publishes to sigstore
 
     Returns:
         A string representing the path to the requested model files.
