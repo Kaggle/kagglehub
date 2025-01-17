@@ -55,7 +55,9 @@ detached = true
 dependencies = [
   "flask",
   "flask-jwt-extended",
+  "pyjwt[crypto]",
   "pytest",
+  "model_signing",
   "black>=23.1.0",
   "mypy>=1.0.0",
   "ruff>=0.0.243",
