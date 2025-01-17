@@ -45,7 +45,7 @@ def model_upload(
     version_notes: str = "",
     ignore_patterns: Optional[Union[list[str], str]] = None,
     *,
-    publish_transparency_log: Optional[bool] = False,
+    sigstore: Optional[bool] = False,
 ) -> None:
     """Upload model files.
 
@@ -61,8 +61,8 @@ def model_upload(
             https://docs.python.org/3/library/fnmatch.html.
             Use a pattern ending with "/" to ignore the whole dir,
             e.g., ".git/" is equivalent to ".git/*".
-        publish_transparency_log: (bool, optional)
-            Creates a trasparent ledger using sigstore. User must be an admin/editor of the model.
+        sigstore: (bool, optional)
+            Creates a trasparent ledger on sigstore. User must be an admin/editor of the model.
     """
     # parse slug
     h = parse_model_handle(handle)
@@ -76,21 +76,22 @@ def model_upload(
 
     # Model can be non-existent. Get token after model creation so signing token can be authorized.
     try:
-        if publish_transparency_log:
+        if sigstore:
             token = signing_token(h.owner, h.model)
             if token:
                 # todo: Special kaggle file is needed
-                signing_file = Path(local_model_dir) / "signing.json"
+                signing_file = Path(local_model_dir) / ".kaggle" / "signing.json"
                 signing_file.unlink(missing_ok=True)
                 SigningConfig().set_sigstore_signer(identity_token=token).sign(
                     Path(local_model_dir), signing_file
                 )
             else:
                 # skips transparency log publishing as we are unable to get a token
-                publish_transparency_log = False
+                sigstore = False
+                logger.warning("Unable to retrieve identity token. Skipping signing...")
     except Exception:
         logger.exception("Signing failed. Skipping signing...")
-        publish_transparency_log = False
+        sigstore = False
 
     # Upload the model files to GCS
     tokens = upload_files_and_directories(
@@ -100,5 +101,5 @@ def model_upload(
     )
 
     create_model_instance_or_version(
-        h, tokens, license_name, version_notes, publish_transparency_log=publish_transparency_log
+        h, tokens, license_name, version_notes, sigstore=sigstore
     )
