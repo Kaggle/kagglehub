@@ -79,10 +79,12 @@ def model_upload(
         if sigstore:
             token = signing_token(h.owner, h.model)
             if token:
-                # todo: Special kaggle file is needed
                 signing_file = Path(local_model_dir) / ".kaggle" / "signing.json"
+                signing_file.parent.mkdir(exist_ok=True, parents=True)
                 signing_file.unlink(missing_ok=True)
-                SigningConfig().set_sigstore_signer(identity_token=token).sign(
+                # The below will throw an exception if the token can't be verified (Needs to be a production token)
+                # Setting KAGGLE_API_ENDPOINT to localhost will throw the exception as stated above.
+                SigningConfig().set_sigstore_signer(identity_token=token, use_staging=False).sign(
                     Path(local_model_dir), signing_file
                 )
             else:
@@ -100,6 +102,4 @@ def model_upload(
         ignore_patterns=normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
     )
 
-    create_model_instance_or_version(
-        h, tokens, license_name, version_notes, sigstore=sigstore
-    )
+    create_model_instance_or_version(h, tokens, license_name, version_notes, sigstore=sigstore)

@@ -133,7 +133,7 @@ class TestModelUpload(BaseTestCase):
                 metadata_file_path.touch()
 
             with mock.patch.object(SigningConfig, "sign", side_effect=mock_sign):
-                model_upload("meta/llama3.2/pytorch/70b", models_dir, publish_transparency_log=True)
+                model_upload("meta/llama3.2/pytorch/70b", str(models_dir), sigstore=True)
                 expected_files = ["my-model.txt", "signing.json"]
                 self.assertCountEqual(set(stub.shared_data.files), expected_files)
 

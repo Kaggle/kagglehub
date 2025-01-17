@@ -77,9 +77,7 @@ def create_model_instance_or_version(
     except BackendError as e:
         if e.error_code == HTTPStatus.CONFLICT:
             # Instance already exist, creating a new version instead.
-            _create_model_instance_version(
-                model_handle, files, version_notes, sigstore=sigstore
-            )
+            _create_model_instance_version(model_handle, files, version_notes, sigstore=sigstore)
         else:
             raise (e)
 
@@ -119,7 +117,7 @@ def signing_token(owner_slug: str, model_slug: str) -> Optional[str]:
     "Returns a JWT for signing if authorized for /{owner_slug}/{model_slug}"
     try:
         api_client = KaggleApiV1Client()
-        resp = api_client.post("/models/signing/token", {"OwnerSlug": owner_slug, "ModelSlug": model_slug})
+        resp = api_client.post("/models/signing/token", {"ownerSlug": owner_slug, "modelSlug": model_slug})
         return resp.get("id_token")
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
