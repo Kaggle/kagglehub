@@ -11,18 +11,22 @@ from tests.fixtures import BaseTestCase
 
 from .server_stubs import competition_download_stub as stub
 from .server_stubs import serv
-from .utils import create_test_cache
+from .utils import AUTO_COMPRESSED_FILE_NAME, create_test_cache
 
 INVALID_ARCHIVE_COMPETITION_HANDLE = "invalid/invalid"
 COMPETITION_HANDLE = "titanic"
 TEST_FILEPATH = "foo.txt"
 TEST_CONTENTS = "foo"
+AUTO_COMPRESSED_CONTENTS = """"shape","degrees","sides","color","date"
+"square",360,4,"blue","2024-12-17"
+"circle",360,,"red","2023-08-01"
+"triangle",180,3,"green","2022-01-05"
+"""
 
 EXPECTED_COMPETITION_SUBDIR = os.path.join(COMPETITIONS_CACHE_SUBFOLDER, "titanic")
 EXPECTED_COMPETITION_SUBPATH = os.path.join(
     COMPETITIONS_CACHE_SUBFOLDER,
     "titanic",
-    TEST_FILEPATH,
 )
 
 
@@ -65,9 +69,20 @@ class TestHttpCompetitionDownload(BaseTestCase):
     ) -> None:
         competition_path = kagglehub.competition_download(competition_handle, path=TEST_FILEPATH, **kwargs)
 
-        self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH), competition_path)
+        self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, TEST_FILEPATH), competition_path)
         with open(competition_path) as competition_file:
             self.assertEqual(TEST_CONTENTS, competition_file.readline())
+
+    def _download_test_file_and_assert_downloaded_auto_compressed(
+        self,
+        d: str,
+        competition_handle: str,
+        **kwargs,  # noqa: ANN003
+    ) -> None:
+        competition_path = kagglehub.competition_download(competition_handle, path=AUTO_COMPRESSED_FILE_NAME, **kwargs)
+        self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, AUTO_COMPRESSED_FILE_NAME), competition_path)
+        with open(competition_path) as competition_file:
+            self.assertEqual(AUTO_COMPRESSED_CONTENTS, competition_file.read())
 
     def test_competition_download(self) -> None:
         with create_test_cache() as d:
@@ -120,6 +135,10 @@ class TestHttpCompetitionDownload(BaseTestCase):
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, COMPETITION_HANDLE)
 
+    def test_competition_download_with_path_auto_compressed(self) -> None:
+        with create_test_cache() as d:
+            self._download_test_file_and_assert_downloaded_auto_compressed(d, COMPETITION_HANDLE)
+
 
 class TestHttpNoInternet(BaseTestCase):
     @classmethod
@@ -145,7 +164,7 @@ class TestHttpNoInternet(BaseTestCase):
 
             path = kagglehub.competition_download(COMPETITION_HANDLE, path=TEST_FILEPATH)
 
-            self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH), path)
+            self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, TEST_FILEPATH), path)
 
     def test_competition_download_already_cached_with_force_download_no_internet(self) -> None:
         with create_test_cache():

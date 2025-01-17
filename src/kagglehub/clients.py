@@ -2,10 +2,11 @@ import hashlib
 import json
 import logging
 import os
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 import requests.auth
@@ -138,6 +139,8 @@ class KaggleApiV1Client:
         out_file: str,
         resource_handle: Optional[ResourceHandle] = None,
         cached_path: Optional[str] = None,
+        *,
+        extract_auto_compressed_file: bool = False,
     ) -> bool:
         """
         Issues a call to kaggle api and downloads files. For competition downloads,
@@ -155,7 +158,8 @@ class KaggleApiV1Client:
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
         ) as response:
             kaggle_api_raise_for_status(response, resource_handle)
-            total_size = int(response.headers["Content-Length"])
+
+            total_size = int(response.headers["Content-Length"]) if "Content-Length" in response.headers else None
             size_read = 0
 
             if isinstance(resource_handle, CompetitionHandle) and not _download_needed(
@@ -166,7 +170,7 @@ class KaggleApiV1Client:
             expected_md5_hash = get_md5_checksum_from_response(response)
             hash_object = hashlib.md5() if expected_md5_hash else None
 
-            if _is_resumable(response) and os.path.isfile(out_file):
+            if _is_resumable(response) and total_size and os.path.isfile(out_file):
                 size_read = os.path.getsize(out_file)
                 update_hash_from_file(hash_object, out_file)
 
@@ -198,6 +202,24 @@ class KaggleApiV1Client:
                         _CHECKSUM_MISMATCH_MSG_TEMPLATE.format(expected_md5_hash, actual_md5_hash)
                     )
 
+            # For individual file downloads, the downloaded file may be a zip of the file rather
+            # than the file name/type that was requested (e.g. my-big-table.csv.zip and not my-big-table.csv).
+            # If that's the case, we should auto-extract it so users get what they expect.
+            expected_downloded_file_name = urlparse(out_file).path.split("/")[-1]
+            actual_downloaded_file_name = urlparse(response.url).path.split("/")[-1]
+            if (
+                extract_auto_compressed_file
+                and f"{expected_downloded_file_name}.zip" == actual_downloaded_file_name
+                and zipfile.is_zipfile(out_file)
+            ):
+                logger.info(f"Extracting zip of {expected_downloded_file_name}...")
+                # Rename the file to match what it really is and make space to write to the expected location
+                renamed_auto_compressed_path = f"{out_file}.zip"
+                os.rename(out_file, renamed_auto_compressed_path)
+                with zipfile.ZipFile(renamed_auto_compressed_path, "r") as f:
+                    f.extract(expected_downloded_file_name, os.path.dirname(out_file))
+                # We don't need the zipped version anymore
+                os.remove(renamed_auto_compressed_path)
             return True
 
     def has_credentials(self) -> bool:
@@ -222,18 +244,25 @@ def _download_file(
     response: requests.Response,
     out_file: str,
     size_read: int,
-    total_size: int,
+    total_size: Optional[int],
     hash_object,  # noqa: ANN001 - no public type for hashlib hash
 ) -> None:
     open_mode = "ab" if size_read > 0 else "wb"
-    with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
+    if total_size is not None:
+        with tqdm(total=total_size, initial=size_read, unit="B", unit_scale=True, unit_divisor=1024) as progress_bar:
+            with open(out_file, open_mode) as f:
+                for chunk in response.iter_content(CHUNK_SIZE):
+                    f.write(chunk)
+                    if hash_object:
+                        hash_object.update(chunk)
+                    size_read = min(total_size, size_read + CHUNK_SIZE)
+                    progress_bar.update(len(chunk))
+    else:
         with open(out_file, open_mode) as f:
             for chunk in response.iter_content(CHUNK_SIZE):
                 f.write(chunk)
                 if hash_object:
                     hash_object.update(chunk)
-                size_read = min(total_size, size_read + CHUNK_SIZE)
-                progress_bar.update(len(chunk))
 
 
 def _download_needed(response: requests.Response, h: ResourceHandle, cached_path: Optional[str] = None) -> bool:

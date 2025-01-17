@@ -31,6 +31,19 @@ dependencies = [
 "Homepage" = "https://github.com/Kaggle/kagglehub"
 "Bug Tracker" = "https://github.com/Kaggle/kagglehub/issues"
 
+[project.optional-dependencies]
+hf-datasets = ["datasets", "kagglehub[pandas-datasets]"]
+pandas-datasets = ["pandas"]
+
+
+# twine 6.0.1 doesn't support metadata-version 2.4.
+# remove `core-metadata-version` pin once twine release a new version with: https://github.com/pypa/twine/pull/1180
+[tool.hatch.build.targets.wheel]
+core-metadata-version = "2.3" 
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.3"
+
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
 
@@ -40,8 +53,11 @@ dependencies = [
   "pytest",
   "flask",
   "flask-jwt-extended",
+  # Used for testing reading Excel file via pandas
+  "openpyxl",
   "pyjwt[crypto]",
 ]
+features = ["hf-datasets"]
 installer = "pip"
 
 [[tool.hatch.envs.hatch-test.matrix]]
@@ -82,6 +98,26 @@ all = [
   "typing",
 ]
 
+# Set up a separate hatch environment that has the added hf-datasets dependencies
+[tool.hatch.envs.hf-datasets]
+dependencies = [
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
+]
+features = [
+  "hf-datasets",
+]
+
+# Set up a separate hatch environment that has the added pandas-datasets dependencies
+[tool.hatch.envs.pandas-datasets]
+dependencies = [
+  # Used for testing reading Excel file via pandas
+  "openpyxl"
+]
+features = [
+  "pandas-datasets",
+]
+
 [tool.black]
 target-version = ["py39"]
 line-length = 120
@@ -90,6 +126,10 @@ skip-string-normalization = true
 [tool.ruff]
 target-version = "py39"
 line-length = 120
+extend-exclude = [
+  # Ignore saved scripts for local kagglehub testing
+  "tools/scripts/*",
+]
 
 [tool.ruff.lint]
 select = [
@@ -172,3 +212,6 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[tool.mypy]
+mypy_path = "./stubs"

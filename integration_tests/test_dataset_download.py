@@ -4,7 +4,7 @@ from requests import HTTPError
 
 from kagglehub import dataset_download
 
-from .utils import assert_files, create_test_cache, unauthenticated
+from .utils import assert_columns, assert_files, create_test_cache, unauthenticated
 
 UNVERSIONED_HANDLE = "ryanholbrook/dl-course-data"
 HANDLE = "ryanholbrook/dl-course-data/versions/5"
@@ -69,6 +69,13 @@ class TestDatasetDownload(unittest.TestCase):
             for p in file_paths:
                 actual_path = dataset_download(HANDLE, path=p)
                 assert_files(self, actual_path, [p])
+
+    def test_auto_decompress_file(self) -> None:
+        with create_test_cache():
+            # diamonds.csv is an auto-compressed CSV with the following columns
+            expected_columns = ["carat", "cut", "color", "clarity", "depth", "table", "price", "x", "y", "z"]
+            actual_path = dataset_download(HANDLE, path="diamonds.csv")
+            assert_columns(self, actual_path, expected_columns)
 
     def test_download_with_incorrect_file_path(self) -> None:
         incorrect_path = "nonexistent/file/path"

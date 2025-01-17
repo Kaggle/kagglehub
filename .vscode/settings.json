@@ -14,5 +14,8 @@
     },
     "python.testing.pytestArgs": [
         "tests"
-    ]
+    ],
+    "[markdown]": {
+        "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+    }
 }

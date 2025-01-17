@@ -6,14 +6,24 @@ from kagglehub import notebook_output_download
 
 from .utils import assert_files, create_test_cache, unauthenticated
 
+VERSIONED_NOTEBOOK_HANDLE = "alexisbcook/titanic-tutorial/versions/1"
+UNVERSIONED_NOTEBOOK_HANDLE = "alexisbcook/titanic-tutorial"
+
 
 class TestModelDownload(unittest.TestCase):
-    def test_download_notebook_output_succeeds(self) -> None:
+    def test_download_notebook_unversioned_output_succeeds(self) -> None:
         with create_test_cache():
-            actual_path = notebook_output_download("alexisbcook/titanic-tutorial")
+            actual_path = notebook_output_download(UNVERSIONED_NOTEBOOK_HANDLE)
 
             expected_files = ["submission.csv"]
             assert_files(self, actual_path, expected_files)
+
+    def test_download_notebook_versioned_output_succeeds(self) -> None:
+        with create_test_cache():
+            actual_path = notebook_output_download("alexisbcook/titanic-tutorial/versions/1")
+
+            expected_file = ["my_submission.csv"]
+            assert_files(self, actual_path, expected_file)
 
     def test_download_public_notebook_output_as_unauthenticated_succeeds(self) -> None:
         with create_test_cache():
