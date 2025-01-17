@@ -22,7 +22,7 @@ def _create_model_instance(
     files_and_directories: UploadDirectoryInfo,
     license_name: Optional[str] = None,
     *,
-    publish_transparency_log: Optional[bool] = False,
+    sigstore: Optional[bool] = False,
 ) -> None:
     serialized_data = files_and_directories.serialize()
     data = {
@@ -30,7 +30,7 @@ def _create_model_instance(
         "framework": model_handle.framework,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
         "directories": serialized_data["directories"],
-        "publish_transparency_log": publish_transparency_log,
+        "sigstore": sigstore,
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -45,14 +45,14 @@ def _create_model_instance_version(
     files_and_directories: UploadDirectoryInfo,
     version_notes: str = "",
     *,
-    publish_transparency_log: Optional[bool] = False,
+    sigstore: Optional[bool] = False,
 ) -> None:
     serialized_data = files_and_directories.serialize()
     data = {
         "versionNotes": version_notes,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
         "directories": serialized_data["directories"],
-        "publish_transparency_log": publish_transparency_log,
+        "sigstore": sigstore,
     }
     api_client = KaggleApiV1Client()
     api_client.post(
@@ -70,15 +70,15 @@ def create_model_instance_or_version(
     license_name: Optional[str],
     version_notes: str = "",
     *,
-    publish_transparency_log: Optional[bool] = False,
+    sigstore: Optional[bool] = False,
 ) -> None:
     try:
-        _create_model_instance(model_handle, files, license_name, publish_transparency_log=publish_transparency_log)
+        _create_model_instance(model_handle, files, license_name, sigstore=sigstore)
     except BackendError as e:
         if e.error_code == HTTPStatus.CONFLICT:
             # Instance already exist, creating a new version instead.
             _create_model_instance_version(
-                model_handle, files, version_notes, publish_transparency_log=publish_transparency_log
+                model_handle, files, version_notes, sigstore=sigstore
             )
         else:
             raise (e)
