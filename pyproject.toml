@@ -42,6 +42,7 @@ dependencies = [
   "flask-jwt-extended",
   "pyjwt[crypto]",
 ]
+installer = "pip"
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
@@ -62,6 +63,7 @@ dependencies = [
   "types-requests",
   "types-tqdm",
 ]
+
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/kagglehub tests}"
 style = [
