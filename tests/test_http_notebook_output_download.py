@@ -18,7 +18,7 @@ TEST_CONTENTS = "foo"
 
 
 EXPECTED_NOTEBOOK_SUBDIR = os.path.join(
-    NOTEBOOKS_CACHE_SUBFOLDER, "khsamaha", "simple-lightgbm-kaggle-sticker-sales-py", "output"
+    NOTEBOOKS_CACHE_SUBFOLDER, "khsamaha", "simple-lightgbm-kaggle-sticker-sales-py", "output", "versions", "2"
 )
 
 
