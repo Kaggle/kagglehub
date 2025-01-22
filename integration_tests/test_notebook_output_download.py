@@ -20,15 +20,25 @@ class TestModelDownload(unittest.TestCase):
 
     def test_download_notebook_versioned_output_succeeds(self) -> None:
         with create_test_cache():
-            actual_path = notebook_output_download("alexisbcook/titanic-tutorial/versions/1")
+            actual_path = notebook_output_download(VERSIONED_NOTEBOOK_HANDLE)
 
-            expected_file = ["my_submission.csv"]
-            assert_files(self, actual_path, expected_file)
+            expected_files = ["my_submission.csv"]
+            assert_files(self, actual_path, expected_files)
+
+    def test_download_both_notebook_outputs_succeeds(self) -> None:
+        with create_test_cache():
+            versioned_path = notebook_output_download(VERSIONED_NOTEBOOK_HANDLE)
+            unversioned_path = notebook_output_download(UNVERSIONED_NOTEBOOK_HANDLE)
+
+            expected_versioned_files = ["my_submission.csv"]
+            expected_unversioned_files = ["submission.csv"]
+            assert_files(self, versioned_path, expected_versioned_files)
+            assert_files(self, unversioned_path, expected_unversioned_files)
 
     def test_download_public_notebook_output_as_unauthenticated_succeeds(self) -> None:
         with create_test_cache():
             with unauthenticated():
-                actual_path = notebook_output_download("alexisbcook/titanic-tutorial")
+                actual_path = notebook_output_download(UNVERSIONED_NOTEBOOK_HANDLE)
 
                 expected_files = ["submission.csv"]
                 assert_files(self, actual_path, expected_files)

@@ -206,10 +206,10 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         if not h.is_versioned():
             h.version = _get_current_version(api_client, h)
 
-        nb_path = load_from_cache(h, path)
-        if nb_path and not force_download:
-            return nb_path  # Already cached
-        elif nb_path and force_download:
+        notebook_path = load_from_cache(h, path)
+        if notebook_path and not force_download:
+            return notebook_path  # Already cached
+        elif notebook_path and force_download:
             delete_from_cache(h, path)
 
         url_path = _build_notebook_download_url_path(h, path)
@@ -314,6 +314,10 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
 
 
 def _build_model_download_url_path(h: ModelHandle, path: Optional[str]) -> str:
+    if not h.is_versioned():
+        msg = "No version provided"
+        raise ValueError(msg)
+
     base_url = f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
     if path:
         return f"{base_url}/{path}"
@@ -322,6 +326,10 @@ def _build_model_download_url_path(h: ModelHandle, path: Optional[str]) -> str:
 
 
 def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
+    if not h.is_versioned():
+        msg = "No version provided"
+        raise ValueError(msg)
+
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files\
 ?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
 
