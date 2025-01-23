@@ -1,6 +1,11 @@
+import datetime
 import threading
 from dataclasses import dataclass, field
+from datetime import timedelta
 
+import jwt
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
 
@@ -132,4 +137,36 @@ def blob_upload() -> ResponseReturnValue:
 @app.route("/upload/storage/v1/b/kaggle-models-data/o", methods=["PUT"])
 def model_instance_create() -> ResponseReturnValue:
     data = {"status": "success", "message": "File uploaded"}
+    return jsonify(data), 200
+
+
+@app.route("/api/v1/models/signing/token", methods=["POST"])
+def model_signing_token() -> ResponseReturnValue:
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    # Generate the private key
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+    # Serialize the private key to PEM format
+    key = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    token = jwt.encode(
+        {
+            "iss": "https://www.kaggle.com/api/v1/models/signing",
+            "sub": "418540",
+            "aud": "sigstore",
+            "exp": int((now + timedelta(minutes=10)).timestamp()),
+            "nbf": int(now.timestamp()),
+            "iat": int(now.timestamp()),
+            "email": "foo@gmail.com",
+            "email_verified": True,
+        },
+        key,
+        algorithm="RS256",
+    )
+    data = {"id_token": token}
     return jsonify(data), 200

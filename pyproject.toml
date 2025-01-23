@@ -24,6 +24,7 @@ dependencies = [
   "requests", 
   "tqdm",
   "packaging",
+  "model_signing",
 ]
 
 [project.urls]
@@ -53,9 +54,11 @@ dependencies = [
   "flask",
   "flask-jwt-extended",
   # Used for testing reading Excel file via pandas
-  "openpyxl"
+  "openpyxl",
+  "pyjwt[crypto]",
 ]
 features = ["hf-datasets"]
+installer = "pip"
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
@@ -68,7 +71,9 @@ detached = true
 dependencies = [
   "flask",
   "flask-jwt-extended",
+  "pyjwt[crypto]",
   "pytest",
+  "model_signing",
   "black>=23.1.0",
   "mypy>=1.0.0",
   "ruff>=0.0.243",
@@ -76,6 +81,7 @@ dependencies = [
   "types-requests",
   "types-tqdm",
 ]
+
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/kagglehub tests}"
 style = [

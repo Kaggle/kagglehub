@@ -18,7 +18,11 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
 
 
 def _create_model_instance(
-    model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, license_name: Optional[str] = None
+    model_handle: ModelHandle,
+    files_and_directories: UploadDirectoryInfo,
+    license_name: Optional[str] = None,
+    *,
+    sigstore: Optional[bool] = False,
 ) -> None:
     serialized_data = files_and_directories.serialize()
     data = {
@@ -26,6 +30,7 @@ def _create_model_instance(
         "framework": model_handle.framework,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
         "directories": serialized_data["directories"],
+        "sigstore": sigstore,
     }
     if license_name is not None:
         data["licenseName"] = license_name
@@ -36,13 +41,18 @@ def _create_model_instance(
 
 
 def _create_model_instance_version(
-    model_handle: ModelHandle, files_and_directories: UploadDirectoryInfo, version_notes: str = ""
+    model_handle: ModelHandle,
+    files_and_directories: UploadDirectoryInfo,
+    version_notes: str = "",
+    *,
+    sigstore: Optional[bool] = False,
 ) -> None:
     serialized_data = files_and_directories.serialize()
     data = {
         "versionNotes": version_notes,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
         "directories": serialized_data["directories"],
+        "sigstore": sigstore,
     }
     api_client = KaggleApiV1Client()
     api_client.post(
@@ -55,14 +65,19 @@ def _create_model_instance_version(
 
 
 def create_model_instance_or_version(
-    model_handle: ModelHandle, files: UploadDirectoryInfo, license_name: Optional[str], version_notes: str = ""
+    model_handle: ModelHandle,
+    files: UploadDirectoryInfo,
+    license_name: Optional[str],
+    version_notes: str = "",
+    *,
+    sigstore: Optional[bool] = False,
 ) -> None:
     try:
-        _create_model_instance(model_handle, files, license_name)
+        _create_model_instance(model_handle, files, license_name, sigstore=sigstore)
     except BackendError as e:
         if e.error_code == HTTPStatus.CONFLICT:
             # Instance already exist, creating a new version instead.
-            _create_model_instance_version(model_handle, files, version_notes)
+            _create_model_instance_version(model_handle, files, version_notes, sigstore=sigstore)
         else:
             raise (e)
 
@@ -96,3 +111,17 @@ def delete_model(owner_slug: str, model_slug: str) -> None:
             logger.info(f"Could not delete Model '{model_slug}' for user '{owner_slug}'...")
         else:
             raise (e)
+
+
+def signing_token(owner_slug: str, model_slug: str) -> Optional[str]:
+    "Returns a JWT for signing if authorized for /{owner_slug}/{model_slug}"
+    try:
+        api_client = KaggleApiV1Client()
+        resp = api_client.post("/models/signing/token", {"ownerSlug": owner_slug, "modelSlug": model_slug})
+        return resp.get("id_token")
+    except KaggleApiHTTPError as e:
+        if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
+            logger.info(
+                f"Could not get Signing token for Model '{model_slug}' for user '{owner_slug}'. Skipping signing..."
+            )
+        return ""
