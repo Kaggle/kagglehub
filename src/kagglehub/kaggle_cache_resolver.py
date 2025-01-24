@@ -255,7 +255,14 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
 
         return False
 
-    def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def __call__(
+        self,
+        h: NotebookHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        referrer: Optional[str] = None,  # noqa: ARG002
+    ) -> str:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
