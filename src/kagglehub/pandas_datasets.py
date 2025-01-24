@@ -9,7 +9,7 @@ from typing import Any, Callable, Optional, Union
 # list of `pandas-datasets` optional dependencies in pyproject.toml.
 import pandas as pd
 
-from kagglehub.datasets import dataset_download
+from kagglehub.datasets_helpers import internal_dataset_download
 
 
 # This is a thin wrapper around pd.read_sql_query so we get the connection
@@ -53,8 +53,8 @@ SUPPORTED_READ_FUNCTIONS_BY_EXTENSION: dict[str, Callable] = {
 
 # Certain extensions leverage a shared method but require additional static kwargs
 STATIC_KWARGS_BY_EXTENSION: dict[str, dict[str, Union[str, bool]]] = {".tsv": {"sep": "\t"}, ".jsonl": {"lines": True}}
-
 MISSING_SQL_QUERY_ERROR_MESSAGE = "Loading from a SQLite file requires a SQL query"
+DATASET_DOWNLOAD_REFERRER = "pandas_data_loader"
 
 
 def load_pandas_dataset(
@@ -62,6 +62,7 @@ def load_pandas_dataset(
     path: str,
     *,
     pandas_kwargs: Any = None,  # noqa: ANN401
+    referrer: Optional[str] = None,
     sql_query: Optional[str],
 ) -> Union[pd.DataFrame, dict[Union[int, str], pd.DataFrame]]:
     """Creates pandas DataFrame(s) from a file in the dataset
@@ -87,7 +88,8 @@ def load_pandas_dataset(
     read_function = _validate_read_function(file_extension, sql_query)
 
     # Now that everything has been validated, we can start downloading and processing
-    filepath = dataset_download(handle, path)
+    # This method is called by the HF data loader, so respect that as the referrer if provided
+    filepath = internal_dataset_download(handle, path, referrer=referrer if referrer else DATASET_DOWNLOAD_REFERRER)
     try:
         result = read_function(
             *_build_args(read_function, filepath, sql_query),

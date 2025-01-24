@@ -13,8 +13,8 @@ MULTIPLE_DATA_FRAMES_ERROR_MESSAGE = (
     "Loading a Huggingface dataset requires the production of exactly one DataFrame. "
     "For example, if using an Excel-based dataset, you must specify a single sheet"
 )
-
 DEFAULT_PANDAS_KWARGS = {"preserve_index": False}
+DATASET_DOWNLOAD_REFERRER = "hugging_face_data_loader"
 
 
 def load_hf_dataset(
@@ -42,7 +42,9 @@ def load_hf_dataset(
     """
     hf_kwargs = {} if hf_kwargs is None else hf_kwargs
     pandas_kwargs = {} if pandas_kwargs is None else pandas_kwargs
-    result = load_pandas_dataset(handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query)
+    result = load_pandas_dataset(
+        handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query, referrer=DATASET_DOWNLOAD_REFERRER
+    )
 
     # We're only loading one Dataset at a time, so alert the user if their args produce multiple. This will
     # probably only happen if the user is trying to load an Excel-based file with many sheets and none specified

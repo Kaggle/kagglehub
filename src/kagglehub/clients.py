@@ -59,13 +59,16 @@ but the actual MD5 checksum of the downloaded contents was:
 """
 
 
-def get_user_agent() -> str:
+def get_user_agent(referrer: Optional[str] = None) -> str:
     """Identifies the user agent based on available system information.
 
     Returns:
         str: user agent information.
     """
     user_agents = [f"kagglehub/{kagglehub.__version__}"]
+
+    if referrer:
+        user_agents.append(referrer)
 
     for keras_lib in ("keras_hub", "keras_nlp", "keras_cv", "keras"):
         keras_info = search_lib_in_call_stack(keras_lib)
@@ -141,6 +144,7 @@ class KaggleApiV1Client:
         cached_path: Optional[str] = None,
         *,
         extract_auto_compressed_file: bool = False,
+        referrer: Optional[str] = None,
     ) -> bool:
         """
         Issues a call to kaggle api and downloads files. For competition downloads,
@@ -152,7 +156,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers={"User-Agent": get_user_agent()},
+            headers={"User-Agent": get_user_agent(referrer)},
             stream=True,
             auth=self._get_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),

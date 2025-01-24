@@ -84,6 +84,10 @@ class TestKaggleApiV1Client(BaseTestCase):
     def test_get_user_agent(self) -> None:
         self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__}")
 
+    def test_get_user_agent_referrer(self) -> None:
+        referrer = "pandas_data_loader"
+        self.assertEqual(clients.get_user_agent(referrer), f"kagglehub/{kagglehub.__version__} {referrer}")
+
     @patch.dict(
         "os.environ", {"KAGGLE_KERNEL_RUN_TYPE": "Interactive", "KAGGLE_DATA_PROXY_URL": "https://dp.kaggle.net"}
     )
