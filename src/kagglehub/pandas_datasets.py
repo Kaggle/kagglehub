@@ -89,7 +89,9 @@ def load_pandas_dataset(
 
     # Now that everything has been validated, we can start downloading and processing
     # This method is called by the HF data loader, so respect that as the referrer if provided
-    filepath = internal_dataset_download(handle, path, referrer=referrer if referrer else DATASET_DOWNLOAD_REFERRER)
+    if referrer is None:
+        referrer = DATASET_DOWNLOAD_REFERRER
+    filepath = internal_dataset_download(handle, path, referrer=referrer)
     try:
         result = read_function(
             *_build_args(read_function, filepath, sql_query),
