@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -72,6 +73,11 @@ def get_user_agent() -> str:
         if keras_info is not None:
             user_agents.append(keras_info)
             break
+
+    for frame_info in inspect.stack():
+        name_and_version = search_lib_in_call_stack("kagglehub")
+        if frame_info.function == "load_dataset" and name_and_version:
+            user_agents.append("pandas_data_loader")        
 
     if is_in_kaggle_notebook():
         build_date = read_kaggle_build_date()
