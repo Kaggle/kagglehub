@@ -85,6 +85,7 @@ def load_pandas_dataset(
     file_extension = os.path.splitext(path)[1]
     read_function = _validate_read_function(file_extension, sql_query)
 
+    # Now that everything has been validated, we can start downloading and processing
     filepath = dataset_download(handle, path)
     try:
         result = read_function(
