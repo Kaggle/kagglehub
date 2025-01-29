@@ -39,14 +39,7 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             return False
         return True
 
-    def __call__(
-        self,
-        h: ModelHandle,
-        path: Optional[str] = None,
-        *,
-        force_download: Optional[bool] = False,
-        referrer: Optional[str] = None,  # noqa: ARG002
-    ) -> str:
+    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",
@@ -117,14 +110,7 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
             return False
         return True
 
-    def __call__(
-        self,
-        h: DatasetHandle,
-        path: Optional[str] = None,
-        *,
-        force_download: Optional[bool] = False,
-        referrer: Optional[str] = None,  # noqa: ARG002
-    ) -> str:
+    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",

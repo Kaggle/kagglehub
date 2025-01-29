@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -17,6 +18,7 @@ from tqdm import tqdm
 import kagglehub
 from kagglehub.cache import delete_from_cache, get_cached_archive_path
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.datasets_enums import KaggleDatasetAdapter
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME,
@@ -58,8 +60,13 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
+ADAPTER_TO_USER_AGENT_MAP = {
+    KaggleDatasetAdapter.HUGGING_FACE: "hugging_face_data_loader",
+    KaggleDatasetAdapter.PANDAS: "pandas_data_loader",
+}
 
-def get_user_agent(referrer: Optional[str] = None) -> str:
+
+def get_user_agent() -> str:
     """Identifies the user agent based on available system information.
 
     Returns:
@@ -67,13 +74,25 @@ def get_user_agent(referrer: Optional[str] = None) -> str:
     """
     user_agents = [f"kagglehub/{kagglehub.__version__}"]
 
-    if referrer:
-        user_agents.append(referrer)
-
     for keras_lib in ("keras_hub", "keras_nlp", "keras_cv", "keras"):
         keras_info = search_lib_in_call_stack(keras_lib)
         if keras_info is not None:
             user_agents.append(keras_info)
+            break
+
+    # Add an appropriate data loader user agent for kagglehub.load_dataset calls
+    for frame_info in inspect.stack():
+        if frame_info.function != "load_dataset":
+            continue
+        module = inspect.getmodule(frame_info.frame)
+
+        if not module or not hasattr(module, "__name__") or not module.__name__.startswith("kagglehub.datasets"):
+            continue
+
+        # We've confirmed that this is a call to kagglehub.load_dataset. Now figure out which loader was used.
+        adapter = frame_info.frame.f_locals["adapter"] if "adapter" in frame_info.frame.f_locals else None
+        if adapter and adapter in ADAPTER_TO_USER_AGENT_MAP:
+            user_agents.append(ADAPTER_TO_USER_AGENT_MAP[adapter])
             break
 
     if is_in_kaggle_notebook():
@@ -144,7 +163,6 @@ class KaggleApiV1Client:
         cached_path: Optional[str] = None,
         *,
         extract_auto_compressed_file: bool = False,
-        referrer: Optional[str] = None,
     ) -> bool:
         """
         Issues a call to kaggle api and downloads files. For competition downloads,
@@ -156,7 +174,7 @@ class KaggleApiV1Client:
         url = self._build_url(path)
         with requests.get(
             url,
-            headers={"User-Agent": get_user_agent(referrer)},
+            headers={"User-Agent": get_user_agent()},
             stream=True,
             auth=self._get_auth(),
             timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),

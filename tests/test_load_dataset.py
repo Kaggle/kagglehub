@@ -1,7 +1,11 @@
 import os
 from typing import Any
+from unittest.mock import MagicMock, patch
+
+from requests import Response
 
 from kagglehub.datasets import KaggleDatasetAdapter, load_dataset
+from kagglehub.exceptions import KaggleApiHTTPError
 from tests.fixtures import BaseTestCase
 
 from .server_stubs import dataset_download_stub as stub
@@ -28,20 +32,22 @@ class TestLoadHfDataset(BaseTestCase):
         cls.server.shutdown()
 
     def _load_hf_dataset_with_invalid_file_type_and_assert_raises(self) -> None:
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError) as cm:
             load_dataset(
                 KaggleDatasetAdapter.HUGGING_FACE,
                 DATASET_HANDLE,
                 TEXT_FILE,
             )
-            self.assertIn(f"Unsupported file extension: '{os.path.basename(TEXT_FILE)}'", e.msg or "")
+        self.assertIn(f"Unsupported file extension: '{os.path.splitext(TEXT_FILE)[1]}'", str(cm.exception))
 
     def _load_hf_dataset_with_multiple_tables_and_assert_raises(self) -> None:
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError) as cm:
             load_dataset(
                 KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, EXCEL_FILE, pandas_kwargs={"sheet_name": None}
             )
-            self.assertIn("Loading a Huggingface dataset requires the production of exactly one DataFrame", e.msg or "")
+        self.assertIn(
+            "Loading a Huggingface dataset requires the production of exactly one DataFrame", str(cm.exception)
+        )
 
     def _load_hf_dataset_and_assert_loaded(self) -> None:
         hf_dataset = load_dataset(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
@@ -59,14 +65,14 @@ class TestLoadHfDataset(BaseTestCase):
         self.assertEqual([*SHAPES_COLUMNS, "__index_level_0__"], hf_dataset.column_names)
 
     def _load_hf_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
-        with self.assertRaises(TypeError) as e:
+        with self.assertRaises(TypeError) as cm:
             load_dataset(
                 KaggleDatasetAdapter.HUGGING_FACE,
                 DATASET_HANDLE,
                 AUTO_COMPRESSED_FILE_NAME,
                 hf_kwargs={INVALID_KWARG: 777},
             )
-            self.assertIn(INVALID_KWARG, e.msg or "")
+        self.assertIn(INVALID_KWARG, str(cm.exception))
 
     def _load_hf_dataset_with_splits_and_assert_loaded(self) -> None:
         hf_dataset = load_dataset(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
@@ -101,6 +107,17 @@ class TestLoadHfDataset(BaseTestCase):
         with create_test_cache():
             self._load_hf_dataset_with_splits_and_assert_loaded()
 
+    @patch("requests.get")
+    def test_hf_dataset_sends_user_agent(self, mock_get: MagicMock) -> None:
+        # Just mock a bad response since all we care to check is that the request headers are right
+        response = Response()
+        response.status_code = 400
+        mock_get.return_value = response
+
+        with self.assertRaises(KaggleApiHTTPError):
+            load_dataset(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
+        self.assertIn("hugging_face_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])
+
 
 class TestLoadPandasDataset(BaseTestCase):
     @classmethod
@@ -112,13 +129,13 @@ class TestLoadPandasDataset(BaseTestCase):
         cls.server.shutdown()
 
     def _load_pandas_dataset_with_invalid_file_type_and_assert_raises(self) -> None:
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError) as cm:
             load_dataset(
                 KaggleDatasetAdapter.PANDAS,
                 DATASET_HANDLE,
                 TEXT_FILE,
             )
-            self.assertIn(f"Unsupported file extension: '{os.path.basename(TEXT_FILE)}'", e.msg or "")
+        self.assertIn(f"Unsupported file extension: '{os.path.splitext(TEXT_FILE)[1]}'", str(cm.exception))
 
     def _load_pandas_simple_dataset_and_assert_loaded(
         self,
@@ -155,14 +172,14 @@ class TestLoadPandasDataset(BaseTestCase):
         self.assertEqual(expected_columns, list(df.columns))
 
     def _load_pandas_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError) as cm:
             load_dataset(
                 KaggleDatasetAdapter.PANDAS,
                 DATASET_HANDLE,
                 AUTO_COMPRESSED_FILE_NAME,
                 pandas_kwargs={INVALID_KWARG: 777},
             )
-            self.assertIn(INVALID_KWARG, e.msg or "")
+        self.assertIn(INVALID_KWARG, str(cm.exception))
 
     def test_pandas_dataset_with_invalid_file_type_raises(self) -> None:
         with create_test_cache():
@@ -199,3 +216,14 @@ class TestLoadPandasDataset(BaseTestCase):
     def test_pandas_sqlite_dataset_succeeds(self) -> None:
         with create_test_cache():
             self._load_pandas_sqlite_dataset_and_assert_loaded()
+
+    @patch("requests.get")
+    def test_pandas_dataset_sends_user_agent(self, mock_get: MagicMock) -> None:
+        # Just mock a bad response since all we care to check is that the request headers are right
+        response = Response()
+        response.status_code = 400
+        mock_get.return_value = response
+
+        with self.assertRaises(KaggleApiHTTPError):
+            load_dataset(KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
+        self.assertIn("pandas_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])

@@ -34,12 +34,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         return True
 
     def __call__(
-        self,
-        h: CompetitionHandle,
-        path: Optional[str] = None,
-        *,
-        force_download: Optional[bool] = False,
-        referrer: Optional[str] = None,  # noqa: ARG002
+        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
     ) -> str:
         api_client = KaggleApiV1Client()
 
@@ -102,14 +97,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
-    def __call__(
-        self,
-        h: DatasetHandle,
-        path: Optional[str] = None,
-        *,
-        force_download: Optional[bool] = False,
-        referrer: Optional[str] = None,
-    ) -> str:
+    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -128,7 +116,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         if path:
             # Downloading a single file.
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True, referrer=referrer)
+            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True)
         else:
             # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
             # Downloading the full archived bundle.
@@ -152,14 +140,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / path.
         return True
 
-    def __call__(
-        self,
-        h: ModelHandle,
-        path: Optional[str] = None,
-        *,
-        force_download: Optional[bool] = False,
-        referrer: Optional[str] = None,  # noqa: ARG002
-    ) -> str:
+    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -219,14 +200,7 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         # Downloading files over HTTP is supported in all environments for all handles / paths.
         return True
 
-    def __call__(
-        self,
-        h: NotebookHandle,
-        path: Optional[str] = None,
-        *,
-        force_download: Optional[bool] = False,
-        referrer: Optional[str] = None,  # noqa: ARG002
-    ) -> str:
+    def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():

@@ -1,13 +1,10 @@
 import logging
 from http import HTTPStatus
-from typing import Optional
 
-from kagglehub import registry
 from kagglehub.clients import BackendError, KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
 from kagglehub.gcs_upload import UploadDirectoryInfo
-from kagglehub.handle import DatasetHandle, parse_dataset_handle
-from kagglehub.logger import EXTRA_CONSOLE_BLOCK
+from kagglehub.handle import DatasetHandle
 
 logger = logging.getLogger(__name__)
 
@@ -64,21 +61,3 @@ def dataset_delete(owner_slug: str, dataset_slug: str) -> None:
             logger.info(f"Could not delete Dataset '{dataset_slug}' for user '{owner_slug}'...")
         else:
             raise (e)
-
-
-def internal_dataset_download(
-    handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False, referrer: Optional[str] = None
-) -> str:
-    """Download dataset files, with extra options intended for internal kagglehub usage
-    Args:
-        handle: (string) the dataset handle
-        path: (string) Optional path to a file within a dataset
-        force_download: (bool) Optional flag to force download a dataset, even if it's cached
-        referrer: (string) Optional string to denote the referrer for the download
-    Returns:
-        A string requesting the path to the requested dataset files.
-    """
-
-    h = parse_dataset_handle(handle)
-    logger.info(f"Downloading Dataset: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    return registry.dataset_resolver(h, path, force_download=force_download, referrer=referrer)

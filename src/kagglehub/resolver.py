@@ -10,16 +10,13 @@ class Resolver(Generic[T]):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __call__(
-        self, handle: T, path: Optional[str], *, force_download: Optional[bool] = False, referrer: Optional[str] = None
-    ) -> str:
+    def __call__(self, handle: T, path: Optional[str], *, force_download: Optional[bool] = False) -> str:
         """Resolves a handle into a path with the requested files.
 
         Args:
             handle: (string) the model handle to resolve.
             path: (string) Optional path to a file within the model bundle.
             force_download: (bool) Optional flag to force download a model, even if it's cached.
-            referrer: (string) Optional string to denote the referrer for the requested files
 
         Returns:
             A string representing the path
