@@ -53,7 +53,6 @@ SUPPORTED_READ_FUNCTIONS_BY_EXTENSION: dict[str, Callable] = {
 
 # Certain extensions leverage a shared method but require additional static kwargs
 STATIC_KWARGS_BY_EXTENSION: dict[str, dict[str, Union[str, bool]]] = {".tsv": {"sep": "\t"}, ".jsonl": {"lines": True}}
-
 MISSING_SQL_QUERY_ERROR_MESSAGE = "Loading from a SQLite file requires a SQL query"
 
 

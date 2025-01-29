@@ -1,5 +1,4 @@
-"""Test helper functions in kagglehub.
-"""
+"""Test helper functions in kagglehub."""
 
 import pathlib
 import tempfile

@@ -13,7 +13,6 @@ MULTIPLE_DATA_FRAMES_ERROR_MESSAGE = (
     "Loading a Huggingface dataset requires the production of exactly one DataFrame. "
     "For example, if using an Excel-based dataset, you must specify a single sheet"
 )
-
 DEFAULT_PANDAS_KWARGS = {"preserve_index": False}
 
 

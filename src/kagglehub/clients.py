@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -17,6 +18,7 @@ from tqdm import tqdm
 import kagglehub
 from kagglehub.cache import delete_from_cache, get_cached_archive_path
 from kagglehub.config import get_kaggle_api_endpoint, get_kaggle_credentials
+from kagglehub.datasets_enums import KaggleDatasetAdapter
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
     KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME,
@@ -58,6 +60,11 @@ but the actual MD5 checksum of the downloaded contents was:
   {}
 """
 
+ADAPTER_TO_USER_AGENT_MAP = {
+    KaggleDatasetAdapter.HUGGING_FACE: "hugging_face_data_loader",
+    KaggleDatasetAdapter.PANDAS: "pandas_data_loader",
+}
+
 
 def get_user_agent() -> str:
     """Identifies the user agent based on available system information.
@@ -71,6 +78,21 @@ def get_user_agent() -> str:
         keras_info = search_lib_in_call_stack(keras_lib)
         if keras_info is not None:
             user_agents.append(keras_info)
+            break
+
+    # Add an appropriate data loader user agent for kagglehub.load_dataset calls
+    for frame_info in inspect.stack():
+        if frame_info.function != "load_dataset":
+            continue
+        module = inspect.getmodule(frame_info.frame)
+
+        if not module or not hasattr(module, "__name__") or not module.__name__.startswith("kagglehub.datasets"):
+            continue
+
+        # We've confirmed that this is a call to kagglehub.load_dataset. Now figure out which loader was used.
+        adapter = frame_info.frame.f_locals["adapter"] if "adapter" in frame_info.frame.f_locals else None
+        if adapter and adapter in ADAPTER_TO_USER_AGENT_MAP:
+            user_agents.append(ADAPTER_TO_USER_AGENT_MAP[adapter])
             break
 
     if is_in_kaggle_notebook():

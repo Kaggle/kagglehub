@@ -39,9 +39,11 @@ class TestCompetitionDownload(unittest.TestCase):
 
     def test_competition_competition_rules_not_accepted_fails(self) -> None:
         # integrationtester bot has not accepted competiton rules
-        with self.assertRaises(HTTPError) as e:
+        with self.assertRaises(HTTPError) as cm:
             competition_download("jane-street-market-prediction")
-            self.assertEqual(e.exception.errno, 403)
+        exception_msg = str(cm.exception)
+        self.assertTrue(exception_msg.startswith("403"))
+        self.assertIn("You don't have permission to access resource at URL", exception_msg)
 
     def test_competition_multiple_files(self) -> None:
         with create_test_cache():
@@ -63,6 +65,8 @@ class TestCompetitionDownload(unittest.TestCase):
 
     def test_competition_with_incorrect_file_path(self) -> None:
         incorrect_path = "nonxisten/Test"
-        with self.assertRaises(HTTPError) as e:
+        with self.assertRaises(HTTPError) as cm:
             competition_download(HANDLE, path=incorrect_path)
-            self.assertEqual(e.exception.errno, 403)
+        exception_msg = str(cm.exception)
+        self.assertTrue(exception_msg.startswith("404"))
+        self.assertIn("Resource not found at URL", exception_msg)
