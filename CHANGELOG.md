@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.3.7 (January 31, 2025)
+
+* Add data loaders to user agent when downloading ([#215](https://github.com/Kaggle/kagglehub/pull/215))
+* Sign model and publish to sigstore ([#211](https://github.com/Kaggle/kagglehub/pull/211))
+* Use version number in notebook cache directories ([#212](https://github.com/Kaggle/kagglehub/pull/212))
+* Notebook Output Download versioning ([#206](https://github.com/Kaggle/kagglehub/pull/206))
+* Add support for utility scripts ([#207](https://github.com/Kaggle/kagglehub/pull/207))
+* Fix `load_dataset` typo in `README` ([#202](https://github.com/Kaggle/kagglehub/pull/202))
+
 ## v0.3.6 (December 19th, 2024)
 
 * Add `kagglehub.load_dataset(...)` ([#192](https://github.com/Kaggle/kagglehub/pull/192), [#197](https://github.com/Kaggle/kagglehub/pull/197))
