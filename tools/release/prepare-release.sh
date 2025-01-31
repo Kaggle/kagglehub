@@ -4,7 +4,7 @@ readonly VERSION_REGEX='__version__ = "([0-9.]+)"' # Regex to find the version s
 readonly CHANGELOG_FILE="CHANGELOG.md"
 readonly INIT_FILE="src/kagglehub/__init__.py"
 readonly FEATURE_BRANCH_PREFIX="release-"
-# Determine the root repo direction based on the location of this script
+# Determine the root repo directory based on the location of this script
 readonly ROOT_REPO_DIR=$(dirname $(dirname $(dirname $(realpath $0))))
 
 # New version specified by the person preparing the release
