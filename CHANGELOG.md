@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.3.7 (January 31, 2025)
+
+* Add data loaders to user agent when downloading ([#215](https://github.com/Kaggle/kagglehub/pull/215))
+* Add README for logging in to integrationtester for integration tests ([#216](https://github.com/Kaggle/kagglehub/pull/216))
+* Improve typing for MultiImplRegistry ([#213](https://github.com/Kaggle/kagglehub/pull/213))
+* Sign model and publish to sigstore ([#211](https://github.com/Kaggle/kagglehub/pull/211))
+* Use version number in notebook cache directories ([#212](https://github.com/Kaggle/kagglehub/pull/212))
+* Cleaning up pathing and method work ([#209](https://github.com/Kaggle/kagglehub/pull/209))
+* Notebook Output Download versioning ([#206](https://github.com/Kaggle/kagglehub/pull/206))
+* Add support for utility scripts ([#207](https://github.com/Kaggle/kagglehub/pull/207))
+* feat(notebooks): implement KaggleCacheResolver for NotebookHandles ([#203](https://github.com/Kaggle/kagglehub/pull/203))
+* Fix `load_dataset` typo in `README` ([#202](https://github.com/Kaggle/kagglehub/pull/202))
+* Pin hatch & twine, add .ruff_cache to .gitignore ([#201](https://github.com/Kaggle/kagglehub/pull/201))
+* Pin metadata-version to 2.3 ([#200](https://github.com/Kaggle/kagglehub/pull/200))
+
 ## v0.3.6 (December 19th, 2024)
 
 * Add `kagglehub.load_dataset(...)` ([#192](https://github.com/Kaggle/kagglehub/pull/192), [#197](https://github.com/Kaggle/kagglehub/pull/197))
