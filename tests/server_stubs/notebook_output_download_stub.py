@@ -11,6 +11,9 @@ from tests.utils import (
 app = Flask(__name__)
 add_mock_gcs_route(app)
 
+GOOD_CREDENTIALS_USERNAME = "dster"
+GOOD_CREDENTIALS_API_KEY = "some-key"
+
 # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
 GCS_HASH_HEADER = "x-goog-hash"
 LAST_MODIFIED = "Last-Modified"
@@ -20,6 +23,16 @@ LAST_MODIFIED_DATE = "Thu, 02 Mar 2020 02:17:12 GMT"
 @app.route("/", methods=["HEAD"])
 def head() -> ResponseReturnValue:
     return "", 200
+
+
+@app.route("/api/v1/hello", methods=["GET"])
+def model_create() -> ResponseReturnValue:
+    auth = request.authorization
+    if auth and auth.username == GOOD_CREDENTIALS_USERNAME and auth.password == GOOD_CREDENTIALS_API_KEY:
+        data = {"message": "Hello from test server!", "userName": auth.username}
+        return jsonify(data), 200
+    else:
+        return jsonify({"code": 401}), 200
 
 
 @app.route("/api/v1/kernels/pull", methods=["GET"])

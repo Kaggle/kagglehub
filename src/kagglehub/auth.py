@@ -114,17 +114,19 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     login_button.on_click(on_click_login_button)
 
 
-def _validate_credentials_helper() -> Optional[str]:
+def _validate_credentials_helper(*, verbose: bool = True) -> Optional[str]:
     api_client = KaggleApiV1Client()
     response = api_client.get("/hello")
     if "userName" in response:
-        _logger.info("Kaggle credentials successfully validated.")
+        if verbose:
+            _logger.info("Kaggle credentials successfully validated.")
         return response["userName"]
     elif "code" in response and response["code"] == INVALID_CREDENTIALS_ERROR:
-        _logger.error(
-            "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
-        )
-    else:
+        if verbose:
+            _logger.error(
+                "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
+            )
+    elif verbose:
         _logger.warning("Unable to validate Kaggle credentials at this time.")
     return None
 
@@ -161,3 +163,11 @@ def whoami() -> dict:
         raise UnauthenticatedError()
     except Exception as e:
         raise UnauthenticatedError() from e
+
+
+def get_username() -> Optional[str]:
+    """Returns the username of the authenticated logged-in user if configured, otherwise None."""
+    try:
+        return _validate_credentials_helper(verbose=False)
+    except Exception:
+        return None

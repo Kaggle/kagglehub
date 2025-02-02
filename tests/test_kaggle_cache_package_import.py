@@ -1,5 +1,4 @@
 import os
-import sys
 from unittest import mock
 
 import requests
@@ -8,6 +7,7 @@ import kagglehub
 from kagglehub.config import DISABLE_KAGGLE_CACHE_ENV_VAR_NAME
 from kagglehub.env import KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME
 from tests.fixtures import BaseTestCase
+from tests.utils import clear_imported_kaggle_packages
 
 from .server_stubs import jwt_stub as stub
 from .server_stubs import serv
@@ -21,10 +21,7 @@ UNVERSIONED_PACKAGE_HANDLE = "alexisbcook/test-package"
 class TestKaggleCachePackageImport(BaseTestCase):
 
     def tearDown(self) -> None:
-        # Clear any imported packages from sys.modules.
-        for name in list(sys.modules.keys()):
-            if name.startswith("kagglehub_package"):
-                del sys.modules[name]
+        clear_imported_kaggle_packages()
 
     @classmethod
     def setUpClass(cls):
