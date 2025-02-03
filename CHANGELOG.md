@@ -1,5 +1,9 @@
 # Changelog
 
+## Next Release
+
+* 
+
 ## v0.3.7 (January 31, 2025)
 
 * Add data loaders to user agent when downloading ([#215](https://github.com/Kaggle/kagglehub/pull/215))

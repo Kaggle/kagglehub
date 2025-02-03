@@ -437,3 +437,7 @@ The table below contains possible locations:
 If needed, the root log directory can be overriden using the following environment variable: `KAGGLE_LOGGING_ROOT_DIR`
 
 Please include the log to help troubleshoot issues.
+
+## Contributing
+
+If you'd like to contribute to `kagglehub`, please make sure to take a look at [CONTRIBUTING.md](CONTRIBUTING.md).
