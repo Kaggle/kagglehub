@@ -126,7 +126,10 @@ class UtilityScriptHandle(NotebookHandle):
 
 
 class PackageHandle(NotebookHandle):
-    pass
+    def with_version(self, version: int) -> "PackageHandle":
+        kwargs = asdict(self)
+        kwargs["version"] = version
+        return PackageHandle(**kwargs)
 
 
 def parse_dataset_handle(handle: str) -> DatasetHandle:

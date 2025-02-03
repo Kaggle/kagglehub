@@ -1,8 +1,10 @@
+import functools
 import os
 import unittest
 from collections.abc import Generator
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
+from typing import Any, Callable
 from unittest import mock
 
 from kagglehub.config import (
@@ -73,3 +75,26 @@ def unauthenticated() -> Generator[None, None, None]:
         {USERNAME_ENV_VAR_NAME: "", KEY_ENV_VAR_NAME: "", CREDENTIALS_FOLDER_ENV_VAR_NAME: "/nonexistent"},
     ):
         yield
+
+
+def parameterized(*parameter_values: Any) -> Callable:  # noqa: ANN401
+    """Decorator which parameterizes a unittest test method.
+
+    Currently only supports single arguments but could be extended."""
+
+    def decorator(method: Callable) -> Callable:
+        @functools.wraps(method)
+        def wrapper(self) -> None:  # noqa: ANN001
+            for value in parameter_values:
+                if hasattr(self, "setUp"):
+                    self.setUp()
+
+                with self.subTest(value):
+                    method(self, value)
+
+                if hasattr(self, "tearDown"):
+                    self.tearDown()
+
+        return wrapper
+
+    return decorator

@@ -5,12 +5,17 @@ import logging
 import pathlib
 import re
 import sys
+import textwrap
 from functools import wraps
 from types import ModuleType
 from typing import Any, Callable, Optional
 
 from kagglehub import registry
-from kagglehub.handle import ResourceHandle, parse_package_handle
+from kagglehub.auth import get_username
+from kagglehub.cache import get_cached_path
+from kagglehub.env import is_in_colab_notebook, is_in_kaggle_notebook
+from kagglehub.exceptions import UserCancelledError
+from kagglehub.handle import PackageHandle, ResourceHandle, parse_package_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.requirements import VersionedDatasources, read_requirements
 
@@ -25,7 +30,9 @@ PACKAGE_VERSION_NAME = "__package_version__"
 KAGGLEHUB_REQUIREMENTS_FILENAME = "kagglehub_requirements.yaml"
 
 
-def package_import(handle: str, *, force_download: Optional[bool] = False) -> ModuleType:
+def package_import(
+    handle: str, *, force_download: Optional[bool] = False, bypass_confirmation: bool = False
+) -> ModuleType:
     """Download a Kaggle Package and import it.
 
     A Kaggle Package is a Kaggle Notebook which has exported code to a python package format.
@@ -40,6 +47,9 @@ def package_import(handle: str, *, force_download: Optional[bool] = False) -> Mo
 
     logger.info(f"Downloading Notebook Output for Package: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
     notebook_path, version = registry.notebook_output_resolver(h, path=None, force_download=force_download)
+    if not h.is_versioned() and version:
+        h = h.with_version(version)
+
     init_file_path = pathlib.Path(notebook_path) / "package" / "__init__.py"
     if not init_file_path.exists():
         msg = f"Notebook '{h!s}' is not a Package, missing 'package/__init__.py' file."
@@ -48,14 +58,18 @@ def package_import(handle: str, *, force_download: Optional[bool] = False) -> Mo
     # Unique module name based on handle + downloaded version
     module_name = re.sub(r"[^a-zA-Z0-9_]", "_", f"kagglehub_package_{h.owner}_{h.notebook}_{version}")
 
-    if module_name in sys.modules:
-        # If this module already exists and the user didn't re-download, just return it
-        if not force_download:
-            return sys.modules[module_name]
+    # If this module was already imported and the user didn't re-download, just return it
+    if module_name in sys.modules and not force_download:
+        return sys.modules[module_name]
 
-        # If already existing but re-downloaded, clear this module and any submodules and reload
+    # We're going to run the downloaded code (via `import`) so get user confirmation first.
+    if not bypass_confirmation:
+        _confirm_import(h)
+
+    # If this module was already imported but now re-downloaded, clear it and any submodules before re-importing
+    if module_name in sys.modules:
         logger.info(
-            f"Uninstalling existing package module {module_name} before re-installing.", extra={**EXTRA_CONSOLE_BLOCK}
+            f"Uninstalling existing package module {module_name} before re-importing.", extra={**EXTRA_CONSOLE_BLOCK}
         )
         del sys.modules[module_name]
         submodule_names = [name for name in sys.modules if name.startswith(f"{module_name}.")]
@@ -72,6 +86,40 @@ def package_import(handle: str, *, force_download: Optional[bool] = False) -> Mo
     spec.loader.exec_module(module)
 
     return module
+
+
+def _confirm_import(h: PackageHandle) -> None:
+    """Gets user's manual confirmation before importing a package which would execute arbitrary code.
+
+    This is skipped for known safe cases:
+    1. Within a Kaggle or Colab environment (already containerized, not user-owned system)
+    2. Package owned by the logged-in user (assumed trusted)
+    3. Nested Package (assume confirmation already provided)
+    """
+    if (
+        is_in_kaggle_notebook()
+        or is_in_colab_notebook()
+        or get_username() == h.owner
+        # Nested package, we assume confirmation has already been provided for the top-level Package.
+        or PackageScope.get() is not None
+    ):
+        return
+
+    msg = f"""
+      WARNING: You are about to execute untrusted code.
+      This code could modify your python environment or operating system.
+
+      Review this code at "{h.to_url()}"
+      or in your download cache at "{get_cached_path(h)}"
+
+      It is strongly recommended that you run this code within a container
+      such as Docker to provide a secure, isolated execution environment.
+      See https://www.kaggle.com/docs/packages for more information.
+      """
+
+    confirmation = input(f"{textwrap.dedent(msg)}\nDo you want to proceed? (y)es/[no]: ")
+    if confirmation.lower() not in ["y", "yes"]:
+        raise UserCancelledError()
 
 
 def get_package_asset_path(path: str) -> pathlib.Path:
