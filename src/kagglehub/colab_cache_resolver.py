@@ -8,6 +8,7 @@ from kagglehub.config import is_colab_cache_disabled
 from kagglehub.exceptions import BackendError, NotFoundError
 from kagglehub.handle import DatasetHandle, ModelHandle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
+from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
 
 COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "COLAB_CACHE_MOUNT_FOLDER"
@@ -29,9 +30,10 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             "variation": handle.variation,
         }
 
-        if handle.is_versioned():
+        version = _get_model_version(handle)
+        if version:
             # Colab treats version as int in the request
-            data["version"] = handle.version  # type: ignore
+            data["version"] = version  # type: ignore
 
         try:
             api_client.post(data, ColabClient.IS_MODEL_SUPPORTED_PATH, handle)
@@ -39,7 +41,9 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             return False
         return True
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",
@@ -53,9 +57,11 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             "framework": h.framework,
             "variation": h.variation,
         }
-        if h.is_versioned():
+
+        version = _get_model_version(h)
+        if version:
             # Colab treats version as int in the request
-            data["version"] = h.version  # type: ignore
+            data["version"] = version  # type: ignore
 
         response = api_client.post(data, ColabClient.MODEL_MOUNT_PATH, h)
 
@@ -85,8 +91,8 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
                     f"You can access the other files of the attached model at '{cached_path}'"
                 )
                 raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            return cached_filepath, version
+        return cached_path, version
 
 
 class DatasetColabCacheResolver(Resolver[DatasetHandle]):
@@ -100,9 +106,10 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
             "dataset": handle.dataset,
         }
 
-        if handle.is_versioned():
+        version = _get_dataset_version(handle)
+        if version:
             # Colab treats version as int in the request
-            data["version"] = handle.version  # type: ignore
+            data["version"] = version  # type: ignore
 
         try:
             api_client.post(data, ColabClient.IS_DATASET_SUPPORTED_PATH, handle)
@@ -110,7 +117,9 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
             return False
         return True
 
-    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",
@@ -122,9 +131,11 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
             "owner": h.owner,
             "dataset": h.dataset,
         }
-        if h.is_versioned():
+
+        version = _get_dataset_version(h)
+        if version:
             # Colab treats version as int in the request
-            data["version"] = h.version  # type: ignore
+            data["version"] = version  # type: ignore
 
         response = api_client.post(data, ColabClient.DATASET_MOUNT_PATH, h)
 
@@ -154,5 +165,27 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
                     f"You can access the other files of the attached dataset at '{cached_path}'"
                 )
                 raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            return cached_filepath, version
+        return cached_path, version
+
+
+def _get_model_version(h: ModelHandle) -> Optional[int]:
+    if h.is_versioned():
+        return h.version
+
+    version_from_package_scope = PackageScope.get_version(h)
+    if version_from_package_scope is not None:
+        return version_from_package_scope
+
+    return None
+
+
+def _get_dataset_version(h: DatasetHandle) -> Optional[int]:
+    if h.is_versioned():
+        return h.version
+
+    version_from_package_scope = PackageScope.get_version(h)
+    if version_from_package_scope is not None:
+        return version_from_package_scope
+
+    return None

@@ -25,6 +25,7 @@ dependencies = [
   "tqdm",
   "packaging",
   "model_signing",
+  "pyyaml",
 ]
 
 [project.urls]

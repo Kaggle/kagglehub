@@ -402,7 +402,7 @@ class ColabClient:
     MOUNT_PATH = "/kagglehub/models/mount"
     MODEL_MOUNT_PATH = "/kagglehub/models/mount"
     DATASET_MOUNT_PATH = "/kagglehub/datasets/mount"
-    # TBE_RUNTIME_ADDR serves requests made from `is_supported` and  `__call__`
+    # TBE_RUNTIME_ADDR serves requests made from `is_supported` and  `_resolve`
     # of ModelColabCacheResolver.
     TBE_RUNTIME_ADDR_ENV_VAR_NAME = "TBE_RUNTIME_ADDR"
 

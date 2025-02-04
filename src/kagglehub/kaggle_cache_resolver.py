@@ -12,6 +12,7 @@ from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
+from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
 
 KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME = "KAGGLE_CACHE_MOUNT_FOLDER"
@@ -36,9 +37,9 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
             return True
         return False
 
-    def __call__(
+    def _resolve(
         self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> str:
+    ) -> tuple[str, Optional[int]]:
         client = KaggleJwtClient()
         if force_download:
             logger.info(
@@ -86,8 +87,8 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
                     f"You can acces the other files othe attached competition at '{cached_path}'"
                 )
                 raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            return cached_filepath, None
+        return cached_path, None
 
 
 class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
@@ -100,7 +101,9 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
 
         return False
 
-    def __call__(self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
@@ -113,6 +116,11 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
         }
         if h.is_versioned():
             dataset_ref["VersionNumber"] = str(h.version)
+        else:
+            # Check if there's a Package in scope which has stored a version number used when it was created.
+            version_from_package_scope = PackageScope.get_version(h)
+            if version_from_package_scope is not None:
+                dataset_ref["VersionNumber"] = str(version_from_package_scope)
 
         result = client.post(
             ATTACH_DATASOURCE_REQUEST_NAME,
@@ -127,6 +135,7 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
 
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
+        version = result.get("versionNumber")  # None if missing
 
         if not os.path.exists(cached_path):
             # Only print this if the dataset is not already mounted.
@@ -153,8 +162,8 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
                     f"You can acces the other files othe attached dataset at '{cached_path}'"
                 )
                 raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            return cached_filepath, version
+        return cached_path, version
 
 
 class ModelKaggleCacheResolver(Resolver[ModelHandle]):
@@ -167,7 +176,9 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
 
         return False
 
-    def __call__(self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
@@ -182,6 +193,11 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         }
         if h.is_versioned():
             model_ref["VersionNumber"] = str(h.version)
+        else:
+            # Check if there's a Package in scope which has stored a version number used when it was created.
+            version_from_package_scope = PackageScope.get_version(h)
+            if version_from_package_scope is not None:
+                model_ref["VersionNumber"] = str(version_from_package_scope)
 
         result = client.post(
             ATTACH_DATASOURCE_REQUEST_NAME,
@@ -196,6 +212,7 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
 
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
+        version = result.get("versionNumber")  # None if missing
 
         if not os.path.exists(cached_path):
             # Only print this if the model is not already mounted.
@@ -222,8 +239,8 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
                     f"You can access the other files of the attached model at '{cached_path}'"
                 )
                 raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            return cached_filepath, version
+        return cached_path, version
 
 
 class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
@@ -236,7 +253,9 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
 
         return False
 
-    def __call__(self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+    def _resolve(
+        self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+    ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
@@ -249,6 +268,11 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
         }
         if h.is_versioned():
             kernel_ref["VersionNumber"] = str(h.version)
+        else:
+            # Check if there's a Package in scope which has stored a version number used when it was created.
+            version_from_package_scope = PackageScope.get_version(h)
+            if version_from_package_scope is not None:
+                kernel_ref["VersionNumber"] = str(version_from_package_scope)
 
         result = client.post(
             ATTACH_DATASOURCE_REQUEST_NAME,
@@ -264,6 +288,7 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
 
         base_mount_path = os.getenv(KAGGLE_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_KAGGLE_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{result['mountSlug']}"
+        version = result.get("versionNumber")  # None if missing
 
         if not os.path.exists(cached_path):
             # Only print this if the notebook output is not already mounted.
@@ -290,5 +315,5 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
                     f"You can access the other files of the attached notebook at '{cached_path}'"
                 )
                 raise ValueError(msg)
-            return cached_filepath
-        return cached_path
+            return cached_filepath, version
+        return cached_path, version

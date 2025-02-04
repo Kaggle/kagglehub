@@ -27,7 +27,7 @@ def utility_script_install(handle: str, *, force_download: Optional[bool] = Fals
     h = parse_utility_script_handle(handle)
 
     logger.info(f"Downloading Utility Script: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    utility_script_path = registry.notebook_output_resolver(h, path=None, force_download=force_download)
+    utility_script_path, _ = registry.notebook_output_resolver(h, path=None, force_download=force_download)
 
     if not _is_notebook_utility_script(h):
         logger.info(
