@@ -21,7 +21,7 @@ We encourage everyone to open an issue first to discuss the general approach bef
 Please follow these best practices when opening a PR:
 
 * Use a **clear and descriptive title**.
-* If your PR adds a new user-facing feature, make sure to add an entry under the "Next Release" section in the [CHANGELOG.md](CHANGELOG.md)
+* If your PR adds a user-facing feature or fixes a bug, make sure to add an entry under the "Next Release" section in the [CHANGELOG.md](CHANGELOG.md)
 * If your PR fixes a specific issue, add `Fixes #<ISSUE_NUMBER>` to your PR's description.
 * Include screenshots/console output of the behavior before and after the fix.
 * Include instructions on how to reproduce the issue and test the fixes.
