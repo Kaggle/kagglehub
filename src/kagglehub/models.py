@@ -1,14 +1,12 @@
 import logging
-from pathlib import Path
 from typing import Optional, Union
-
-from model_signing.api import SigningConfig
 
 from kagglehub import registry
 from kagglehub.gcs_upload import normalize_patterns, upload_files_and_directories
 from kagglehub.handle import parse_model_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version, signing_token
+from kagglehub.signing import sign_with_sigstore
 
 logger = logging.getLogger(__name__)
 
@@ -76,23 +74,14 @@ def model_upload(
     # Model can be non-existent. Get token after model creation so signing token can be authorized.
     try:
         if sigstore:
-            token = signing_token(h.owner, h.model)
-            if token:
-                signing_file = Path(local_model_dir) / ".kaggle" / "signing.json"
-                signing_file.parent.mkdir(exist_ok=True, parents=True)
-                signing_file.unlink(missing_ok=True)
-                # The below will throw an exception if the token can't be verified (Needs to be a production token)
-                # Setting KAGGLE_API_ENDPOINT to localhost will throw the exception as stated above.
-                SigningConfig().set_sigstore_signer(identity_token=token, use_staging=False).sign(
-                    Path(local_model_dir), signing_file
-                )
-            else:
-                # skips transparency log publishing as we are unable to get a token
-                sigstore = False
-                logger.warning("Unable to retrieve identity token. Skipping signing...")
-    except Exception:
-        logger.exception("Signing failed. Skipping signing...")
-        sigstore = False
+            sigstore = sign_with_sigstore(local_model_dir, h)
+    except ImportError:
+        import_warning_message = (
+            "The 'model_upload(...sign=True)' function requires the 'kagglehub[signing]' extras. "
+            "Install them with 'pip install kagglehub[signing]'"
+        )
+        # Inform the user if we detect that they didn't install everything
+        raise ImportError(import_warning_message) from None
 
     # Upload the model files to GCS
     tokens = upload_files_and_directories(
