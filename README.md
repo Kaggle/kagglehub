@@ -259,7 +259,7 @@ import kagglehub
 # - https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
 # 
 # You would use the following handle: `bricevergnou/spotify-recommendation`
-handle = '<KAGGLE_USERNAME>/<DATASET>
+handle = '<KAGGLE_USERNAME>/<DATASET>'
 local_dataset_dir = 'path/to/local/dataset/dir'
 
 # Create a new dataset
@@ -285,11 +285,28 @@ import kagglehub
 # Download the latest version.
 kagglehub.competition_download('digit-recognizer')
 
-# Download a single file
+# Download a single file.
 kagglehub.competition_download('digit-recognizer', path='train.csv')
 
 # Download a competition or file, even if previously downloaded to cache. 
 kagglehub.competition_download('digit-recognizer', force_download=True)
+```
+
+### Download Notebook Outputs
+
+The following examples download the `Titanic Tutorial` notebook output.
+
+```python
+import kagglehub
+
+# Download the latest version.
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial')
+
+# Download a specific version of the notebook output.
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial/versions/1')
+
+# Download a single file.
+kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submission.csv')
 ```
 
 ## Development
