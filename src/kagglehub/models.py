@@ -5,7 +5,7 @@ from kagglehub import registry
 from kagglehub.gcs_upload import normalize_patterns, upload_files_and_directories
 from kagglehub.handle import parse_model_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
-from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version, signing_token
+from kagglehub.models_helpers import create_model_if_missing, create_model_instance_or_version
 from kagglehub.signing import sign_with_sigstore
 
 logger = logging.getLogger(__name__)

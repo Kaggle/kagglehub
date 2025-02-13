@@ -2,7 +2,7 @@
 
 ## Next Release
 
-* 
+* Moved signing as optional feature due to dependency issue.
 
 ## v0.3.7 (January 31, 2025)
 
