@@ -32,7 +32,8 @@ def model_download(
     """
     h = parse_model_handle(handle)
     logger.info(f"Downloading Model: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    return registry.model_resolver(h, path, force_download=force_download)
+    path, _ = registry.model_resolver(h, path, force_download=force_download)
+    return path
 
 
 def model_upload(

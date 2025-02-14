@@ -53,6 +53,10 @@ class UnauthenticatedError(Exception):
         super().__init__(message)
 
 
+class UserCancelledError(Exception):
+    pass
+
+
 def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Optional[ResourceHandle] = None) -> None:
     """
     Wrapper around `response.raise_for_status()` that provides nicer error messages

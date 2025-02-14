@@ -11,6 +11,9 @@ from tests.utils import (
 app = Flask(__name__)
 add_mock_gcs_route(app)
 
+GOOD_CREDENTIALS_USERNAME = "dster"
+GOOD_CREDENTIALS_API_KEY = "some-key"
+
 # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
 GCS_HASH_HEADER = "x-goog-hash"
 LAST_MODIFIED = "Last-Modified"
@@ -20,6 +23,16 @@ LAST_MODIFIED_DATE = "Thu, 02 Mar 2020 02:17:12 GMT"
 @app.route("/", methods=["HEAD"])
 def head() -> ResponseReturnValue:
     return "", 200
+
+
+@app.route("/api/v1/hello", methods=["GET"])
+def model_create() -> ResponseReturnValue:
+    auth = request.authorization
+    if auth and auth.username == GOOD_CREDENTIALS_USERNAME and auth.password == GOOD_CREDENTIALS_API_KEY:
+        data = {"message": "Hello from test server!", "userName": auth.username}
+        return jsonify(data), 200
+    else:
+        return jsonify({"code": 401}), 200
 
 
 @app.route("/api/v1/kernels/pull", methods=["GET"])
@@ -37,8 +50,10 @@ def notebook_output_download(owner_slug: str, kernel_slug: str) -> ResponseRetur
 
     # First, determine if we're fetching a file or the whole notebook output
     file_name_query_param = request.args.get("file_path")
-    test_file_name = "foo.txt.zip"
-    if file_name_query_param:
+    if kernel_slug == "package-test":
+        version = request.args.get("version_number", type=int)
+        test_file_name = f"package-v{version}.zip"
+    elif file_name_query_param:
         # This mimics behavior for our file downloads, where users request a file, but
         # receive a zipped version of the file from GCS.
         test_file_name = (
@@ -46,18 +61,10 @@ def notebook_output_download(owner_slug: str, kernel_slug: str) -> ResponseRetur
             if file_name_query_param == AUTO_COMPRESSED_FILE_NAME
             else file_name_query_param
         )
+    else:
+        test_file_name = "foo.txt.zip"
 
     return get_gcs_redirect_response(test_file_name)
-
-
-@app.route("/api/v1/kernels/output/list/<owner_slug>/<kernel_slug>", methods=["GET"])
-def notebook_list_files(owner_slug: str, kernel_slug: str) -> ResponseReturnValue:
-    # Name to prevent linter from complaining about unused variables.
-    _ = f"{owner_slug}/{kernel_slug}"
-
-    data = {"files": [{"url": "testUrl", "fileName": "foo.txt"}]}
-
-    return jsonify(data), 200
 
 
 @app.errorhandler(404)
