@@ -201,16 +201,26 @@ Some examples include:
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
+<<<<<<< HEAD
 # Load a Dataset with a specific version of a CSV, then remove a column
 dataset = kagglehub.dataset_load(
+=======
+# Load a Dataset with a specific version of a CSV, then remove a column.
+dataset = kagglehub.load_dataset(
+>>>>>>> 6b7a181 (add utility install)
     KaggleDatasetAdapter.HUGGING_FACE,
     "unsdsn/world-happiness/versions/1",
     "2016.csv",
 )
 dataset = dataset.remove_columns('Region')
 
+<<<<<<< HEAD
 # Load a Dataset with specific columns from a parquet file, then split into test/train splits
 dataset = kagglehub.dataset_load(
+=======
+# Load a Dataset with specific columns from a parquet file, then split into test/train splits.
+dataset = kagglehub.load_dataset(
+>>>>>>> 6b7a181 (add utility install)
     KaggleDatasetAdapter.HUGGING_FACE,
     "robikscube/textocr-text-extraction-from-images-dataset",
     "annot.parquet",
@@ -218,8 +228,13 @@ dataset = kagglehub.dataset_load(
 )
 dataset_with_splits = dataset.train_test_split(test_size=0.8, train_size=0.2)
 
+<<<<<<< HEAD
 # Load a Dataset by executing a SQL query against a SQLite DB, then rename a column
 dataset = kagglehub.dataset_load(
+=======
+# Load a Dataset by executing a SQL query against a SQLite DB, then rename a column.
+dataset = kagglehub.load_dataset(
+>>>>>>> 6b7a181 (add utility install)
     KaggleDatasetAdapter.HUGGING_FACE,
     "wyattowalsh/basketball",
     "nba.sqlite",
@@ -241,7 +256,7 @@ kagglehub.dataset_download('bricevergnou/spotify-recommendation')
 # Download a specific version.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation/versions/1')
 
-# Download a single file
+# Download a single file.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv')
 
 # Download a dataset or file, even if previously downloaded to cache.
@@ -294,7 +309,7 @@ kagglehub.competition_download('digit-recognizer', force_download=True)
 
 ### Download Notebook Outputs
 
-The following examples download the `Titanic Tutorial` notebook output.
+The following examples download the `Titanic Tutorial` notebook output: https://www.kaggle.com/code/alexisbcook/titanic-tutorial
 
 ```python
 import kagglehub
@@ -308,6 +323,21 @@ kagglehub.notebook_output_download('alexisbcook/titanic-tutorial/versions/1')
 # Download a single file.
 kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submission.csv')
 ```
+
+### Install Utility Script
+
+The following example installs the utility script `Physionet Challenge Utility Script` Utility Script: https://www.kaggle.com/code/bjoernjostein/physionet-challenge-utility-script
+```python
+import kagglehub
+
+# Install the latest version.
+kagglehub.utility_script_install('bjoernjostein/physionet-challenge-utility-script')
+
+# Install a specific version of the utility script.
+kagglehub.utility_script_install('bjoernjostein/physionet-challenge-utility-script/versions/1')
+
+```
+
 
 ## Development
 
