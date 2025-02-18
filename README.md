@@ -200,30 +200,16 @@ Some examples include:
 ```python
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
-
-<<<<<<< HEAD
-<<<<<<< HEAD
 # Load a Dataset with a specific version of a CSV, then remove a column
 dataset = kagglehub.dataset_load(
-=======
-=======
->>>>>>> d1d9811 (.)
-# Load a Dataset with a specific version of a CSV, then remove a column.
-dataset = kagglehub.load_dataset(
->>>>>>> 6b7a181 (add utility install)
     KaggleDatasetAdapter.HUGGING_FACE,
     "unsdsn/world-happiness/versions/1",
     "2016.csv",
 )
 dataset = dataset.remove_columns('Region')
 
-<<<<<<< HEAD
 # Load a Dataset with specific columns from a parquet file, then split into test/train splits
 dataset = kagglehub.dataset_load(
-=======
-# Load a Dataset with specific columns from a parquet file, then split into test/train splits.
-dataset = kagglehub.load_dataset(
->>>>>>> 6b7a181 (add utility install)
     KaggleDatasetAdapter.HUGGING_FACE,
     "robikscube/textocr-text-extraction-from-images-dataset",
     "annot.parquet",
@@ -231,13 +217,8 @@ dataset = kagglehub.load_dataset(
 )
 dataset_with_splits = dataset.train_test_split(test_size=0.8, train_size=0.2)
 
-<<<<<<< HEAD
 # Load a Dataset by executing a SQL query against a SQLite DB, then rename a column
 dataset = kagglehub.dataset_load(
-=======
-# Load a Dataset by executing a SQL query against a SQLite DB, then rename a column.
-dataset = kagglehub.load_dataset(
->>>>>>> 6b7a181 (add utility install)
     KaggleDatasetAdapter.HUGGING_FACE,
     "wyattowalsh/basketball",
     "nba.sqlite",
