@@ -1,7 +1,7 @@
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
-dataset = kagglehub.load_dataset(
+dataset = kagglehub.dataset_load(
     KaggleDatasetAdapter.HUGGING_FACE,
     "unsdsn/world-happiness",
     "2016.csv",

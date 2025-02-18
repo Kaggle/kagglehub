@@ -134,21 +134,21 @@ This adapter supports the following file types, which map to a corresponding `pa
 
 [^4]: The specific file extension will dictate which optional `engine` dependency needs to be installed to read the file
 
-`load_dataset` also supports `pandas_kwargs` which will be passed as keyword arguments to the `pandas.read_*` method. Some examples include:
+`dataset_load` also supports `pandas_kwargs` which will be passed as keyword arguments to the `pandas.read_*` method. Some examples include:
 
 ```python
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
 # Load a DataFrame with a specific version of a CSV
-df = kagglehub.load_dataset(
+df = kagglehub.dataset_load(
     KaggleDatasetAdapter.PANDAS,
     "unsdsn/world-happiness/versions/1",
     "2016.csv",
 )
 
 # Load a DataFrame with specific columns from a parquet file
-df = kagglehub.load_dataset(
+df = kagglehub.dataset_load(
     KaggleDatasetAdapter.PANDAS,
     "robikscube/textocr-text-extraction-from-images-dataset",
     "annot.parquet",
@@ -158,7 +158,7 @@ df = kagglehub.load_dataset(
 # Load a dictionary of DataFrames from an Excel file where the keys are sheet names 
 # and the values are DataFrames for each sheet's data. NOTE: As written, this requires 
 # installing the default openpyxl engine.
-df_dict = kagglehub.load_dataset(
+df_dict = kagglehub.dataset_load(
     KaggleDatasetAdapter.PANDAS,
     "theworldbank/education-statistics",
     "edstats-excel-zip-72-mb-/EdStatsEXCEL.xlsx",
@@ -166,7 +166,7 @@ df_dict = kagglehub.load_dataset(
 )
 
 # Load a DataFrame using an XML file (with the natively available etree parser)
-df = load_dataset(
+df = dataset_load(
     KaggleDatasetAdapter.PANDAS,
     "parulpandey/covid19-clinical-trials-dataset",
     "COVID-19 CLinical trials studies/COVID-19 CLinical trials studies/NCT00571389.xml",
@@ -174,7 +174,7 @@ df = load_dataset(
 )
 
 # Load a DataFrame by executing a SQL query against a SQLite DB
-df = kagglehub.load_dataset(
+df = kagglehub.dataset_load(
     KaggleDatasetAdapter.PANDAS,
     "wyattowalsh/basketball",
     "nba.sqlite",
@@ -202,7 +202,7 @@ import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
 # Load a Dataset with a specific version of a CSV, then remove a column
-dataset = kagglehub.load_dataset(
+dataset = kagglehub.dataset_load(
     KaggleDatasetAdapter.HUGGING_FACE,
     "unsdsn/world-happiness/versions/1",
     "2016.csv",
@@ -210,7 +210,7 @@ dataset = kagglehub.load_dataset(
 dataset = dataset.remove_columns('Region')
 
 # Load a Dataset with specific columns from a parquet file, then split into test/train splits
-dataset = kagglehub.load_dataset(
+dataset = kagglehub.dataset_load(
     KaggleDatasetAdapter.HUGGING_FACE,
     "robikscube/textocr-text-extraction-from-images-dataset",
     "annot.parquet",
@@ -219,7 +219,7 @@ dataset = kagglehub.load_dataset(
 dataset_with_splits = dataset.train_test_split(test_size=0.8, train_size=0.2)
 
 # Load a Dataset by executing a SQL query against a SQLite DB, then rename a column
-dataset = kagglehub.load_dataset(
+dataset = kagglehub.dataset_load(
     KaggleDatasetAdapter.HUGGING_FACE,
     "wyattowalsh/basketball",
     "nba.sqlite",

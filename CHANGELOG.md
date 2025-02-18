@@ -2,6 +2,8 @@
 
 ## Next Release
 
+* Renamed load_datset to dataset_load.
+
 ## v0.3.8 (February 13, 2025)
 
 * Moved signing as optional feature due to dependency issue.

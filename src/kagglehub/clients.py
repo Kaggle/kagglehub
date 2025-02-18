@@ -80,16 +80,16 @@ def get_user_agent() -> str:
             user_agents.append(keras_info)
             break
 
-    # Add an appropriate data loader user agent for kagglehub.load_dataset calls
+    # Add an appropriate data loader user agent for kagglehub.dataset_load calls
     for frame_info in inspect.stack():
-        if frame_info.function != "load_dataset":
+        if frame_info.function != "dataset_load":
             continue
         module = inspect.getmodule(frame_info.frame)
 
         if not module or not hasattr(module, "__name__") or not module.__name__.startswith("kagglehub.datasets"):
             continue
 
-        # We've confirmed that this is a call to kagglehub.load_dataset. Now figure out which loader was used.
+        # We've confirmed that this is a call to kagglehub.dataset_load. Now figure out which loader was used.
         adapter = frame_info.frame.f_locals["adapter"] if "adapter" in frame_info.frame.f_locals else None
         if adapter and adapter in ADAPTER_TO_USER_AGENT_MAP:
             user_agents.append(ADAPTER_TO_USER_AGENT_MAP[adapter])
