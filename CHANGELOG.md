@@ -2,6 +2,8 @@
 
 ## Next Release
 
+## v0.3.9 (February 18, 2025)
+
 * Renamed load_datset to dataset_load.
 
 ## v0.3.8 (February 13, 2025)
