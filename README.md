@@ -326,18 +326,15 @@ kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submissi
 
 ### Install Utility Script
 
-The following example installs the utility script `Physionet Challenge Utility Script` Utility Script: https://www.kaggle.com/code/bjoernjostein/physionet-challenge-utility-script
+The following example installs the utility script `Physionet Challenge Utility Script` Utility Script: https://www.kaggle.com/code/bjoernjostein/physionet-challenge-utility-script. Using this command allows the code from this script to be available in your python environment.
+
 ```python
 import kagglehub
 
 # Install the latest version.
 kagglehub.utility_script_install('bjoernjostein/physionet-challenge-utility-script')
 
-# Install a specific version of the utility script.
-kagglehub.utility_script_install('bjoernjostein/physionet-challenge-utility-script/versions/1')
-
 ```
-
 
 ## Development
 
