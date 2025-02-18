@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import Any, Optional, Union
 
 from kagglehub import registry
@@ -69,7 +70,7 @@ def dataset_upload(
     create_dataset_or_version(h, tokens, version_notes)
 
 
-def load_dataset(
+def dataset_load(
     adapter: KaggleDatasetAdapter,
     # In the form of {owner_slug}/{dataset_slug} or {owner_slug}/{dataset_slug}/versions/{version_number}
     handle: str,
@@ -120,8 +121,22 @@ def load_dataset(
     except ImportError:
         adapter_optional_dependency = LOAD_DATASET_ADAPTER_OPTIONAL_DEPENDENCIES_MAP[adapter]
         import_warning_message = (
-            f"The 'load_dataset' function requires the '{adapter_optional_dependency}' extras. "
+            f"The 'dataset_load' function requires the '{adapter_optional_dependency}' extras. "
             f"Install them with 'pip install kagglehub[{adapter_optional_dependency}]'"
         )
         # Inform the user if we detect that they didn't install everything
         raise ImportError(import_warning_message) from None
+
+
+def load_dataset(
+    adapter: KaggleDatasetAdapter,
+    # In the form of {owner_slug}/{dataset_slug} or {owner_slug}/{dataset_slug}/versions/{version_number}
+    handle: str,
+    path: str,
+    *,
+    pandas_kwargs: Any = None,  # noqa: ANN401
+    sql_query: Optional[str] = None,
+    hf_kwargs: Any = None,  # noqa: ANN401
+) -> Any:  # noqa: ANN401
+    warnings.warn("load_dataset is deprecated and will be removed in future version.", DeprecationWarning, stacklevel=2)
+    return dataset_load(adapter, handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query, hf_kwargs=hf_kwargs)

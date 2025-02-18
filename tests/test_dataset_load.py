@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from requests import Response
 
-from kagglehub.datasets import KaggleDatasetAdapter, load_dataset
+from kagglehub.datasets import KaggleDatasetAdapter, dataset_load
 from kagglehub.exceptions import KaggleApiHTTPError
 from tests.fixtures import BaseTestCase
 
@@ -33,7 +33,7 @@ class TestLoadHfDataset(BaseTestCase):
 
     def _load_hf_dataset_with_invalid_file_type_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
-            load_dataset(
+            dataset_load(
                 KaggleDatasetAdapter.HUGGING_FACE,
                 DATASET_HANDLE,
                 TEXT_FILE,
@@ -42,7 +42,7 @@ class TestLoadHfDataset(BaseTestCase):
 
     def _load_hf_dataset_with_multiple_tables_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
-            load_dataset(
+            dataset_load(
                 KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, EXCEL_FILE, pandas_kwargs={"sheet_name": None}
             )
         self.assertIn(
@@ -50,12 +50,12 @@ class TestLoadHfDataset(BaseTestCase):
         )
 
     def _load_hf_dataset_and_assert_loaded(self) -> None:
-        hf_dataset = load_dataset(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
+        hf_dataset = dataset_load(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         self.assertEqual(SHAPES_ROW_COUNT, hf_dataset.num_rows)
         self.assertEqual(SHAPES_COLUMNS, hf_dataset.column_names)
 
     def _load_hf_dataset_with_valid_kwargs_and_assert_loaded(self) -> None:
-        hf_dataset = load_dataset(
+        hf_dataset = dataset_load(
             KaggleDatasetAdapter.HUGGING_FACE,
             DATASET_HANDLE,
             AUTO_COMPRESSED_FILE_NAME,
@@ -66,7 +66,7 @@ class TestLoadHfDataset(BaseTestCase):
 
     def _load_hf_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
         with self.assertRaises(TypeError) as cm:
-            load_dataset(
+            dataset_load(
                 KaggleDatasetAdapter.HUGGING_FACE,
                 DATASET_HANDLE,
                 AUTO_COMPRESSED_FILE_NAME,
@@ -75,7 +75,7 @@ class TestLoadHfDataset(BaseTestCase):
         self.assertIn(INVALID_KWARG, str(cm.exception))
 
     def _load_hf_dataset_with_splits_and_assert_loaded(self) -> None:
-        hf_dataset = load_dataset(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
+        hf_dataset = dataset_load(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         dataset_splits = hf_dataset.train_test_split(
             test_size=TEST_SPLIT_SIZE, train_size=TRAIN_SPLIT_SIZE, shuffle=False
         )
@@ -115,7 +115,7 @@ class TestLoadHfDataset(BaseTestCase):
         mock_get.return_value = response
 
         with self.assertRaises(KaggleApiHTTPError):
-            load_dataset(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
+            dataset_load(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         self.assertIn("hugging_face_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])
 
 
@@ -130,7 +130,7 @@ class TestLoadPandasDataset(BaseTestCase):
 
     def _load_pandas_dataset_with_invalid_file_type_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
-            load_dataset(
+            dataset_load(
                 KaggleDatasetAdapter.PANDAS,
                 DATASET_HANDLE,
                 TEXT_FILE,
@@ -142,19 +142,19 @@ class TestLoadPandasDataset(BaseTestCase):
         file_extension: str,
         pandas_kwargs: Any = None,  # noqa: ANN401
     ) -> None:
-        df = load_dataset(
+        df = dataset_load(
             KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, f"shapes.{file_extension}", pandas_kwargs=pandas_kwargs
         )
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
         self.assertEqual(SHAPES_COLUMNS, list(df.columns))
 
     def _load_pandas_sqlite_dataset_and_assert_loaded(self) -> None:
-        df = load_dataset(KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, "shapes.db", sql_query="SELECT * FROM shapes")
+        df = dataset_load(KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, "shapes.db", sql_query="SELECT * FROM shapes")
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
         self.assertEqual(SHAPES_COLUMNS, list(df.columns))
 
     def _load_pandas_dataset_with_multiple_tables_and_assert_loaded(self) -> None:
-        result = load_dataset(
+        result = dataset_load(
             KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, EXCEL_FILE, pandas_kwargs={"sheet_name": None}
         )
         self.assertTrue(result, isinstance(result, dict))
@@ -162,7 +162,7 @@ class TestLoadPandasDataset(BaseTestCase):
 
     def _load_pandas_dataset_with_valid_kwargs_and_assert_loaded(self) -> None:
         expected_columns = ["degrees"]
-        df = load_dataset(
+        df = dataset_load(
             KaggleDatasetAdapter.PANDAS,
             DATASET_HANDLE,
             AUTO_COMPRESSED_FILE_NAME,
@@ -173,7 +173,7 @@ class TestLoadPandasDataset(BaseTestCase):
 
     def _load_pandas_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
-            load_dataset(
+            dataset_load(
                 KaggleDatasetAdapter.PANDAS,
                 DATASET_HANDLE,
                 AUTO_COMPRESSED_FILE_NAME,
@@ -225,5 +225,5 @@ class TestLoadPandasDataset(BaseTestCase):
         mock_get.return_value = response
 
         with self.assertRaises(KaggleApiHTTPError):
-            load_dataset(KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
+            dataset_load(KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         self.assertIn("pandas_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])

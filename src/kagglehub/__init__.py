@@ -4,7 +4,7 @@ import kagglehub.logger  # configures the library logger.
 from kagglehub import colab_cache_resolver, http_resolver, kaggle_cache_resolver, registry
 from kagglehub.auth import login, whoami
 from kagglehub.competition import competition_download
-from kagglehub.datasets import KaggleDatasetAdapter, dataset_download, dataset_upload, load_dataset
+from kagglehub.datasets import KaggleDatasetAdapter, dataset_download, dataset_load, dataset_upload, load_dataset
 from kagglehub.models import model_download, model_upload
 from kagglehub.notebooks import notebook_output_download
 from kagglehub.packages import get_package_asset_path, package_import
