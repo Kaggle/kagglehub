@@ -202,9 +202,12 @@ import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Load a Dataset with a specific version of a CSV, then remove a column
 dataset = kagglehub.dataset_load(
 =======
+=======
+>>>>>>> d1d9811 (.)
 # Load a Dataset with a specific version of a CSV, then remove a column.
 dataset = kagglehub.load_dataset(
 >>>>>>> 6b7a181 (add utility install)
