@@ -24,6 +24,7 @@ dependencies = [
   "requests", 
   "tqdm",
   "packaging",
+  "pyyaml",
 ]
 
 [project.urls]
@@ -54,6 +55,7 @@ dependencies = [
   "flask-jwt-extended",
   # Used for testing reading Excel file via pandas
   "openpyxl",
+  "pip",
   "pyjwt[crypto]",
 ]
 features = ["hf-datasets", "signing"]
