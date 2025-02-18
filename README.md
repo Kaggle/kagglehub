@@ -200,7 +200,6 @@ Some examples include:
 ```python
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
-
 # Load a Dataset with a specific version of a CSV, then remove a column
 dataset = kagglehub.dataset_load(
     KaggleDatasetAdapter.HUGGING_FACE,
@@ -241,7 +240,7 @@ kagglehub.dataset_download('bricevergnou/spotify-recommendation')
 # Download a specific version.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation/versions/1')
 
-# Download a single file
+# Download a single file.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv')
 
 # Download a dataset or file, even if previously downloaded to cache.
@@ -259,7 +258,7 @@ import kagglehub
 # - https://www.kaggle.com/datasets/bricevergnou/spotify-recommendation
 # 
 # You would use the following handle: `bricevergnou/spotify-recommendation`
-handle = '<KAGGLE_USERNAME>/<DATASET>
+handle = '<KAGGLE_USERNAME>/<DATASET>'
 local_dataset_dir = 'path/to/local/dataset/dir'
 
 # Create a new dataset
@@ -285,11 +284,40 @@ import kagglehub
 # Download the latest version.
 kagglehub.competition_download('digit-recognizer')
 
-# Download a single file
+# Download a single file.
 kagglehub.competition_download('digit-recognizer', path='train.csv')
 
 # Download a competition or file, even if previously downloaded to cache. 
 kagglehub.competition_download('digit-recognizer', force_download=True)
+```
+
+### Download Notebook Outputs
+
+The following examples download the `Titanic Tutorial` notebook output: https://www.kaggle.com/code/alexisbcook/titanic-tutorial
+
+```python
+import kagglehub
+
+# Download the latest version.
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial')
+
+# Download a specific version of the notebook output.
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial/versions/1')
+
+# Download a single file.
+kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submission.csv')
+```
+
+### Install Utility Script
+
+The following example installs the utility script `Physionet Challenge Utility Script` Utility Script: https://www.kaggle.com/code/bjoernjostein/physionet-challenge-utility-script. Using this command allows the code from this script to be available in your python environment.
+
+```python
+import kagglehub
+
+# Install the latest version.
+kagglehub.utility_script_install('bjoernjostein/physionet-challenge-utility-script')
+
 ```
 
 ## Development
