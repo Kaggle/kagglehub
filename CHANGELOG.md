@@ -2,13 +2,15 @@
 
 ## Next Release
 
+* Fix Colab environment detection logic ([#230](https://github.com/Kaggle/kagglehub/pull/230))
+
 ## v0.3.9 (February 18, 2025)
 
-* Renamed load_datset to dataset_load.
+* Renamed load_datset to dataset_load ([#228](https://github.com/Kaggle/kagglehub/pull/228))
 
 ## v0.3.8 (February 13, 2025)
 
-* Moved signing as optional feature due to dependency issue.
+* Moved signing as optional feature due to dependency issue ([#225](https://github.com/Kaggle/kagglehub/pull/225))
 
 ## v0.3.7 (January 31, 2025)
 

@@ -11,9 +11,18 @@ KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME = "KAGGLE_API_V1_TOKEN"
 
 logger = logging.getLogger(__name__)
 
+try:
+    from IPython import get_ipython  # type: ignore
+
+    # Set to `True` if script is running in a Google Colab notebook.
+    # Taken from https://stackoverflow.com/a/63519730.
+    _is_google_colab = "google.colab" in str(get_ipython())
+except (NameError, ModuleNotFoundError):
+    _is_google_colab = False
+
 
 def is_in_colab_notebook() -> bool:
-    return os.getenv("COLAB_RELEASE_TAG") is not None
+    return _is_google_colab
 
 
 def is_in_kaggle_notebook() -> bool:
