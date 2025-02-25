@@ -2,11 +2,16 @@
 
 ## Next Release
 
+*
+
+## v0.3.10 (February 25, 2025)
+
 * Fix Colab environment detection logic ([#230](https://github.com/Kaggle/kagglehub/pull/230))
 
 ## v0.3.9 (February 18, 2025)
 
 * Renamed load_datset to dataset_load ([#228](https://github.com/Kaggle/kagglehub/pull/228))
+* Support for [Kaggle Packages](https://www.kaggle.com/discussions/product-announcements/564941) ([#196](https://github.com/Kaggle/kagglehub/pull/196))
 
 ## v0.3.8 (February 13, 2025)
 
