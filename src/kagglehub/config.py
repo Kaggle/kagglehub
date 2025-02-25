@@ -163,7 +163,6 @@ def get_colab_credentials() -> Optional[KaggleApiCredentials]:
     # userdata access is already thread-safe after b/318732641
     try:
         from google.colab import userdata  # type: ignore[import]
-        from google.colab.errors import Error as ColabError  # type: ignore[import]
     except ImportError:
         return None
 
@@ -172,6 +171,7 @@ def get_colab_credentials() -> Optional[KaggleApiCredentials]:
         key = _normalize_whitespace(userdata.get(COLAB_SECRET_KEY))
         if username and key:
             return KaggleApiCredentials(username=username, key=key)
-    except ColabError:
-        pass
-    return None
+        return None
+    except Exception:
+        # fail to get Kaggle credentials from Colab secrets. Skip...
+        return None

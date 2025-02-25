@@ -96,6 +96,7 @@ class TestKaggleApiV1Client(BaseTestCase):
             "COLAB_RELEASE_TAG": "release-colab-20230531-060125-RC00",
         },
     )
+    @patch("kagglehub.env._is_google_colab", True)
     def test_get_user_agent_colab(self) -> None:
         self.assertEqual(
             clients.get_user_agent(),
