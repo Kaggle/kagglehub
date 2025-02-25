@@ -2,6 +2,10 @@
 
 ## Next Release
 
+*
+
+## v0.3.10 (February 25, 2025)
+
 * Fix Colab environment detection logic ([#230](https://github.com/Kaggle/kagglehub/pull/230))
 
 ## v0.3.9 (February 18, 2025)
