@@ -11,6 +11,7 @@
 ## v0.3.9 (February 18, 2025)
 
 * Renamed load_datset to dataset_load ([#228](https://github.com/Kaggle/kagglehub/pull/228))
+* Support for [Kaggle Packages](https://www.kaggle.com/discussions/product-announcements/564941) ([#196](https://github.com/Kaggle/kagglehub/pull/196))
 
 ## v0.3.8 (February 13, 2025)
 
