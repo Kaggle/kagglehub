@@ -7,7 +7,7 @@ This library also integrates natively with the Kaggle notebook environment. This
 * In a Kaggle notebook:
     * The resource is automatically attached to your Kaggle notebook.
     * The resource will be shown under the "Input" panel in the Kaggle notebook editor.
-    * The files are served from the shared Kaggle resource cache (not using VM disk)
+    * The resource files are served from the shared Kaggle resources cache (not using the VM's disk).
 * Outside a Kaggle notebook:
     * The resource files are downloaded to a local [cache folder](#change-the-default-cache-folder).
 
