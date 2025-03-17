@@ -1,4 +1,15 @@
-# Kaggle Hub Client Library
+# kagglehub
+
+The `kagglehub` library provides a simple way to interact with Kaggle resources such as datasets, models, notebook outputs in Python.
+
+This library also integrates natively with the Kaggle notebook environment. This means the behavior differs when you download a Kaggle resource with `kagglehub` in the Kaggle notebook environment:
+
+* In a Kaggle notebook:
+    * The resource is automatically attached to your Kaggle notebook.
+    * The resource will be shown under the "Input" panel in the Kaggle notebook editor.
+    * The resource files are served from the shared Kaggle resources cache (not using the VM's disk).
+* Outside a Kaggle notebook:
+    * The resource files are downloaded to a local [cache folder](#change-the-default-cache-folder).
 
 ## Installation
 
@@ -11,6 +22,9 @@ pip install kagglehub
 ## Usage
 
 ### Authenticate
+
+> [!NOTE]
+> `kagglehub` is authenticated by default when running in a Kaggle notebook.
 
 Authenticating is **only** needed to access public resources requiring user consent or private resources.
 
@@ -320,6 +334,14 @@ import kagglehub
 kagglehub.utility_script_install('bjoernjostein/physionet-challenge-utility-script')
 
 ```
+
+### Options
+
+#### Change the default cache folder
+
+By default, `kagglehub` downloads files to your home folder at `~/.cache/kagglehub/`.
+
+You can override this path by setting the `KAGGLEHUB_CACHE` environment variable.
 
 ## Development
 
