@@ -186,8 +186,6 @@ ignore = [
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
   # Ignore tarfile-unsafe-members
   "S202",
-  # Ignore types of default values
-  "PLW1508",
 ]
 unfixable = [
   # Don't touch unused imports

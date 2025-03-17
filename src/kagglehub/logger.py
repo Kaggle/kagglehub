@@ -39,7 +39,7 @@ def _configure_logger(log_dir: Optional[Path] = None) -> None:
         handler = library_logger.handlers.pop()
         while handler.filters:
             handler.filters.pop()
-    logging_enabled = os.environ.get(KAGGLE_LOGGING_ENABLED_ENV_VAR_NAME, False)
+    logging_enabled = os.environ.get(KAGGLE_LOGGING_ENABLED_ENV_VAR_NAME, "False")
     if str(logging_enabled).lower() in ("true", 1):
         log_root_dir = Path(os.environ.get(KAGGLE_LOGGING_ROOT_DIR_ENV_VAR_NAME, Path.home()))
         log_dir = log_root_dir / ".kaggle" / "logs" if log_dir is None else log_dir
