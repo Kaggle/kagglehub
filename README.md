@@ -18,7 +18,8 @@ First, you will need a Kaggle account. You can sign up [here](https://www.kaggle
 
 After login, you can download your Kaggle API credentials at https://www.kaggle.com/settings by clicking on the "Create New Token" button under the "API" section.
 
-You have 3 different options to authenticate.
+You have four different options to authenticate. Note that if you use `kaggle-api` (the `kaggle` command-line tool) you have
+already done Option 3 and can skip this.
 
 #### Option 1: Calling kagglehub.login()
 
