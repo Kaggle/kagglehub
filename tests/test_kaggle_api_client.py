@@ -138,3 +138,21 @@ class TestKaggleApiV1Client(BaseTestCase):
         mock_is_module.return_value = True
         mock_version.return_value = "0.17.0"
         self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__} keras_hub/0.17.0")
+
+    @patch("importlib.metadata.version")
+    @patch("inspect.ismodule")
+    @patch("inspect.stack")
+    def test_get_user_agent_torch_tune(
+        self, mock_stack: MagicMock, mock_is_module: MagicMock, mock_version: MagicMock
+    ) -> None:
+        # Mock the call stack and version information.
+        mock_stack.return_value = [
+            MagicMock(frame=MagicMock(__name__="kagglehub.clients")),
+            MagicMock(frame=MagicMock(__name__="kagglehub.models_helpers")),
+            MagicMock(frame=MagicMock(__name__="kagglehub.models")),
+            MagicMock(frame=MagicMock(__name__="torchtune.src.utils.preset_utils")),
+            MagicMock(frame=MagicMock(None)),
+        ]
+        mock_is_module.return_value = True
+        mock_version.return_value = "0.18.0"
+        self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__} torchtune/0.18.0")
