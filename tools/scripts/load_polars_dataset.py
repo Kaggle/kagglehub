@@ -16,7 +16,7 @@ dataset = kagglehub.dataset_load(
     "robikscube/textocr-text-extraction-from-images-dataset",
     "annot.parquet",
     polars_frame_type=PolarsFrameType.EAGER,
-    polars_kwargs={"columns": ["image_id", "bbox", "points", "area"]}
+    polars_kwargs={"columns": ["image_id", "bbox", "points", "area"]},
 )
 
 print("Records in OCR dataset: ", dataset.shape)
