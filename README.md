@@ -123,10 +123,13 @@ Loads a file from a Kaggle Dataset into a python object based on the selected `K
   (or multiple given certain files/settings)
 - `KaggleDatasetAdapter.HUGGING_FACE`&rarr; 
   [Hugging Face Dataset](https://huggingface.co/docs/datasets/main/en/package_reference/main_classes#datasets.Dataset)
+- `KaggleDatasetAdapter.POLARS` &rarr; polars [LazyFrame](https://docs.pola.rs/api/python/stable/reference/lazyframe/index.html) or [DataFrame](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html)
+  (or multiple given certain files/settings)
 
 **NOTE: To use these adapters, you must install the optional dependencies (or already have them available in your environment)**
 - `KaggleDatasetAdapter.PANDAS` &rarr; `pip install kagglehub[pandas-datasets]`
 - `KaggleDatasetAdapter.HUGGING_FACE`&rarr; `pip install kagglehub[hf-datasets]`
+- `KaggleDatasetAdapter.POLARS`&rarr; `pip install kagglehub[polars-datasets]`
 
 #### `KaggleDatasetAdapter.PANDAS`
 
@@ -240,6 +243,81 @@ dataset = kagglehub.dataset_load(
     sql_query="SELECT person_id, player_name FROM draft_history",
 )
 dataset = dataset.rename_column('season', 'year')
+```
+
+#### `KaggleDatasetAdapter.POLARS`
+
+This adapter supports the following file types, which map to a corresponding `polars.scan_*` or `polars.read_*` method:
+| File Extension                                  | `pandas` Method                                                                                                                                                                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| .csv, .tsv[^1]                                  | [`polars.scan_csv`](https://docs.pola.rs/api/python/stable/reference/api/polars.scan_csv.html#polars.scan_csv) or [`polars.read_csv`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html) |
+| .json                                           | [`polars.read_json`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_json.html)                                                                                                                 |
+| .jsonl                                          | [`polars.scan_ndjson`](https://docs.pola.rs/api/python/stable/reference/api/polars.scan_ndjson.html) or [`polars.read_ndjson`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_ndjson.html)     |
+| .parquet                                        | [`polars.scan_parquet`](https://docs.pola.rs/api/python/stable/reference/api/polars.scan_parquet.html) or [`polars.read_parquet`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_parquet.html) |
+| .feather                                        | [`polars.scan_ipc`](https://docs.pola.rs/api/python/stable/reference/api/polars.scan_ipc.html) or [`polars.read_ipc`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_ipc.html)                 |
+| .sqlite, .sqlite3, .db, .db3, .s3db, .dl3[^2]   | [`polars.read_database`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_database.html)                                                                                                         |
+| .xls, .xlsx, .xlsm, .xlsb, .odf, .ods, .odt[^3] | [`polars.read_excel`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_excel.html)                                                                                                               |
+
+[^1]: For TSV files, `\t` is automatically supplied for the `separator` parameter, but may be overridden with `polars_kwargs`
+
+[^2]: For SQLite files, a `sql_query` must be provided to generate the `DataFrame`(s)
+
+[^3]: The specific file extension may dictate which optional `engine` dependency needs to be installed to read the file
+
+`dataset_load` also supports `polars_kwargs` which will be passed as keyword arguments to the `polars.scan_*` or `polars_read_*` method.
+
+##### `LazyFrame` vs `DataFrame`
+
+Per polars documentation, [LazyFrame](https://docs.pola.rs/api/python/stable/reference/lazyframe/index.html) "allows for whole-query optimisation in addition to parallelism, and is the preferred (and highest-performance) mode of operation for polars." As such, `scan_*` methods are used by default whenever possible--and when not possible the result of the `read_*` method is returned after calling [`.lazy()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.lazy.html). If a [DataFrame](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html) is preferred, `dataset_load` supports an optional `polars_frame_type` and `PolarsFrameType.EAGER` may be passed in. This will force a `read_*` method to be used with no `.lazy()` call. **NOTE:** For file types that support `scan_*`, changing the `polars_frame_type` may affect which `polars_kwargs` are acceptable to the underlying method since it will force a `read_*` method to be used rather than a `scan_*` method.
+
+Some examples include:
+
+```python
+import kagglehub
+from kagglehub import KaggleDatasetAdapter, PolarsFrameType
+
+# Load a LazyFrame with a specific version of a CSV
+lf = kagglehub.dataset_load(
+    KaggleDatasetAdapter.POLARS,
+    "unsdsn/world-happiness/versions/1",
+    "2016.csv",
+)
+
+# Load a LazyFramefrom a parquet file, then select specific columns
+lf = kagglehub.dataset_load(
+    KaggleDatasetAdapter.POLARS,
+    "robikscube/textocr-text-extraction-from-images-dataset",
+    "annot.parquet",
+)
+lf.select(["image_id", "bbox", "points", "area"]).collect()
+
+# Load a DataFrame with specific columns from a parquet file
+df = kagglehub.dataset_load(
+    KaggleDatasetAdapter.POLARS,
+    "robikscube/textocr-text-extraction-from-images-dataset",
+    "annot.parquet",
+    polars_frame_type=PolarsFrameType.EAGER,
+    polars_kwargs={"columns": ["image_id", "bbox", "points", "area"]}
+)
+
+# Load a dictionary of DataFrames from an Excel file where the keys are sheet names 
+# and the values are DataFrames for each sheet's data. NOTE: As written, this requires 
+# installing the default fastexcel engine.
+df_dict = kagglehub.dataset_load(
+    KaggleDatasetAdapter.POLARS,
+    "theworldbank/education-statistics",
+    "edstats-excel-zip-72-mb-/EdStatsEXCEL.xlsx",
+    # sheet_id of 0 returns all sheets
+    polars_kwargs={"sheet_id": 0},
+)
+
+# Load a DataFrame by executing a SQL query against a SQLite DB
+df = kagglehub.dataset_load(
+    KaggleDatasetAdapter.POLARS,
+    "wyattowalsh/basketball",
+    "nba.sqlite",
+    sql_query="SELECT person_id, player_name FROM draft_history",
+)
 ```
 
 ### Download Dataset
@@ -469,7 +547,7 @@ Configure hatch to create virtual env in project folder.
 hatch config set dirs.env.virtual .env
 ```
 
-After, create all the python environments needed by running `hatch tests --all`.
+After, create all the python environments needed by running `hatch test --all`.
 
 Finally, configure vscode to use one of the selected environments:
 `cmd + shift + p` -> `python: Select Interpreter` -> Pick one of the folders in `./.env`

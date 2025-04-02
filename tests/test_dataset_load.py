@@ -2,9 +2,10 @@ import os
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import polars as pl
 from requests import Response
 
-from kagglehub.datasets import KaggleDatasetAdapter, dataset_load
+from kagglehub.datasets import KaggleDatasetAdapter, PolarsFrameType, dataset_load
 from kagglehub.exceptions import KaggleApiHTTPError
 from tests.fixtures import BaseTestCase
 
@@ -20,6 +21,7 @@ TEXT_FILE = "foo.txt"
 EXCEL_FILE = "my-spreadsheet.xlsx"
 SHAPES_COLUMNS = ["shape", "degrees", "sides", "color", "date"]
 SHAPES_ROW_COUNT = 3
+SHAPES_COLUMNS_SUBSET = ["shape", "sides", "date"]
 
 
 class TestLoadHfDataset(BaseTestCase):
@@ -157,7 +159,7 @@ class TestLoadPandasDataset(BaseTestCase):
         result = dataset_load(
             KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, EXCEL_FILE, pandas_kwargs={"sheet_name": None}
         )
-        self.assertTrue(result, isinstance(result, dict))
+        self.assertIsInstance(result, dict)
         self.assertEqual(["Cars", "Animals"], list(result.keys()))
 
     def _load_pandas_dataset_with_valid_kwargs_and_assert_loaded(self) -> None:
@@ -227,3 +229,150 @@ class TestLoadPandasDataset(BaseTestCase):
         with self.assertRaises(KaggleApiHTTPError):
             dataset_load(KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         self.assertIn("pandas_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])
+
+
+class TestLoadPolarsDataset(BaseTestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = serv.start_server(stub.app)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+
+    def _load_polars_dataset_with_invalid_file_type_and_assert_raises(self) -> None:
+        with self.assertRaises(ValueError) as cm:
+            dataset_load(
+                KaggleDatasetAdapter.POLARS,
+                DATASET_HANDLE,
+                TEXT_FILE,
+            )
+        self.assertIn(f"Unsupported file extension: '{os.path.splitext(TEXT_FILE)[1]}'", str(cm.exception))
+
+    def _load_polars_simple_dataset_and_assert_loaded(
+        self,
+        file_extension: str,
+        polars_frame_type: PolarsFrameType,
+    ) -> None:
+        polars_frame = dataset_load(
+            KaggleDatasetAdapter.POLARS, DATASET_HANDLE, f"shapes.{file_extension}", polars_frame_type=polars_frame_type
+        )
+        if polars_frame_type is PolarsFrameType.LAZY:
+            self.assertIsInstance(polars_frame, pl.LazyFrame)
+            # Materialize the results to check rows and columns
+            polars_frame = polars_frame.collect()
+        else:
+            self.assertIsInstance(polars_frame, pl.DataFrame)
+        self.assertEqual(SHAPES_ROW_COUNT, len(polars_frame))
+        self.assertEqual(SHAPES_COLUMNS, list(polars_frame.columns))
+
+    def _load_polars_sqlite_dataset_and_assert_loaded(self) -> None:
+        df = dataset_load(
+            KaggleDatasetAdapter.POLARS,
+            DATASET_HANDLE,
+            "shapes.db",
+            polars_frame_type=PolarsFrameType.EAGER,
+            sql_query="SELECT * FROM shapes",
+        )
+        self.assertEqual(SHAPES_ROW_COUNT, len(df))
+        self.assertEqual(SHAPES_COLUMNS, list(df.columns))
+
+    def _load_polars_columns_subset_and_assert_loaded(self) -> None:
+        df = dataset_load(
+            KaggleDatasetAdapter.POLARS,
+            DATASET_HANDLE,
+            "shapes.csv",
+            polars_frame_type=PolarsFrameType.EAGER,
+            polars_kwargs={"columns": SHAPES_COLUMNS_SUBSET},
+        )
+        lf = dataset_load(
+            KaggleDatasetAdapter.POLARS,
+            DATASET_HANDLE,
+            "shapes.csv",
+        )
+        self.assertEqual(str(df), str(lf.select(SHAPES_COLUMNS_SUBSET).collect()))
+
+    def _load_polars_dataset_with_multiple_tables_and_assert_loaded(self) -> None:
+        result = dataset_load(
+            KaggleDatasetAdapter.POLARS,
+            DATASET_HANDLE,
+            EXCEL_FILE,
+            polars_frame_type=PolarsFrameType.EAGER,
+            # sheet_id of 0 returns all sheets. This differs from pandas where sheet_name of None returns all
+            polars_kwargs={"sheet_id": 0},
+        )
+        self.assertIsInstance(result, dict)
+        self.assertEqual(["Cars", "Animals"], list(result.keys()))
+
+    def _load_polars_dataset_with_valid_kwargs_and_assert_loaded(self) -> None:
+        expected_columns = ["degrees"]
+        df = dataset_load(
+            KaggleDatasetAdapter.POLARS,
+            DATASET_HANDLE,
+            AUTO_COMPRESSED_FILE_NAME,
+            polars_frame_type=PolarsFrameType.EAGER,
+            polars_kwargs={"columns": expected_columns},
+        )
+        self.assertEqual(SHAPES_ROW_COUNT, len(df))
+        self.assertEqual(expected_columns, list(df.columns))
+
+    def _load_polars_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
+        with self.assertRaises(ValueError) as cm:
+            dataset_load(
+                KaggleDatasetAdapter.POLARS,
+                DATASET_HANDLE,
+                AUTO_COMPRESSED_FILE_NAME,
+                polars_kwargs={INVALID_KWARG: 777},
+            )
+        self.assertIn(INVALID_KWARG, str(cm.exception))
+
+    def test_polars_dataset_with_invalid_file_type_raises(self) -> None:
+        with create_test_cache():
+            self._load_polars_dataset_with_invalid_file_type_and_assert_raises()
+
+    def test_polars_dataset_with_multiple_tables_succeeds(self) -> None:
+        with create_test_cache():
+            self._load_polars_dataset_with_multiple_tables_and_assert_loaded()
+
+    def test_polars_dataset_with_valid_kwargs_succeeds(self) -> None:
+        with create_test_cache():
+            self._load_polars_dataset_with_valid_kwargs_and_assert_loaded()
+
+    def test_polars_dataset_with_invalid_kwargs_raises(self) -> None:
+        with create_test_cache():
+            self._load_polars_dataset_with_invalid_kwargs_and_assert_raises()
+
+    def test_polars_simple_dataset_succeeds(self) -> None:
+        # This would be better as a parameterized test, but that doesn't work for subclasses:
+        # https://docs.pytest.org/en/stable/how-to/unittest.html#pytest-features-in-unittest-testcase-subclasses
+        test_cases = [
+            "csv",
+            "tsv",
+            "parquet",
+            "feather",
+            "json",
+            "jsonl",
+        ]
+        for test_case in test_cases:
+            with create_test_cache():
+                self._load_polars_simple_dataset_and_assert_loaded(test_case, PolarsFrameType.LAZY)
+                self._load_polars_simple_dataset_and_assert_loaded(test_case, PolarsFrameType.EAGER)
+
+    def test_polars_sqlite_dataset_succeeds(self) -> None:
+        with create_test_cache():
+            self._load_polars_sqlite_dataset_and_assert_loaded()
+
+    def test_polars_columns_subset_succeeds(self) -> None:
+        with create_test_cache():
+            self._load_polars_columns_subset_and_assert_loaded()
+
+    @patch("requests.get")
+    def test_polars_dataset_sends_user_agent(self, mock_get: MagicMock) -> None:
+        # Just mock a bad response since all we care to check is that the request headers are right
+        response = Response()
+        response.status_code = 400
+        mock_get.return_value = response
+
+        with self.assertRaises(KaggleApiHTTPError):
+            dataset_load(KaggleDatasetAdapter.POLARS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
+        self.assertIn("polars_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])

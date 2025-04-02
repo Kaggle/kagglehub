@@ -35,6 +35,7 @@ dependencies = [
 hf-datasets = ["datasets", "kagglehub[pandas-datasets]"]
 pandas-datasets = ["pandas"]
 signing = [ "model_signing", "sigstore>=3.6.1", "betterproto>=2.0.0b6"]
+polars-datasets = ["polars"]
 
 # twine 6.0.1 doesn't support metadata-version 2.4.
 # remove `core-metadata-version` pin once twine release a new version with: https://github.com/pypa/twine/pull/1180
@@ -55,10 +56,12 @@ dependencies = [
   "flask-jwt-extended",
   # Used for testing reading Excel file via pandas
   "openpyxl",
+  # Used for testing reading Excel file via polars
+  "fastexcel",
   "pip",
   "pyjwt[crypto]",
 ]
-features = ["hf-datasets", "signing"]
+features = ["hf-datasets", "signing", "polars-datasets"]
 
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.9", "3.10", "3.11", "3.12"]
@@ -77,9 +80,11 @@ dependencies = [
   "black>=23.1.0",
   "mypy>=1.0.0",
   "ruff>=0.0.243",
-  # Pre-install `types-*` packages to speed up lint:typing command.
+  # Pre-install typing packages (`types-*`, `pandas_stubs`, `polars` in-built into package) to speed up lint:typing command.
   "types-requests",
   "types-tqdm",
+  "pandas_stubs",
+  "polars"
 ]
 
 [tool.hatch.envs.lint.scripts]
@@ -116,6 +121,15 @@ dependencies = [
 ]
 features = [
   "pandas-datasets",
+]
+
+# Set up a separate hatch environment that has the added polars-datasets dependencies
+[tool.hatch.envs.polars-datasets]
+dependencies = [
+  # Used for testing reading Excel file via polars
+  "fastexcel" ]
+features = [
+  "polars-datasets",
 ]
 
 # Signing is unable to be installed via uv without a prerelease library: b/395859806
