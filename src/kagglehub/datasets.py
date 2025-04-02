@@ -3,7 +3,7 @@ import warnings
 from typing import Any, Optional, Union
 
 from kagglehub import registry
-from kagglehub.datasets_enums import KaggleDatasetAdapter
+from kagglehub.datasets_enums import KaggleDatasetAdapter, PolarsFrameType
 from kagglehub.datasets_helpers import create_dataset_or_version
 from kagglehub.gcs_upload import normalize_patterns, upload_files_and_directories
 from kagglehub.handle import parse_dataset_handle
@@ -18,6 +18,7 @@ DEFAULT_IGNORE_PATTERNS = [".git/", "*/.git/", ".cache/", ".huggingface/"]
 LOAD_DATASET_ADAPTER_OPTIONAL_DEPENDENCIES_MAP = {
     KaggleDatasetAdapter.HUGGING_FACE: "hf-datasets",
     KaggleDatasetAdapter.PANDAS: "pandas-datasets",
+    KaggleDatasetAdapter.POLARS: "polars-datasets",
 }
 
 
@@ -79,6 +80,8 @@ def dataset_load(
     pandas_kwargs: Any = None,  # noqa: ANN401
     sql_query: Optional[str] = None,
     hf_kwargs: Any = None,  # noqa: ANN401
+    polars_frame_type: PolarsFrameType = PolarsFrameType.LAZY,
+    polars_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     """Load a Kaggle Dataset into a python object based on the selected adapter
 
@@ -93,10 +96,14 @@ def dataset_load(
             for details: https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html
         hf_kwargs:
             (dict) Optional set of kwargs to pass to Dataset.from_pandas() while constructing the Dataset
+        polars_frame_type: (PolarsFrameType) Optional value to control what type of frame to return from polars
+        polars_kwargs:
+            (dict) Optional set of kwargs to pass to the polars `read_*` method while constructing the DataFrame(s)
     Returns:
         A python object based on the selected adapter:
             - 'pandas': A DataFrame (or dict[int | str, DataFrame] for Excel-like files with multiple sheets)
             - 'hugging_face': A Huggingface Dataset (via pandas)
+            - 'polars': A LazyFrame or DataFrame (or dict[int | str, DataFrame] for Excel-like files with multiple sheets)
     """
     try:
         if adapter is KaggleDatasetAdapter.HUGGING_FACE:
@@ -114,6 +121,12 @@ def dataset_load(
 
             return kagglehub.pandas_datasets.load_pandas_dataset(
                 handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query
+            )
+        elif adapter is KaggleDatasetAdapter.POLARS:
+            import kagglehub.polars_datasets
+
+            return kagglehub.polars_datasets.load_polars_dataset(
+                handle, path, polars_frame_type=polars_frame_type, polars_kwargs=polars_kwargs, sql_query=sql_query
             )
         else:
             not_implemented_error_message = f"{adapter} is not yet implemented"
@@ -138,5 +151,7 @@ def load_dataset(
     sql_query: Optional[str] = None,
     hf_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
-    warnings.warn("load_dataset is deprecated and will be removed in future version.", DeprecationWarning, stacklevel=2)
+    warnings.warn(
+        "load_dataset is deprecated and will be removed in a future version.", DeprecationWarning, stacklevel=2
+    )
     return dataset_load(adapter, handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query, hf_kwargs=hf_kwargs)

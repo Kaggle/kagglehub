@@ -2,7 +2,7 @@
 
 ## Next Release
 
-*
+* Add `KaggleDatasetAdapter.POLARS` support to `dataset_load`
 
 ## v0.3.10 (February 25, 2025)
 
