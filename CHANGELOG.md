@@ -4,6 +4,10 @@
 
 * Add `KaggleDatasetAdapter.POLARS` support to `dataset_load`
 
+## v0.3.11 (April 1, 2025)
+
+* Add `torchtune` as user-agent ([#237](https://github.com/Kaggle/kagglehub/pull/237))
+
 ## v0.3.10 (February 25, 2025)
 
 * Fix Colab environment detection logic ([#230](https://github.com/Kaggle/kagglehub/pull/230))
