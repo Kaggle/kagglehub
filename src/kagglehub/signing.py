@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def sign_with_sigstore(local_model_dir: str, handle: ModelHandle) -> bool:
-    from model_signing.api import SigningConfig
+    from model_signing.signing import Config
 
     try:
         token = signing_token(handle.owner, handle.model)
@@ -18,7 +18,7 @@ def sign_with_sigstore(local_model_dir: str, handle: ModelHandle) -> bool:
             signing_file.unlink(missing_ok=True)
             # The below will throw an exception if the token can't be verified (Needs to be a production token)
             # Setting KAGGLE_API_ENDPOINT to localhost will throw the exception as stated above.
-            SigningConfig().set_sigstore_signer(identity_token=token, use_staging=False).sign(
+            Config().use_sigstore_signer(identity_token=token, use_staging=False).sign(
                 Path(local_model_dir), signing_file
             )
             return True
