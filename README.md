@@ -300,10 +300,10 @@ df = kagglehub.dataset_load(
     polars_kwargs={"columns": ["image_id", "bbox", "points", "area"]}
 )
 
-# Load a dictionary of DataFrames from an Excel file where the keys are sheet names 
-# and the values are DataFrames for each sheet's data. NOTE: As written, this requires 
+# Load a dictionary of LazyFrames from an Excel file where the keys are sheet names 
+# and the values are LazyFrames for each sheet's data. NOTE: As written, this requires 
 # installing the default fastexcel engine.
-df_dict = kagglehub.dataset_load(
+lf_dict = kagglehub.dataset_load(
     KaggleDatasetAdapter.POLARS,
     "theworldbank/education-statistics",
     "edstats-excel-zip-72-mb-/EdStatsEXCEL.xlsx",
@@ -311,8 +311,8 @@ df_dict = kagglehub.dataset_load(
     polars_kwargs={"sheet_id": 0},
 )
 
-# Load a DataFrame by executing a SQL query against a SQLite DB
-df = kagglehub.dataset_load(
+# Load a LazyFrame by executing a SQL query against a SQLite DB
+lf = kagglehub.dataset_load(
     KaggleDatasetAdapter.POLARS,
     "wyattowalsh/basketball",
     "nba.sqlite",
