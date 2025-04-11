@@ -129,7 +129,8 @@ def load_polars_dataset(
                 # So all of these *should* already be DataFrames, but we'll just be extra safe.
                 if isinstance(value, pl.DataFrame):
                     result[key] = value.lazy()
-        result = result.lazy()
+        else:
+            result = result.lazy()
 
     return result
 
