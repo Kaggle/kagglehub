@@ -77,7 +77,7 @@ def load_polars_dataset(
     polars_kwargs: Any = None,  # noqa: ANN401
     sql_query: Optional[str],
 ) -> Union[pl.DataFrame, dict[Union[int, str], pl.DataFrame]]:
-    """Creates polars DataFrame(s) from a file in the dataset
+    """Creates polars LazyFrame(s) or DataFrame(s) from a file in the dataset
 
     Args:
         handle: (string) The dataset handle
@@ -99,8 +99,8 @@ def load_polars_dataset(
             for details: https://docs.pola.rs/api/python/stable/reference/api/polars.read_database.html
 
     Returns:
-        - dict[int | str, DataFrame] for Excel-like files with multiple sheets
-        - A polars DataFrame for all others
+        - dict[int | str, LazyFrame] or dict[int | str, DataFrame] for Excel-like files with multiple sheets
+        - A polars LazyFrame or DataFrame for all others
 
     Raises:
         ValueError: If the file extension is not supported or the file fails to read
@@ -121,11 +121,16 @@ def load_polars_dataset(
         raise ValueError(read_error_message) from e
 
     # The user requested a LazyFrame, but there's no scan_* method for the file extension. We need to
-    # convert the resulting DataFrame to a LazyFrame.
+    # convert the resulting DataFrame(s) to a LazyFrame(s) before we return the result.
     if io_frame_type is PolarsFrameType.EAGER and polars_frame_type is PolarsFrameType.LAZY:
-        return result.lazy()
+        if isinstance(result, dict):
+            for key, value in result.items():
+                # The only time a dict can be returned is for Excel files, which only supports read_excel.
+                # So all of these *should* already be DataFrames, but we'll just be extra safe.
+                if isinstance(value, pl.DataFrame):
+                    result[key] = value.lazy()
+        result = result.lazy()
 
-    # The requested frame type already matches what the user requested, so we just return it
     return result
 
 

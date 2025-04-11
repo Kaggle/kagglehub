@@ -292,16 +292,18 @@ class TestLoadPolarsDataset(BaseTestCase):
         )
         self.assertEqual(str(df), str(lf.select(SHAPES_COLUMNS_SUBSET).collect()))
 
-    def _load_polars_dataset_with_multiple_tables_and_assert_loaded(self) -> None:
+    def _load_polars_dataset_with_multiple_tables_and_assert_loaded(self, polars_frame_type: PolarsFrameType) -> None:
         result = dataset_load(
             KaggleDatasetAdapter.POLARS,
             DATASET_HANDLE,
             EXCEL_FILE,
-            polars_frame_type=PolarsFrameType.EAGER,
+            polars_frame_type=polars_frame_type,
             # sheet_id of 0 returns all sheets. This differs from pandas where sheet_name of None returns all
             polars_kwargs={"sheet_id": 0},
         )
-        self.assertIsInstance(result, dict)
+
+        expected_type = pl.LazyFrame if polars_frame_type is PolarsFrameType.LAZY else pl.DataFrame
+        self.assertTrue(all(isinstance(v, expected_type) for v in result.values()))
         self.assertEqual(["Cars", "Animals"], list(result.keys()))
 
     def _load_polars_dataset_with_valid_kwargs_and_assert_loaded(self) -> None:
@@ -332,7 +334,8 @@ class TestLoadPolarsDataset(BaseTestCase):
 
     def test_polars_dataset_with_multiple_tables_succeeds(self) -> None:
         with create_test_cache():
-            self._load_polars_dataset_with_multiple_tables_and_assert_loaded()
+            self._load_polars_dataset_with_multiple_tables_and_assert_loaded(PolarsFrameType.LAZY)
+            self._load_polars_dataset_with_multiple_tables_and_assert_loaded(PolarsFrameType.EAGER)
 
     def test_polars_dataset_with_valid_kwargs_succeeds(self) -> None:
         with create_test_cache():
