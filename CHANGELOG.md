@@ -2,7 +2,7 @@
 
 ## Next Release
 
-*
+* Fix `model_signing` breaking changes from `1.0.0` release
 
 ## v0.3.11 (April 1, 2025)
 
