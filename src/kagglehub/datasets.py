@@ -104,7 +104,8 @@ def dataset_load(
             - 'pandas': A DataFrame (or dict[int | str, DataFrame] for Excel-like files with multiple sheets)
             - 'hugging_face': A Huggingface Dataset (via pandas)
             - 'polars':
-                A LazyFrame or DataFrame (or dict[int | str, DataFrame] for Excel-like files with multiple sheets)
+                A LazyFrame or DataFrame (or dict[int | str, LazyFrame] / dict[int | str, DataFrame] for Excel-like
+                files with multiple sheets)
     """
     try:
         if adapter is KaggleDatasetAdapter.HUGGING_FACE:

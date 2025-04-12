@@ -248,7 +248,7 @@ dataset = dataset.rename_column('season', 'year')
 #### `KaggleDatasetAdapter.POLARS`
 
 This adapter supports the following file types, which map to a corresponding `polars.scan_*` or `polars.read_*` method:
-| File Extension                                  | `pandas` Method                                                                                                                                                                                                  |
+| File Extension                                  | `polars` Method                                                                                                                                                                                                  |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | .csv, .tsv[^1]                                  | [`polars.scan_csv`](https://docs.pola.rs/api/python/stable/reference/api/polars.scan_csv.html#polars.scan_csv) or [`polars.read_csv`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_csv.html) |
 | .json                                           | [`polars.read_json`](https://docs.pola.rs/api/python/stable/reference/api/polars.read_json.html)                                                                                                                 |
