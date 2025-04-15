@@ -80,7 +80,7 @@ def dataset_load(
     pandas_kwargs: Any = None,  # noqa: ANN401
     sql_query: Optional[str] = None,
     hf_kwargs: Any = None,  # noqa: ANN401
-    polars_frame_type: PolarsFrameType = PolarsFrameType.LAZY,
+    polars_frame_type: PolarsFrameType = PolarsFrameType.LAZY_FRAME,
     polars_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     """Load a Kaggle Dataset into a python object based on the selected adapter

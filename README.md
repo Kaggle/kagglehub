@@ -268,7 +268,7 @@ This adapter supports the following file types, which map to a corresponding `po
 
 ##### `LazyFrame` vs `DataFrame`
 
-Per polars documentation, [LazyFrame](https://docs.pola.rs/api/python/stable/reference/lazyframe/index.html) "allows for whole-query optimisation in addition to parallelism, and is the preferred (and highest-performance) mode of operation for polars." As such, `scan_*` methods are used by default whenever possible--and when not possible the result of the `read_*` method is returned after calling [`.lazy()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.lazy.html). If a [DataFrame](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html) is preferred, `dataset_load` supports an optional `polars_frame_type` and `PolarsFrameType.EAGER` may be passed in. This will force a `read_*` method to be used with no `.lazy()` call. **NOTE:** For file types that support `scan_*`, changing the `polars_frame_type` may affect which `polars_kwargs` are acceptable to the underlying method since it will force a `read_*` method to be used rather than a `scan_*` method.
+Per polars documentation, [LazyFrame](https://docs.pola.rs/api/python/stable/reference/lazyframe/index.html) "allows for whole-query optimisation in addition to parallelism, and is the preferred (and highest-performance) mode of operation for polars." As such, `scan_*` methods are used by default whenever possible--and when not possible the result of the `read_*` method is returned after calling [`.lazy()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.lazy.html). If a [DataFrame](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html) is preferred, `dataset_load` supports an optional `polars_frame_type` and `PolarsFrameType.DATA_FRAME` may be passed in. This will force a `read_*` method to be used with no `.lazy()` call. **NOTE:** For file types that support `scan_*`, changing the `polars_frame_type` may affect which `polars_kwargs` are acceptable to the underlying method since it will force a `read_*` method to be used rather than a `scan_*` method.
 
 Some examples include:
 
@@ -296,7 +296,7 @@ df = kagglehub.dataset_load(
     KaggleDatasetAdapter.POLARS,
     "robikscube/textocr-text-extraction-from-images-dataset",
     "annot.parquet",
-    polars_frame_type=PolarsFrameType.EAGER,
+    polars_frame_type=PolarsFrameType.DATA_FRAME,
     polars_kwargs={"columns": ["image_id", "bbox", "points", "area"]}
 )
 

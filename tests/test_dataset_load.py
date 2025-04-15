@@ -257,7 +257,7 @@ class TestLoadPolarsDataset(BaseTestCase):
         polars_frame = dataset_load(
             KaggleDatasetAdapter.POLARS, DATASET_HANDLE, f"shapes.{file_extension}", polars_frame_type=polars_frame_type
         )
-        if polars_frame_type is PolarsFrameType.LAZY:
+        if polars_frame_type is PolarsFrameType.LAZY_FRAME:
             self.assertIsInstance(polars_frame, pl.LazyFrame)
             # Materialize the results to check rows and columns
             polars_frame = polars_frame.collect()
@@ -271,7 +271,7 @@ class TestLoadPolarsDataset(BaseTestCase):
             KaggleDatasetAdapter.POLARS,
             DATASET_HANDLE,
             "shapes.db",
-            polars_frame_type=PolarsFrameType.EAGER,
+            polars_frame_type=PolarsFrameType.DATA_FRAME,
             sql_query="SELECT * FROM shapes",
         )
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
@@ -282,7 +282,7 @@ class TestLoadPolarsDataset(BaseTestCase):
             KaggleDatasetAdapter.POLARS,
             DATASET_HANDLE,
             "shapes.csv",
-            polars_frame_type=PolarsFrameType.EAGER,
+            polars_frame_type=PolarsFrameType.DATA_FRAME,
             polars_kwargs={"columns": SHAPES_COLUMNS_SUBSET},
         )
         lf = dataset_load(
@@ -302,7 +302,7 @@ class TestLoadPolarsDataset(BaseTestCase):
             polars_kwargs={"sheet_id": 0},
         )
 
-        expected_type = pl.LazyFrame if polars_frame_type is PolarsFrameType.LAZY else pl.DataFrame
+        expected_type = pl.LazyFrame if polars_frame_type is PolarsFrameType.LAZY_FRAME else pl.DataFrame
         self.assertTrue(all(isinstance(v, expected_type) for v in result.values()))
         self.assertEqual(["Cars", "Animals"], list(result.keys()))
 
@@ -312,7 +312,7 @@ class TestLoadPolarsDataset(BaseTestCase):
             KaggleDatasetAdapter.POLARS,
             DATASET_HANDLE,
             AUTO_COMPRESSED_FILE_NAME,
-            polars_frame_type=PolarsFrameType.EAGER,
+            polars_frame_type=PolarsFrameType.DATA_FRAME,
             polars_kwargs={"columns": expected_columns},
         )
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
@@ -334,8 +334,8 @@ class TestLoadPolarsDataset(BaseTestCase):
 
     def test_polars_dataset_with_multiple_tables_succeeds(self) -> None:
         with create_test_cache():
-            self._load_polars_dataset_with_multiple_tables_and_assert_loaded(PolarsFrameType.LAZY)
-            self._load_polars_dataset_with_multiple_tables_and_assert_loaded(PolarsFrameType.EAGER)
+            self._load_polars_dataset_with_multiple_tables_and_assert_loaded(PolarsFrameType.LAZY_FRAME)
+            self._load_polars_dataset_with_multiple_tables_and_assert_loaded(PolarsFrameType.DATA_FRAME)
 
     def test_polars_dataset_with_valid_kwargs_succeeds(self) -> None:
         with create_test_cache():
@@ -358,8 +358,8 @@ class TestLoadPolarsDataset(BaseTestCase):
         ]
         for test_case in test_cases:
             with create_test_cache():
-                self._load_polars_simple_dataset_and_assert_loaded(test_case, PolarsFrameType.LAZY)
-                self._load_polars_simple_dataset_and_assert_loaded(test_case, PolarsFrameType.EAGER)
+                self._load_polars_simple_dataset_and_assert_loaded(test_case, PolarsFrameType.LAZY_FRAME)
+                self._load_polars_simple_dataset_and_assert_loaded(test_case, PolarsFrameType.DATA_FRAME)
 
     def test_polars_sqlite_dataset_succeeds(self) -> None:
         with create_test_cache():

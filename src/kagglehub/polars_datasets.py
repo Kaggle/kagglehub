@@ -73,7 +73,7 @@ def load_polars_dataset(
     handle: str,
     path: str,
     *,
-    polars_frame_type: PolarsFrameType = PolarsFrameType.LAZY,
+    polars_frame_type: PolarsFrameType = PolarsFrameType.LAZY_FRAME,
     polars_kwargs: Any = None,  # noqa: ANN401
     sql_query: Optional[str],
 ) -> Union[pl.DataFrame, dict[Union[int, str], pl.DataFrame]]:
@@ -84,14 +84,15 @@ def load_polars_dataset(
         path: (string) Path to a file within the dataset
         polars_frame_type:
             (PolarsFrameType) Optional control for which Frame to return: LazyFrame or DataFrame. The default is
-            PolarsFrameType.LAZY.
+            PolarsFrameType.LAZY_FRAME.
 
-            PolarsFrameType.LAZY: We attempt to use a scan_* method if it's available for the provided file extension.
-            Otherwise, we use a read_* method to produce a DataFrame and return the result after calling .lazy() on it.
-            This satisfies the requested polars_frame_type as a LazyFrame, but does require loading the file in memory.
+            PolarsFrameType.LAZY_FRAME: We attempt to use a scan_* method if it's available for the provided file
+            extension. Otherwise, we use a read_* method to produce a DataFrame and return the result after calling
+            .lazy() on it. This satisfies the requested polars_frame_type as a LazyFrame, but does require loading the
+            file in memory.
 
-            PolarsFrameType.EAGER: We use whatever read_* method corresponds to the provided file extension and return
-            the resulting DatFrame.
+            PolarsFrameType.DATA_FRAME: We use whatever read_* method corresponds to the provided file extension and
+            return the resulting DatFrame.
         polars_kwargs:
             (dict) Optional set of kwargs to pass to the polars `read_*` method while constructing the DataFrame(s)
         sql_query:
@@ -122,7 +123,7 @@ def load_polars_dataset(
 
     # The user requested a LazyFrame, but there's no scan_* method for the file extension. We need to
     # convert the resulting DataFrame(s) to a LazyFrame(s) before we return the result.
-    if io_frame_type is PolarsFrameType.EAGER and polars_frame_type is PolarsFrameType.LAZY:
+    if io_frame_type is PolarsFrameType.DATA_FRAME and polars_frame_type is PolarsFrameType.LAZY_FRAME:
         if isinstance(result, dict):
             for key, value in result.items():
                 # The only time a dict can be returned is for Excel files, which only supports read_excel.
@@ -150,10 +151,10 @@ def _validate_io_function(
         raise ValueError(MISSING_SQL_QUERY_ERROR_MESSAGE)
 
     # Now that we've validated all the inputs, we can determine whether we can/should use a scan_* function
-    if polars_frame_type is PolarsFrameType.EAGER or file_extension not in SUPPORTED_SCAN_FUNCTIONS_BY_EXTENSION:
-        return (read_function, PolarsFrameType.EAGER)
+    if polars_frame_type is PolarsFrameType.DATA_FRAME or file_extension not in SUPPORTED_SCAN_FUNCTIONS_BY_EXTENSION:
+        return (read_function, PolarsFrameType.DATA_FRAME)
 
-    return (SUPPORTED_SCAN_FUNCTIONS_BY_EXTENSION[file_extension], PolarsFrameType.LAZY)
+    return (SUPPORTED_SCAN_FUNCTIONS_BY_EXTENSION[file_extension], PolarsFrameType.LAZY_FRAME)
 
 
 def _build_args(read_function: Callable, path: str, sql_query: Optional[str]) -> list:

@@ -11,5 +11,5 @@ class KaggleDatasetAdapter(Enum):
 # way of working with polars: https://docs.pola.rs/api/python/stable/reference/lazyframe/index.html
 # But users should be able to control whether they want a fully loaded DataFrame instead.
 class PolarsFrameType(Enum):
-    LAZY = 1
-    EAGER = 2
+    LAZY_FRAME = 1
+    DATA_FRAME = 2

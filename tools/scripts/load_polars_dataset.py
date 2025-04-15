@@ -15,7 +15,7 @@ dataset = kagglehub.dataset_load(
     KaggleDatasetAdapter.POLARS,
     "robikscube/textocr-text-extraction-from-images-dataset",
     "annot.parquet",
-    polars_frame_type=PolarsFrameType.EAGER,
+    polars_frame_type=PolarsFrameType.DATA_FRAME,
     polars_kwargs={"columns": ["image_id", "bbox", "points", "area"]},
 )
 
