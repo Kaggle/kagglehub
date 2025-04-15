@@ -63,6 +63,7 @@ but the actual MD5 checksum of the downloaded contents was:
 ADAPTER_TO_USER_AGENT_MAP = {
     KaggleDatasetAdapter.HUGGING_FACE: "hugging_face_data_loader",
     KaggleDatasetAdapter.PANDAS: "pandas_data_loader",
+    KaggleDatasetAdapter.POLARS: "polars_data_loader",
 }
 
 
