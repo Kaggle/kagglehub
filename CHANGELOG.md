@@ -4,6 +4,7 @@
 
 * Fix `model_signing` breaking changes from `1.0.0` release
 * Add `KaggleDatasetAdapter.POLARS` support to `dataset_load`
+* Add validation of kwargs to `dataset_load`
 
 ## v0.3.11 (April 1, 2025)
 
