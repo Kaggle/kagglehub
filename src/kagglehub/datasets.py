@@ -22,7 +22,7 @@ DATASET_LOAD_ADAPTER_OPTIONAL_DEPENDENCIES_MAP = {
 }
 
 # Mapping of adapters to the valid kwargs to use for that adapter
-DATASET_LOAD_VALID_KWARGS_MAP = {
+_DATASET_LOAD_VALID_KWARGS_MAP = {
     KaggleDatasetAdapter.HUGGING_FACE: {"hf_kwargs", "pandas_kwargs", "sql_query"},
     KaggleDatasetAdapter.PANDAS: {"pandas_kwargs", "sql_query"},
     KaggleDatasetAdapter.POLARS: {"sql_query", "polars_frame_type", "polars_kwargs"},
@@ -123,7 +123,6 @@ def dataset_load(
         polars_frame_type=polars_frame_type,
         polars_kwargs=polars_kwargs,
     )
-    # Define the default behavior internally so we can assess kwarg validity in validate_dataset_load_args above
     polars_frame_type = polars_frame_type if polars_frame_type is not None else PolarsFrameType.LAZY_FRAME
     try:
         if adapter is KaggleDatasetAdapter.HUGGING_FACE:
@@ -181,7 +180,7 @@ def validate_dataset_load_args(
     adapter: KaggleDatasetAdapter,
     **kwargs: Any,  # noqa: ANN401
 ) -> None:
-    valid_kwargs = DATASET_LOAD_VALID_KWARGS_MAP[adapter]
+    valid_kwargs = _DATASET_LOAD_VALID_KWARGS_MAP[adapter]
     invalid_kwargs_list: list[str] = []
     for key, value in kwargs.items():
         if key not in valid_kwargs and value is not None:
@@ -191,5 +190,4 @@ def validate_dataset_load_args(
         return
 
     invalid_kwargs = ", ".join(invalid_kwargs_list)
-    invalid_kwargs_msg = f"{invalid_kwargs} are invalid for {adapter}"
-    raise ValueError(invalid_kwargs_msg) from None
+    logger.warning(f"{invalid_kwargs} are invalid for {adapter} and will be ignored")
