@@ -1,3 +1,5 @@
+import io
+import logging
 import os
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -5,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import polars as pl
 from requests import Response
 
-from kagglehub.datasets import KaggleDatasetAdapter, PolarsFrameType, dataset_load
+from kagglehub.datasets import KaggleDatasetAdapter, PolarsFrameType, dataset_load, logger
 from kagglehub.exceptions import KaggleApiHTTPError
 from tests.fixtures import BaseTestCase
 
@@ -41,6 +43,22 @@ class TestLoadHfDataset(BaseTestCase):
                 TEXT_FILE,
             )
         self.assertIn(f"Unsupported file extension: '{os.path.splitext(TEXT_FILE)[1]}'", str(cm.exception))
+
+    def _load_hf_dataset_with_other_loader_kwargs_and_assert_warning(self) -> None:
+        output_stream = io.StringIO()
+        handler = logging.StreamHandler(output_stream)
+        logger.addHandler(handler)
+        dataset_load(
+            KaggleDatasetAdapter.HUGGING_FACE,
+            DATASET_HANDLE,
+            AUTO_COMPRESSED_FILE_NAME,
+            polars_frame_type=PolarsFrameType.LAZY_FRAME,
+            polars_kwargs={},
+        )
+        captured_output = output_stream.getvalue()
+        self.assertIn(
+            "polars_frame_type, polars_kwargs are invalid for KaggleDatasetAdapter.HUGGING_FACE", captured_output
+        )
 
     def _load_hf_dataset_with_multiple_tables_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
@@ -84,6 +102,10 @@ class TestLoadHfDataset(BaseTestCase):
         for split_name, dataset in dataset_splits.items():
             self.assertEqual(TEST_SPLIT_SIZE if split_name == "test" else TRAIN_SPLIT_SIZE, dataset.num_rows)
             self.assertEqual(SHAPES_COLUMNS, dataset.column_names)
+
+    def test_hf_dataset_with_other_loader_kwargs_prints_warning(self) -> None:
+        with create_test_cache():
+            self._load_hf_dataset_with_other_loader_kwargs_and_assert_warning()
 
     def test_hf_dataset_with_invalid_file_type_raises(self) -> None:
         with create_test_cache():
@@ -139,6 +161,23 @@ class TestLoadPandasDataset(BaseTestCase):
             )
         self.assertIn(f"Unsupported file extension: '{os.path.splitext(TEXT_FILE)[1]}'", str(cm.exception))
 
+    def _load_pandas_dataset_with_other_loader_kwargs_and_assert_warning(self) -> None:
+        output_stream = io.StringIO()
+        handler = logging.StreamHandler(output_stream)
+        logger.addHandler(handler)
+        dataset_load(
+            KaggleDatasetAdapter.PANDAS,
+            DATASET_HANDLE,
+            AUTO_COMPRESSED_FILE_NAME,
+            hf_kwargs={},
+            polars_frame_type=PolarsFrameType.LAZY_FRAME,
+            polars_kwargs={},
+        )
+        captured_output = output_stream.getvalue()
+        self.assertIn(
+            "hf_kwargs, polars_frame_type, polars_kwargs are invalid for KaggleDatasetAdapter.PANDAS", captured_output
+        )
+
     def _load_pandas_simple_dataset_and_assert_loaded(
         self,
         file_extension: str,
@@ -186,6 +225,10 @@ class TestLoadPandasDataset(BaseTestCase):
     def test_pandas_dataset_with_invalid_file_type_raises(self) -> None:
         with create_test_cache():
             self._load_pandas_dataset_with_invalid_file_type_and_assert_raises()
+
+    def test_pandas_dataset_with_other_loader_kwargs_prints_warning(self) -> None:
+        with create_test_cache():
+            self._load_pandas_dataset_with_other_loader_kwargs_and_assert_warning()
 
     def test_pandas_dataset_with_multiple_tables_succeeds(self) -> None:
         with create_test_cache():
@@ -248,6 +291,20 @@ class TestLoadPolarsDataset(BaseTestCase):
                 TEXT_FILE,
             )
         self.assertIn(f"Unsupported file extension: '{os.path.splitext(TEXT_FILE)[1]}'", str(cm.exception))
+
+    def _load_polars_dataset_with_other_loader_kwargs_and_assert_warning(self) -> None:
+        output_stream = io.StringIO()
+        handler = logging.StreamHandler(output_stream)
+        logger.addHandler(handler)
+        dataset_load(
+            KaggleDatasetAdapter.POLARS,
+            DATASET_HANDLE,
+            AUTO_COMPRESSED_FILE_NAME,
+            pandas_kwargs={},
+            hf_kwargs={},
+        )
+        captured_output = output_stream.getvalue()
+        self.assertIn("pandas_kwargs, hf_kwargs are invalid for KaggleDatasetAdapter.POLARS", captured_output)
 
     def _load_polars_simple_dataset_and_assert_loaded(
         self,
@@ -331,6 +388,10 @@ class TestLoadPolarsDataset(BaseTestCase):
     def test_polars_dataset_with_invalid_file_type_raises(self) -> None:
         with create_test_cache():
             self._load_polars_dataset_with_invalid_file_type_and_assert_raises()
+
+    def test_polars_dataset_with_other_loader_kwargs_prints_warning(self) -> None:
+        with create_test_cache():
+            self._load_polars_dataset_with_other_loader_kwargs_and_assert_warning()
 
     def test_polars_dataset_with_multiple_tables_succeeds(self) -> None:
         with create_test_cache():

@@ -15,10 +15,17 @@ logger = logging.getLogger(__name__)
 # Patterns that are always ignored for dataset uploading.
 DEFAULT_IGNORE_PATTERNS = [".git/", "*/.git/", ".cache/", ".huggingface/"]
 # Mapping of adapters to the optional dependencies required to run them
-LOAD_DATASET_ADAPTER_OPTIONAL_DEPENDENCIES_MAP = {
+DATASET_LOAD_ADAPTER_OPTIONAL_DEPENDENCIES_MAP = {
     KaggleDatasetAdapter.HUGGING_FACE: "hf-datasets",
     KaggleDatasetAdapter.PANDAS: "pandas-datasets",
     KaggleDatasetAdapter.POLARS: "polars-datasets",
+}
+
+# Mapping of adapters to the valid kwargs to use for that adapter
+_DATASET_LOAD_VALID_KWARGS_MAP = {
+    KaggleDatasetAdapter.HUGGING_FACE: {"hf_kwargs", "pandas_kwargs", "sql_query"},
+    KaggleDatasetAdapter.PANDAS: {"pandas_kwargs", "sql_query"},
+    KaggleDatasetAdapter.POLARS: {"sql_query", "polars_frame_type", "polars_kwargs"},
 }
 
 
@@ -80,7 +87,7 @@ def dataset_load(
     pandas_kwargs: Any = None,  # noqa: ANN401
     sql_query: Optional[str] = None,
     hf_kwargs: Any = None,  # noqa: ANN401
-    polars_frame_type: PolarsFrameType = PolarsFrameType.LAZY_FRAME,
+    polars_frame_type: Optional[PolarsFrameType] = None,
     polars_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     """Load a Kaggle Dataset into a python object based on the selected adapter
@@ -96,7 +103,8 @@ def dataset_load(
             for details: https://pandas.pydata.org/docs/reference/api/pandas.read_sql_query.html
         hf_kwargs:
             (dict) Optional set of kwargs to pass to Dataset.from_pandas() while constructing the Dataset
-        polars_frame_type: (PolarsFrameType) Optional value to control what type of frame to return from polars
+        polars_frame_type: (PolarsFrameType) Optional control for which Frame to return: LazyFrame or DataFrame. The
+            default is PolarsFrameType.LAZY_FRAME.
         polars_kwargs:
             (dict) Optional set of kwargs to pass to the polars `read_*` method while constructing the DataFrame(s)
     Returns:
@@ -107,6 +115,15 @@ def dataset_load(
                 A LazyFrame or DataFrame (or dict[int | str, LazyFrame] / dict[int | str, DataFrame] for Excel-like
                 files with multiple sheets)
     """
+    validate_dataset_load_args(
+        adapter,
+        pandas_kwargs=pandas_kwargs,
+        sql_query=sql_query,
+        hf_kwargs=hf_kwargs,
+        polars_frame_type=polars_frame_type,
+        polars_kwargs=polars_kwargs,
+    )
+    polars_frame_type = polars_frame_type if polars_frame_type is not None else PolarsFrameType.LAZY_FRAME
     try:
         if adapter is KaggleDatasetAdapter.HUGGING_FACE:
             import kagglehub.hf_datasets
@@ -134,7 +151,7 @@ def dataset_load(
             not_implemented_error_message = f"{adapter} is not yet implemented"
             raise NotImplementedError(not_implemented_error_message)
     except ImportError:
-        adapter_optional_dependency = LOAD_DATASET_ADAPTER_OPTIONAL_DEPENDENCIES_MAP[adapter]
+        adapter_optional_dependency = DATASET_LOAD_ADAPTER_OPTIONAL_DEPENDENCIES_MAP[adapter]
         import_warning_message = (
             f"The 'dataset_load' function requires the '{adapter_optional_dependency}' extras. "
             f"Install them with 'pip install kagglehub[{adapter_optional_dependency}]'"
@@ -157,3 +174,20 @@ def load_dataset(
         "load_dataset is deprecated and will be removed in a future version.", DeprecationWarning, stacklevel=2
     )
     return dataset_load(adapter, handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query, hf_kwargs=hf_kwargs)
+
+
+def validate_dataset_load_args(
+    adapter: KaggleDatasetAdapter,
+    **kwargs: Any,  # noqa: ANN401
+) -> None:
+    valid_kwargs = _DATASET_LOAD_VALID_KWARGS_MAP[adapter]
+    invalid_kwargs_list: list[str] = []
+    for key, value in kwargs.items():
+        if key not in valid_kwargs and value is not None:
+            invalid_kwargs_list.append(key)
+
+    if len(invalid_kwargs_list) == 0:
+        return
+
+    invalid_kwargs = ", ".join(invalid_kwargs_list)
+    logger.warning(f"{invalid_kwargs} are invalid for {adapter} and will be ignored")
