@@ -11,7 +11,7 @@ from typing import Optional, Union
 
 import requests
 from requests.exceptions import Timeout
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from tqdm.utils import CallbackIOWrapper
 
 from kagglehub.clients import KaggleApiV1Client
