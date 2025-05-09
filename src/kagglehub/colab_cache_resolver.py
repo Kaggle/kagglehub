@@ -73,7 +73,7 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
             msg = "'slug' field missing from response"
             raise BackendError(msg)
 
-        logger.info(f"Using Colab cache for faster access.")
+        logger.info("Using Colab cache for faster access.")
 
         base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{response['slug']}"
@@ -149,7 +149,7 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
             msg = "'slug' field missing from response"
             raise BackendError(msg)
 
-        logger.info(f"Using Colab cache for faster access.")
+        logger.info("Using Colab cache for faster access.")
 
         base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
         cached_path = f"{base_mount_path}/{response['slug']}"
