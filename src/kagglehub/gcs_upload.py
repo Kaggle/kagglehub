@@ -218,16 +218,17 @@ def _check_uploadable_files(folder: str, *, ignore_patterns: Sequence[str], foll
                 symlinked_dirs.add(dir_p)
         file_count += len(files)
 
-    if file_count == 0 and os.path.isdir(folder):
-        no_uploadable_exception = "No uploadable files are found. At least one file is needed."
-        raise ValueError(no_uploadable_exception)
-
     n_links = len(symlinked_dirs)
     if not follow_links and n_links > 0:
         logger.warning(
             f"Skip {n_links} symbolic link directories."
             " If you want to include these directores, set `follow_links=True`."
         )
+
+    if file_count == 0 and os.path.isdir(folder):
+        no_uploadable_exception = "No uploadable files are found. At least one file is needed."
+        raise ValueError(no_uploadable_exception)
+
     return file_count
 
 
