@@ -69,7 +69,7 @@ class File(object):  # noqa: UP004
         return f"{size:.{precision}f}{suffixes[suffix_index]}"
 
 
-def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str], follow_links: bool = False) -> Iterable[tuple[str, list[str], list[str]]]:
+def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str], follow_links: bool = False, max_warning: int = 0) -> Iterable[tuple[str, list[str], list[str]]]:
     """An `os.walk` like directory tree generator with filtering.
 
     This method filters out files matching any ignore pattern.
@@ -85,7 +85,6 @@ def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str], follow_links
         Iterable[tuple[str, list[str], list[str]]]: (base_dir_path, list[dir_names], list[filtered_file_names])
     """
     visited = set()
-    max_warning = 5
     num_warning = 0
     for dir_path, dir_names, file_names in os.walk(base_dir, followlinks=follow_links):
         dir_p = pathlib.Path(dir_path)
@@ -206,7 +205,7 @@ def _upload_blob(file_path: str, item_type: str) -> str:
 def _check_uploadable_files(folder, ignore_patterns, follow_links):
     file_count = 0
     symlinked_dirs = set()
-    for root, dirs, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns, follow_links=follow_links):
+    for root, dirs, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns, follow_links=follow_links, max_warning=5):
         root_path = pathlib.Path(root)
         for d in dirs:
             dir_p = root_path / d
@@ -214,7 +213,7 @@ def _check_uploadable_files(folder, ignore_patterns, follow_links):
                 symlinked_dirs.add(dir_p)
         file_count += len(files)
 
-    if file_count == 0:
+    if file_count == 0 and os.path.isdir(folder):
         raise ValueError("No uploadable files are found. At least one file is needed.")
 
     n_links = len(symlinked_dirs)
