@@ -82,7 +82,7 @@ def filtered_walk(
             The patterns for ignored files. These are standard wildcards relative to base_dir.
         follow_links (bool):  If `True`, follows symbolic linked directories.
             If links that point to already visited directories are detected, skip them.
-        max_warning (int): Maxmum number of warning to be displayed.
+        max_warning (int): Maximum number of warning to be displayed.
 
     Yields:
         Iterable[tuple[str, list[str], list[str]]]: (base_dir_path, list[dir_names], list[filtered_file_names])
