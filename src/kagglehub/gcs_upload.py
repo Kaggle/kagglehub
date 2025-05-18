@@ -69,7 +69,7 @@ class File(object):  # noqa: UP004
         return f"{size:.{precision}f}{suffixes[suffix_index]}"
 
 
-def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str]) -> Iterable[tuple[str, list[str], list[str]]]:
+def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str], follow_links: bool = False) -> Iterable[tuple[str, list[str], list[str]]]:
     """An `os.walk` like directory tree generator with filtering.
 
     This method filters out files matching any ignore pattern.
@@ -78,12 +78,27 @@ def filtered_walk(*, base_dir: str, ignore_patterns: Sequence[str]) -> Iterable[
         base_dir (str): The base dir to walk in.
         ignore_patterns (Sequence[str]):
             The patterns for ignored files. These are standard wildcards relative to base_dir.
+        follow_links (bool):  If `True`, follows symbolic linked directories. If links that point to already visited directories are detected, skip them.
+
 
     Yields:
         Iterable[tuple[str, list[str], list[str]]]: (base_dir_path, list[dir_names], list[filtered_file_names])
     """
-    for dir_path, dir_names, file_names in os.walk(base_dir):
+    visited = set()
+    max_warning = 5
+    num_warning = 0
+    for dir_path, dir_names, file_names in os.walk(base_dir, followlinks=follow_links):
         dir_p = pathlib.Path(dir_path)
+
+        resolved_dir_p = dir_p.resolve()
+        if resolved_dir_p in visited:
+            # Avoid inclusion of circular links or duplicate directories in the dataset when follow_links=True.
+            if num_warning <= max_warning:
+                logger.warning(f"Skip duplicated symlinks pointing to the same directory: {dir_p}({resolved_dir_p})")
+                num_warning += 1
+            continue
+        visited.add(resolved_dir_p)
+
         filtered_files = []
         for file_name in file_names:
             rel_file_p = (dir_p / file_name).relative_to(base_dir)
@@ -188,17 +203,37 @@ def _upload_blob(file_path: str, item_type: str) -> str:
     return response["token"]
 
 
+def _check_uploadable_files(folder, ignore_patterns, follow_links):
+    file_count = 0
+    symlinked_dirs = set()
+    for root, dirs, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns, follow_links=follow_links):
+        root_path = pathlib.Path(root)
+        for d in dirs:
+            dir_p = root_path / d
+            if dir_p.is_symlink():
+                symlinked_dirs.add(dir_p)
+        file_count += len(files)
+
+    if file_count == 0:
+        raise ValueError("No uploadable files are found. At least one file is needed.")
+
+    n_links = len(symlinked_dirs)
+    if not follow_links and n_links > 0:
+        logger.warning(f"Skip {n_links} symbolic link directories. If you want to include these directores, set `follow_links=True`.")
+    return file_count
+
+
 def upload_files_and_directories(
     folder: str,
     *,
     ignore_patterns: Sequence[str],
     item_type: str,
     quiet: bool = False,
+    follow_links: bool = False,
 ) -> UploadDirectoryInfo:
+
     # Count the total number of files
-    file_count = 0
-    for _, _, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns):
-        file_count += len(files)
+    file_count = _check_uploadable_files(folder, ignore_patterns, follow_links)
 
     if file_count > MAX_FILES_TO_UPLOAD:
         if not quiet:
@@ -207,7 +242,7 @@ def upload_files_and_directories(
         with TemporaryDirectory() as temp_dir:
             zip_path = os.path.join(temp_dir, TEMP_ARCHIVE_FILE)
             with zipfile.ZipFile(zip_path, "w") as zipf:
-                for root, _, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns):
+                for root, _, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns, follow_links=follow_links):
                     for file in files:
                         file_path = os.path.join(root, file)
                         zipf.write(file_path, os.path.relpath(file_path, folder))
@@ -226,10 +261,9 @@ def upload_files_and_directories(
         if token:
             root_dict.files.append(token)
     else:
-        for root, _, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns):
+        for root, _, files in filtered_walk(base_dir=folder, ignore_patterns=ignore_patterns, follow_links=follow_links):
             # Path of the current folder relative to the base folder
             path = os.path.relpath(root, folder)
-
             # Navigate or create the dictionary path to the current folder
             current_dict = root_dict
             if path != ".":
