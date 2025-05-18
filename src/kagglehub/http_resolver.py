@@ -189,7 +189,8 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                     os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
                     api_client.download_file(url_path + "/" + file, file_out_path, h)
 
-                if kwargs["max_workers"] > 8:
+                max_workers = 8 if "max_workers" not in kwargs else kwargs["max_workers"]
+                if max_workers > 8:
                     logger.warning(
                         "Downloading files in parallel with more than 8 threads is not recommended. "
                         "This may lead to throttling or connection issues."
@@ -199,7 +200,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                     _inner_download_file,
                     files,
                     desc=f"Downloading {len(files)} files",
-                    max_workers=min(8, kwargs["max_workers"]),  # Never use more than 8 threads in parallel to download files.
+                    max_workers=min(8, max_workers),  # Never use more than 8 threads in parallel to download files.
                 )
 
         mark_as_complete(h, path)
