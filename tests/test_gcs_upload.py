@@ -62,9 +62,8 @@ class TesModelsHelpers(BaseTestCase):
                     walked_files.append(pathlib.Path(dir_path) / file_name)
             self.assertEqual(set(walked_files), expected_files)
 
-
-    def _setup_link_dir(self, tmp_dir_p: pathlib.Path):
-        """ setup the following structure
+    def _setup_link_dir(self, tmp_dir_p: pathlib.Path) -> None:
+        """setup the following structure
         tmp_dir/
           root/
             link_dir -> tmp_dir/extern/
@@ -76,7 +75,7 @@ class TesModelsHelpers(BaseTestCase):
         """
         extern_dir = tmp_dir_p / "extern"
         extern_dir.mkdir()
-        (extern_dir / "b.txt") .touch()
+        (extern_dir / "b.txt").touch()
         (extern_dir / "loop_dir").symlink_to(extern_dir, target_is_directory=True)
 
         root_dir = tmp_dir_p / "root"
@@ -100,7 +99,9 @@ class TesModelsHelpers(BaseTestCase):
                 root_dir / "link_dir" / "b.txt",
             }
             walked_files = []
-            for dir_path, _, file_names in filtered_walk(base_dir=root_dir, ignore_patterns=[], follow_links=follow_links):
+            for dir_path, _, file_names in filtered_walk(
+                base_dir=root_dir, ignore_patterns=[], follow_links=follow_links
+            ):
                 for file_name in file_names:
                     walked_files.append(pathlib.Path(dir_path) / file_name)
             self.assertEqual(set(walked_files), expected_files)
@@ -120,7 +121,9 @@ class TesModelsHelpers(BaseTestCase):
                 root_dir / "real_dir" / "a.txt",
             }
             walked_files = []
-            for dir_path, _, file_names in filtered_walk(base_dir=root_dir, ignore_patterns=[], follow_links=follow_links):
+            for dir_path, _, file_names in filtered_walk(
+                base_dir=root_dir, ignore_patterns=[], follow_links=follow_links
+            ):
                 for file_name in file_names:
                     walked_files.append(pathlib.Path(dir_path) / file_name)
             self.assertEqual(set(walked_files), expected_files)
