@@ -2,7 +2,8 @@
 
 ## Next Release
 
-* 
+* Add `max_workers` on `model_download`
+* Use `tqdm.auto` instead of `tqdm`
 
 ## v0.3.12 (April 23, 2025)
 

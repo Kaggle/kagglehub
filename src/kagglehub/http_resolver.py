@@ -144,7 +144,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return True
 
     def _resolve(
-        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False, **kwargs
     ) -> tuple[str, Optional[int]]:
         api_client = KaggleApiV1Client()
 
@@ -189,11 +189,17 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                     os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
                     api_client.download_file(url_path + "/" + file, file_out_path, h)
 
+                if kwargs["max_workers"] > 8:
+                    logger.warning(
+                        "Downloading files in parallel with more than 8 threads is not recommended. "
+                        "This may lead to throttling or connection issues."
+                    )
+
                 thread_map(
                     _inner_download_file,
                     files,
                     desc=f"Downloading {len(files)} files",
-                    max_workers=8,  # Never use more than 8 threads in parallel to download files.
+                    max_workers=min(8, kwargs["max_workers"]),  # Never use more than 8 threads in parallel to download files.
                 )
 
         mark_as_complete(h, path)
