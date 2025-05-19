@@ -49,6 +49,8 @@ def dataset_upload(
     local_dataset_dir: str,
     version_notes: str = "",
     ignore_patterns: Optional[Union[list[str], str]] = None,
+    *,
+    follow_links: bool = False,
 ) -> None:
     """Upload dataset files.
     Args:
@@ -62,6 +64,7 @@ def dataset_upload(
             https://docs.python.org/3/library/fnmatch.html.
             Use a pattern ending with "/" to ignore the whole dir,
             e.g., ".git/" is equivalent to ".git/*".
+        follow_links: (bool) Enable to follow symbolic link directories.
     """
     h = parse_dataset_handle(handle)
     logger.info(f"Uploading Dataset {h.to_url()} ...")
@@ -73,6 +76,7 @@ def dataset_upload(
         local_dataset_dir,
         item_type="dataset",
         ignore_patterns=normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
+        follow_links=follow_links,
     )
 
     create_dataset_or_version(h, tokens, version_notes)
