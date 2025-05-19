@@ -171,7 +171,9 @@ def load_dataset(
     hf_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     warnings.warn(
-        "load_dataset is deprecated and will be removed in a future version.", DeprecationWarning, stacklevel=2
+        "Use dataset_load() instead of load_dataset(). load_dataset() will be removed in a future version.",
+        DeprecationWarning,
+        stacklevel=2,
     )
     return dataset_load(adapter, handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query, hf_kwargs=hf_kwargs)
 
