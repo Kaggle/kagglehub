@@ -171,7 +171,12 @@ def load_dataset(
     hf_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     warnings.warn(
-        "Use dataset_load() instead of load_dataset(). load_dataset() will be removed in a future version.",
+        (
+            "Use dataset_load() instead of load_dataset(). load_dataset() will be removed in version 1.0.0. "
+            "`dataset_load` offers more flexibility and new features.\n"
+            "# OLD: load_dataset(adapter, handle, path, ...)\n"
+            "# NEW: dataset_load(adapter, handle, path, ...)"
+        ),
         DeprecationWarning,
         stacklevel=2,
     )
