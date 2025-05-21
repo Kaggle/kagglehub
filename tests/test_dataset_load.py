@@ -1,13 +1,26 @@
+import sys
+import os
+# Assuming tests are in 'tests/' and source is in 'src/'
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
+import importlib
+import kagglehub.datasets
 import io
 import logging
-import os
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import polars as pl
+import pytest
 from requests import Response
 
-from kagglehub.datasets import KaggleDatasetAdapter, PolarsFrameType, dataset_load, logger
+from kagglehub.datasets import (
+    PolarsFrameType,
+    dataset_load,
+    load_dataset,
+    logger,
+)
+from kagglehub.datasets_enums import KaggleDatasetAdapter  # Corrected import
 from kagglehub.exceptions import KaggleApiHTTPError
 from tests.fixtures import BaseTestCase
 
@@ -440,3 +453,36 @@ class TestLoadPolarsDataset(BaseTestCase):
         with self.assertRaises(KaggleApiHTTPError):
             dataset_load(KaggleDatasetAdapter.POLARS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         self.assertIn("polars_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])
+
+
+class TestLoadDatasetDeprecation(BaseTestCase):
+    def test_load_dataset_deprecation_warning(self) -> None:
+        # Arrange
+        adapter = KaggleDatasetAdapter.PANDAS
+        handle = "owner/dataset"
+        path = "file.csv"
+        expected_message = (
+            "Use dataset_load() instead of load_dataset(). load_dataset() will be removed in version 1.0.0. "
+            "`dataset_load` offers more flexibility and new features.\n"
+            "# OLD: load_dataset(adapter, handle, path, ...)\n"
+            "# NEW: dataset_load(adapter, handle, path, ...)"
+        )
+
+        # Reload the module to ensure we have the latest version
+        importlib.reload(kagglehub.datasets)
+        
+        # Patch dataset_load within the reloaded module for the scope of this call
+        with patch('kagglehub.datasets.dataset_load', new_callable=MagicMock) as mocked_dataset_load_func:
+            # Act & Assert
+            with pytest.warns(DeprecationWarning) as record:
+                # Call load_dataset from the reloaded module
+                kagglehub.datasets.load_dataset(adapter, handle, path)
+
+            # Assert that one warning was captured
+            assert len(record) == 1
+            # Assert that the warning message matches the expected message
+            assert str(record[0].message) == expected_message
+            # Assert that the mocked dataset_load was called
+            mocked_dataset_load_func.assert_called_once_with(
+                adapter, handle, path, pandas_kwargs=None, sql_query=None, hf_kwargs=None
+            )
