@@ -260,7 +260,13 @@ class PackageScope:
     """
 
     # Global context variable tracking the currently active package scope.
-    _ctx = contextvars.ContextVar[Optional["PackageScope"]]("kagglehub_package_scope", default=None)
+    _current_scope_ctx = contextvars.ContextVar[Optional["PackageScope"]]("kagglehub_package_scope", default=None)
+    # Global context variable tracking the context token stack for _current_scope_ctx to
+    # revert to previous scope (if applicable) when exiting a given scope.
+    # b/417707383: Use a ContextVar here to support multithreaded usage of an imported package.
+    _token_stack_ctx = contextvars.ContextVar[Optional[list[contextvars.Token]]](
+        "kagglehub_package_scope_token_stack", default=None
+    )
 
     def __init__(self, package_module: ModuleType):
         if not hasattr(package_module, "__file__") or not package_module.__file__:
@@ -271,21 +277,23 @@ class PackageScope:
         self.path: pathlib.Path = pathlib.Path(package_module.__file__).parent
         self.datasources: VersionedDatasources = read_file(self.path / KAGGLEHUB_REQUIREMENTS_FILENAME)
 
-        self._token_stack: list[contextvars.Token] = []
-
     def __enter__(self):
-        token = PackageScope._ctx.set(self)
-        self._token_stack.append(token)
+        token = PackageScope._current_scope_ctx.set(self)
+
+        if PackageScope._token_stack_ctx.get() is None:
+            PackageScope._token_stack_ctx.set([])
+        PackageScope._token_stack_ctx.get().append(token)
+
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):  # noqa: ANN001
-        token = self._token_stack.pop()
-        PackageScope._ctx.reset(token)
+        token = PackageScope._token_stack_ctx.get().pop()
+        PackageScope._current_scope_ctx.reset(token)
 
     @staticmethod
     def get() -> Optional["PackageScope"]:
         """Gets the currently applied PackageScope, or None if none applied."""
-        return PackageScope._ctx.get()
+        return PackageScope._current_scope_ctx.get()
 
     @staticmethod
     def get_version(h: ResourceHandle) -> Optional[int]:
