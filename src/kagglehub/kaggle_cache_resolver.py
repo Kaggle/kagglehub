@@ -102,11 +102,16 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
         return False
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False, target_path: Optional[str] = None
     ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         client = KaggleJwtClient()

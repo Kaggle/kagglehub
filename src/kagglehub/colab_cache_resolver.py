@@ -118,11 +118,16 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
         return True
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False, target_path: Optional[str] = None
     ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument when running inside the Colab notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
 

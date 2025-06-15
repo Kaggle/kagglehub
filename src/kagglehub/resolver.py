@@ -13,7 +13,7 @@ class Resolver(Generic[T]):
     __metaclass__ = abc.ABCMeta
 
     def __call__(
-        self, handle: T, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self, handle: T, path: Optional[str] = None, *, force_download: Optional[bool] = False, target_path: Optional[str] = None
     ) -> tuple[str, Optional[int]]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
@@ -21,12 +21,13 @@ class Resolver(Generic[T]):
             handle: (T) the ResourceHandle to resolve.
             path: (string) Optional path to a file within the resource.
             force_download: (bool) Optional flag to force download, even if it's cached.
+            target_path: (string) Optional path to a directory where the files will be downloaded.
 
         Returns:
             A tuple of: (string representing the path, version number of resolved datasource if present)
             Some cases where version number might be missing: Competition datasource, API-based models.
         """
-        path, version = self._resolve(handle, path, force_download=force_download)
+        path, version = self._resolve(handle, path, force_download=force_download, target_path=target_path)
 
         # Note handles are immutable, so _resolve() could not have altered our reference
         register_datasource_access(handle, version)
@@ -35,7 +36,7 @@ class Resolver(Generic[T]):
 
     @abc.abstractmethod
     def _resolve(
-        self, handle: T, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self, handle: T, path: Optional[str] = None, *, force_download: Optional[bool] = False, target_path: Optional[str] = None
     ) -> tuple[str, Optional[int]]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
@@ -43,6 +44,7 @@ class Resolver(Generic[T]):
             handle: (T) the ResourceHandle to resolve.
             path: (string) Optional path to a file within the resource.
             force_download: (bool) Optional flag to force download, even if it's cached.
+            target_path: (string) Optional path to a directory where the files will be downloaded.
 
         Returns:
             A tuple of: (string representing the path, version number of resolved datasource if present)
