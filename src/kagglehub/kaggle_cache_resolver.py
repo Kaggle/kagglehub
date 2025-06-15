@@ -38,12 +38,22 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
         return False
 
     def _resolve(
-        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: CompetitionHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
         client = KaggleJwtClient()
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
 
@@ -102,7 +112,12 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
         return False
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False, target_path: Optional[str] = None
+        self,
+        h: DatasetHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
@@ -182,11 +197,21 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         return False
 
     def _resolve(
-        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: ModelHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         client = KaggleJwtClient()
@@ -259,11 +284,21 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
         return False
 
     def _resolve(
-        self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: NotebookHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         client = KaggleJwtClient()

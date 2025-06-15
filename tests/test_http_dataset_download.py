@@ -79,7 +79,7 @@ class TestHttpDatasetDownload(BaseTestCase):
         **kwargs,  # noqa: ANN003
     ) -> None:
         dataset_path = kagglehub.dataset_download(dataset_handle, path=TEST_FILEPATH, **kwargs)
-        
+
         if expected_target_path:
             self.assertEqual(expected_target_path, dataset_path)
             with open(dataset_path) as dataset_file:
@@ -163,7 +163,7 @@ class TestHttpDatasetDownload(BaseTestCase):
                 VERSIONED_DATASET_HANDLE,
                 EXPECTED_DATASET_SUBDIR,
                 target_path=target_dir,
-                expected_target_path=os.path.join(target_dir, os.path.basename(EXPECTED_DATASET_SUBPATH))
+                expected_target_path=os.path.join(target_dir, os.path.basename(EXPECTED_DATASET_SUBPATH)),
             )
 
     def test_versioned_dataset_download_with_path_and_target_path(self) -> None:
@@ -174,5 +174,5 @@ class TestHttpDatasetDownload(BaseTestCase):
                 d,
                 VERSIONED_DATASET_HANDLE,
                 target_path=target_dir,
-                expected_target_path=os.path.join(target_dir, TEST_FILEPATH)
+                expected_target_path=os.path.join(target_dir, TEST_FILEPATH),
             )

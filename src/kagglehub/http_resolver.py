@@ -18,6 +18,7 @@ from kagglehub.cache import (
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import UnauthenticatedError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
+from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
 
@@ -36,8 +37,18 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         return True
 
     def _resolve(
-        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: CompetitionHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument for competition downloads.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         api_client = KaggleApiV1Client()
 
         cached_path = load_from_cache(h, path)
@@ -100,7 +111,12 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         return True
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False, target_path: Optional[str] = None
+        self,
+        h: DatasetHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
         api_client = KaggleApiV1Client()
 
@@ -154,8 +170,18 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return True
 
     def _resolve(
-        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: ModelHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument for model downloads.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -216,8 +242,18 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         return True
 
     def _resolve(
-        self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: NotebookHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument for notebook output downloads.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
