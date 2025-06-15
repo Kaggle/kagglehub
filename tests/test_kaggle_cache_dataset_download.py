@@ -1,4 +1,5 @@
 import os
+import shutil
 from unittest import mock
 
 import requests
@@ -84,3 +85,18 @@ class TestKaggleCacheDatasetDownload(BaseTestCase):
         with stub.create_env():
             dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, force_download=False)
             self.assertEqual(["foo.txt"], sorted(os.listdir(dataset_path)))
+
+    def test_versioned_dataset_download_with_target_path(self) -> None:
+        with stub.create_env():
+            target_dir = os.path.join(os.getcwd(), "custom_target")
+            os.makedirs(target_dir, exist_ok=True)
+            try:
+                dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, target_path=target_dir)
+                # Kaggle cache resolver ignores target_path, so it should return the original path
+                self.assertNotEqual(target_dir, os.path.dirname(dataset_path))
+                # Check that original dataset path contains expected files
+                self.assertEqual(["foo.txt"], sorted(os.listdir(dataset_path)))
+            finally:
+                # Clean up
+                if os.path.exists(target_dir):
+                    shutil.rmtree(target_dir)
