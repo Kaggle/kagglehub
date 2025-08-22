@@ -14,6 +14,7 @@ def _create_dataset(dataset_handle: DatasetHandle, files_and_directories: Upload
         "ownerSlug": dataset_handle.owner,
         "title": dataset_handle.dataset,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": files_and_directories.serialize()["directories"],
         "isPrivate": True,
     }
 
@@ -30,6 +31,7 @@ def _create_dataset_version(
     data = {
         "versionNotes": version_notes,
         "files": [{"token": file_token} for file_token in files_and_directories.files],
+        "directories": files_and_directories.serialize()["directories"],
     }
     api_client = KaggleApiV1Client()
     api_client.post(f"/datasets/create/version/{dataset_handle.owner}/{dataset_handle.dataset}", data)
