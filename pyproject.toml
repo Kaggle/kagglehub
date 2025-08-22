@@ -84,7 +84,7 @@ dependencies = [
   "types-requests",
   "types-tqdm",
   "pandas_stubs",
-  "polars"
+  "polars",
 ]
 
 [tool.hatch.envs.lint.scripts]
@@ -237,3 +237,7 @@ exclude_lines = [
 
 [tool.mypy]
 mypy_path = "./stubs"
+
+[[tool.mypy.overrides]]
+module = ["yaml.*"]
+ignore_missing_imports = true
