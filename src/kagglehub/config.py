@@ -162,7 +162,7 @@ def _normalize_whitespace(s: str) -> str:
 def get_colab_credentials() -> Optional[KaggleApiCredentials]:
     # userdata access is already thread-safe after b/318732641
     try:
-        from google.colab import userdata  # type: ignore[import]
+        from google.colab import userdata  # type: ignore[import] # noqa: PLC0415
     except ImportError:
         return None
 

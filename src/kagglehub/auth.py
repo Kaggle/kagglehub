@@ -51,7 +51,7 @@ def _is_in_notebook() -> bool:
     Adapted to make it work with Google colab as well.
     """
     try:
-        from IPython import get_ipython  # type: ignore
+        from IPython import get_ipython  # type: ignore # noqa: PLC0415
 
         shell_class = get_ipython().__class__
         for parent_class in shell_class.__mro__:  # e.g. "is subclass of"
@@ -66,8 +66,8 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     """Prompt the user for their Kaggle token and save it in a widget (Jupyter or Colab)."""
     library_error = "You need the `ipywidgets` module: `pip install ipywidgets`."
     try:
-        from IPython.display import display  # type: ignore
-        from ipywidgets import widgets  # type: ignore
+        from IPython.display import display  # type: ignore # noqa: PLC0415
+        from ipywidgets import widgets  # type: ignore # noqa: PLC0415
     except ImportError:
         raise ImportError(library_error)  # noqa: B904
 

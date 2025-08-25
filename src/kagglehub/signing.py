@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def sign_with_sigstore(local_model_dir: str, handle: ModelHandle) -> bool:
-    from model_signing.signing import Config
+    from model_signing.signing import Config  # noqa: PLC0415
 
     try:
         token = signing_token(handle.owner, handle.model)
