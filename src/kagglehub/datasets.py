@@ -126,7 +126,7 @@ def dataset_load(
     polars_frame_type = polars_frame_type if polars_frame_type is not None else PolarsFrameType.LAZY_FRAME
     try:
         if adapter is KaggleDatasetAdapter.HUGGING_FACE:
-            import kagglehub.hf_datasets
+            import kagglehub.hf_datasets  # noqa: PLC0415
 
             return kagglehub.hf_datasets.load_hf_dataset(
                 handle,
@@ -136,13 +136,13 @@ def dataset_load(
                 hf_kwargs=hf_kwargs,
             )
         elif adapter is KaggleDatasetAdapter.PANDAS:
-            import kagglehub.pandas_datasets
+            import kagglehub.pandas_datasets  # noqa: PLC0415
 
             return kagglehub.pandas_datasets.load_pandas_dataset(
                 handle, path, pandas_kwargs=pandas_kwargs, sql_query=sql_query
             )
         elif adapter is KaggleDatasetAdapter.POLARS:
-            import kagglehub.polars_datasets
+            import kagglehub.polars_datasets  # noqa: PLC0415
 
             return kagglehub.polars_datasets.load_polars_dataset(
                 handle, path, polars_frame_type=polars_frame_type, polars_kwargs=polars_kwargs, sql_query=sql_query
