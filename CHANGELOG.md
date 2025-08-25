@@ -2,7 +2,12 @@
 
 ## Next Release
 
-* 
+## v0.3.13 (August 25, 2025)
+
+* Resolve an issue with the creation of datasets containing directories. ([#255](https://github.com/Kaggle/kagglehub/pull/255))
+* Enhance the error message for the deprecation warning to provide more clarity. ([#249](https://github.com/Kaggle/kagglehub/pull/249))
+* Fix a bug related to multithreading in Kaggle Packages. ([#248](https://github.com/Kaggle/kagglehub/pull/248))
+* Improve the logging messages for Colab caching for better user experiences. ([#243](https://github.com/Kaggle/kagglehub/pull/243))
 
 ## v0.3.12 (April 23, 2025)
 
