@@ -48,26 +48,46 @@ class TestHttpDatasetDownload(BaseTestCase):
         dataset_handle: str,
         expected_subdir_or_subpath: str,
         expected_files: Optional[list[str]] = None,
+        expected_target_path: Optional[str] = None,
         **kwargs,  # noqa: ANN003
     ) -> None:
         # Download the full datasets and ensure all files are there.
         dataset_path = kagglehub.dataset_download(dataset_handle, **kwargs)
 
-        self.assertEqual(os.path.join(d, expected_subdir_or_subpath), dataset_path)
+        # If target_path was specified, check that the file was copied there
+        if expected_target_path:
+            self.assertEqual(expected_target_path, dataset_path)
+            self.assertTrue(os.path.exists(expected_target_path))
+        else:
+            self.assertEqual(os.path.join(d, expected_subdir_or_subpath), dataset_path)
+
+        path_to_check = dataset_path
 
         if not expected_files:
             expected_files = ["foo.txt"]
-        self.assertEqual(sorted(expected_files), sorted(os.listdir(dataset_path)))
+        self.assertEqual(sorted(expected_files), sorted(os.listdir(path_to_check)))
 
         # Assert that the archive file has been deleted
         archive_path = get_cached_archive_path(parse_dataset_handle(dataset_handle))
         self.assertFalse(os.path.exists(archive_path))
 
-    def _download_test_file_and_assert_downloaded(self, d: str, dataset_handle: str, **kwargs) -> None:  # noqa: ANN003
+    def _download_test_file_and_assert_downloaded(
+        self,
+        d: str,
+        dataset_handle: str,
+        expected_target_path: Optional[str] = None,
+        **kwargs,  # noqa: ANN003
+    ) -> None:
         dataset_path = kagglehub.dataset_download(dataset_handle, path=TEST_FILEPATH, **kwargs)
-        self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, TEST_FILEPATH), dataset_path)
-        with open(dataset_path) as dataset_file:
-            self.assertEqual(TEST_CONTENTS, dataset_file.read())
+
+        if expected_target_path:
+            self.assertEqual(expected_target_path, dataset_path)
+            with open(dataset_path) as dataset_file:
+                self.assertEqual(TEST_CONTENTS, dataset_file.read())
+        else:
+            self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, TEST_FILEPATH), dataset_path)
+            with open(dataset_path) as dataset_file:
+                self.assertEqual(TEST_CONTENTS, dataset_file.read())
 
     def _download_test_file_and_assert_downloaded_auto_compressed(
         self,
@@ -133,3 +153,26 @@ class TestHttpDatasetDownload(BaseTestCase):
             # Download a single file first
             kagglehub.dataset_download(UNVERSIONED_DATASET_HANDLE, path=TEST_FILEPATH)
             self._download_dataset_and_assert_downloaded(d, UNVERSIONED_DATASET_HANDLE, EXPECTED_DATASET_SUBDIR)
+
+    def test_versioned_dataset_download_with_target_path(self) -> None:
+        with create_test_cache() as d:
+            target_dir = os.path.join(d, "custom_target")
+            os.makedirs(target_dir, exist_ok=True)
+            self._download_dataset_and_assert_downloaded(
+                d,
+                VERSIONED_DATASET_HANDLE,
+                EXPECTED_DATASET_SUBDIR,
+                target_path=target_dir,
+                expected_target_path=os.path.join(target_dir, os.path.basename(EXPECTED_DATASET_SUBPATH)),
+            )
+
+    def test_versioned_dataset_download_with_path_and_target_path(self) -> None:
+        with create_test_cache() as d:
+            target_dir = os.path.join(d, "custom_target")
+            os.makedirs(target_dir, exist_ok=True)
+            self._download_test_file_and_assert_downloaded(
+                d,
+                VERSIONED_DATASET_HANDLE,
+                target_path=target_dir,
+                expected_target_path=os.path.join(target_dir, TEST_FILEPATH),
+            )

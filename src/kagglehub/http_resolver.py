@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import tarfile
 import zipfile
 from typing import Optional
@@ -17,6 +18,7 @@ from kagglehub.cache import (
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.exceptions import UnauthenticatedError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
+from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
 
@@ -35,8 +37,18 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         return True
 
     def _resolve(
-        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: CompetitionHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument for competition downloads.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         api_client = KaggleApiV1Client()
 
         cached_path = load_from_cache(h, path)
@@ -99,7 +111,12 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         return True
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: DatasetHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
         api_client = KaggleApiV1Client()
 
@@ -108,12 +125,16 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
 
         dataset_path = load_from_cache(h, path)
         if dataset_path and not force_download:
+            if target_path:
+                # Handle target_path for cached files
+                return _copy_to_target_path(dataset_path, target_path), h.version
             return dataset_path, h.version  # Already cached
         elif dataset_path and force_download:
             delete_from_cache(h, path)
 
         url_path = _build_dataset_download_url_path(h, path)
         out_path = get_cached_path(h, path)
+        final_path = out_path
 
         # Create the intermediary directories
         if path:
@@ -135,7 +156,12 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             os.remove(archive_path)
 
         mark_as_complete(h, path)
-        return out_path, h.version
+        
+        # Handle target_path if specified
+        if target_path:
+            final_path = _copy_to_target_path(out_path, target_path)
+            
+        return final_path, h.version
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
@@ -144,8 +170,18 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return True
 
     def _resolve(
-        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: ModelHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument for model downloads.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -206,8 +242,18 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         return True
 
     def _resolve(
-        self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
+        self,
+        h: NotebookHandle,
+        path: Optional[str] = None,
+        *,
+        force_download: Optional[bool] = False,
+        target_path: Optional[str] = None,
     ) -> tuple[str, Optional[int]]:
+        if target_path:
+            logger.info(
+                "Ignoring `target_path` argument for notebook output downloads.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -385,3 +431,30 @@ def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
 
 def _build_competition_download_file_url_path(h: CompetitionHandle, file: str) -> str:
     return f"competitions/data/download/{h.competition}/{file}"
+
+
+def _copy_to_target_path(source_path: str, target_path: str) -> str:
+    """Copy file or directory from source_path to target_path.
+    
+    Args:
+        source_path: Path to the source file or directory
+        target_path: Path to the target directory
+        
+    Returns:
+        Path to the copied file or directory
+    """
+    os.makedirs(target_path, exist_ok=True)
+    
+    # Determine final path
+    basename = os.path.basename(source_path)
+    final_path = os.path.join(target_path, basename)
+    
+    # Copy file or directory
+    if os.path.isdir(source_path):
+        if os.path.exists(final_path):
+            shutil.rmtree(final_path)
+        shutil.copytree(source_path, final_path)
+    else:
+        shutil.copy2(source_path, final_path)
+        
+    return final_path
