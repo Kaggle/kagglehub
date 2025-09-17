@@ -2,7 +2,6 @@
 
 import abc
 from dataclasses import asdict, dataclass
-from typing import Optional
 
 from kagglehub.config import get_kaggle_api_endpoint
 
@@ -31,7 +30,7 @@ class ModelHandle(ResourceHandle):
     model: str
     framework: str
     variation: str
-    version: Optional[int]
+    version: int | None
 
     def is_versioned(self) -> bool:
         return self.version is not None and self.version > 0
@@ -59,7 +58,7 @@ class ModelHandle(ResourceHandle):
 class DatasetHandle(ResourceHandle):
     owner: str
     dataset: str
-    version: Optional[int] = None
+    version: int | None = None
 
     def is_versioned(self) -> bool:
         return self.version is not None and self.version > 0
@@ -99,7 +98,7 @@ class CompetitionHandle(ResourceHandle):
 class NotebookHandle(ResourceHandle):
     owner: str
     notebook: str
-    version: Optional[int] = None
+    version: int | None = None
 
     def is_versioned(self) -> bool:
         return self.version is not None and self.version > 0

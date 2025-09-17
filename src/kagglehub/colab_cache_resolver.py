@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-from typing import Optional
 
 from kagglehub.clients import ColabClient
 from kagglehub.config import is_colab_cache_disabled
@@ -42,8 +41,8 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
         return True
 
     def _resolve(
-        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: ModelHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",
@@ -118,8 +117,8 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
         return True
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: DatasetHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",
@@ -171,7 +170,7 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
         return cached_path, version
 
 
-def _get_model_version(h: ModelHandle) -> Optional[int]:
+def _get_model_version(h: ModelHandle) -> int | None:
     if h.is_versioned():
         return h.version
 
@@ -182,7 +181,7 @@ def _get_model_version(h: ModelHandle) -> Optional[int]:
     return None
 
 
-def _get_dataset_version(h: DatasetHandle) -> Optional[int]:
+def _get_dataset_version(h: DatasetHandle) -> int | None:
     if h.is_versioned():
         return h.version
 

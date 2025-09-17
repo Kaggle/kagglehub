@@ -1,11 +1,12 @@
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from kagglehub import registry
 from kagglehub.handle import ResourceHandle
 from kagglehub.resolver import Resolver
 from tests.fixtures import BaseTestCase
 
-SOME_VALUE: tuple[str, Optional[int]] = ("test", 1)
+SOME_VALUE: tuple[str, int | None] = ("test", 1)
 
 
 class FakeHandle(ResourceHandle):
@@ -17,7 +18,7 @@ class FakeImpl(Resolver[FakeHandle]):
     def __init__(
         self,
         is_supported_fn: Callable[[FakeHandle], bool],
-        resolve_fn: Callable[[FakeHandle], tuple[str, Optional[int]]],
+        resolve_fn: Callable[[FakeHandle], tuple[str, int | None]],
     ):
         self._is_supported_fn = is_supported_fn
         self._resolve_fn = resolve_fn
@@ -25,11 +26,11 @@ class FakeImpl(Resolver[FakeHandle]):
     def is_supported(self, *args: Any, **kwargs: Any) -> bool:  # noqa: ANN401
         return self._is_supported_fn(*args, **kwargs)
 
-    def _resolve(self, *args: Any, **kwargs: Any) -> tuple[str, Optional[int]]:  # noqa: ANN401
+    def _resolve(self, *args: Any, **kwargs: Any) -> tuple[str, int | None]:  # noqa: ANN401
         return self._resolve_fn(*args, **kwargs)
 
 
-def fail_fn(*_, **__) -> tuple[str, Optional[int]]:  # noqa: ANN002, ANN003
+def fail_fn(*_, **__) -> tuple[str, int | None]:  # noqa: ANN002, ANN003
     msg = "fail_fn should not be called"
     raise AssertionError(msg)
 

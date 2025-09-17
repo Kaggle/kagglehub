@@ -7,7 +7,6 @@ import zipfile
 from collections.abc import Iterable, Sequence
 from datetime import datetime
 from tempfile import TemporaryDirectory
-from typing import Optional, Union
 
 import requests
 from requests.exceptions import Timeout
@@ -29,8 +28,8 @@ class UploadDirectoryInfo:
     def __init__(
         self,
         name: str,
-        files: Optional[list[str]] = None,
-        directories: Optional[list["UploadDirectoryInfo"]] = None,
+        files: list[str] | None = None,
+        directories: list["UploadDirectoryInfo"] | None = None,
     ):
         self.name = name
         self.files = files if files is not None else []
@@ -44,7 +43,7 @@ class UploadDirectoryInfo:
         }
 
 
-def parse_datetime_string(string: str) -> Union[datetime, str]:
+def parse_datetime_string(string: str) -> datetime | str:
     time_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%fZ"]
     for t in time_formats:
         try:
@@ -254,7 +253,7 @@ def upload_files_and_directories(
     return root_dict
 
 
-def _upload_file(file_path: str, *, quiet: bool, item_type: str) -> Optional[str]:
+def _upload_file(file_path: str, *, quiet: bool, item_type: str) -> str | None:
     """Helper function to upload a single file.
 
     Args:
@@ -280,7 +279,7 @@ def _upload_file(file_path: str, *, quiet: bool, item_type: str) -> Optional[str
     return token
 
 
-def normalize_patterns(*, default: list[str], additional: Optional[Union[list[str], str]]) -> list[str]:
+def normalize_patterns(*, default: list[str], additional: list[str] | str | None) -> list[str]:
     """Merges additional patterns with the default, and normalize the dir pattern with wildcard."""
 
     def add_wildcard_to_dir(pattern: str) -> str:

@@ -19,7 +19,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords = ["Kaggle", "API"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
   "requests", 
   "tqdm",
@@ -64,10 +64,10 @@ dependencies = [
 features = ["hf-datasets", "signing", "polars-datasets"]
 
 [[tool.hatch.envs.hatch-test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+python = ["3.10", "3.11", "3.12"]
 
 [[tool.hatch.envs.all.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+python = ["3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.lint]
 detached = true
@@ -141,12 +141,12 @@ features = [
 ]
 
 [tool.black]
-target-version = ["py39"]
+target-version = ["py310"]
 line-length = 120
 skip-string-normalization = true
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 120
 extend-exclude = [
   # Ignore saved scripts for local kagglehub testing

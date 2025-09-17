@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any, Optional, Union
+from typing import Any
 
 from kagglehub import registry
 from kagglehub.datasets_enums import KaggleDatasetAdapter, PolarsFrameType
@@ -29,7 +29,7 @@ _DATASET_LOAD_VALID_KWARGS_MAP = {
 }
 
 
-def dataset_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+def dataset_download(handle: str, path: str | None = None, *, force_download: bool | None = False) -> str:
     """Download dataset files
     Args:
         handle: (string) the dataset handle
@@ -48,7 +48,7 @@ def dataset_upload(
     handle: str,
     local_dataset_dir: str,
     version_notes: str = "",
-    ignore_patterns: Optional[Union[list[str], str]] = None,
+    ignore_patterns: list[str] | str | None = None,
 ) -> None:
     """Upload dataset files.
     Args:
@@ -85,9 +85,9 @@ def dataset_load(
     path: str,
     *,
     pandas_kwargs: Any = None,  # noqa: ANN401
-    sql_query: Optional[str] = None,
+    sql_query: str | None = None,
     hf_kwargs: Any = None,  # noqa: ANN401
-    polars_frame_type: Optional[PolarsFrameType] = None,
+    polars_frame_type: PolarsFrameType | None = None,
     polars_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     """Load a Kaggle Dataset into a python object based on the selected adapter
@@ -167,7 +167,7 @@ def load_dataset(
     path: str,
     *,
     pandas_kwargs: Any = None,  # noqa: ANN401
-    sql_query: Optional[str] = None,
+    sql_query: str | None = None,
     hf_kwargs: Any = None,  # noqa: ANN401
 ) -> Any:  # noqa: ANN401
     warnings.warn(

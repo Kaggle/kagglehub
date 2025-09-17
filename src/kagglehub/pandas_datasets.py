@@ -1,6 +1,7 @@
 import os
 import sqlite3
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 # WARNING: This module is intended to be imported only at runtime, with
 # specific error handling to inform users that they need to install the
@@ -52,7 +53,7 @@ SUPPORTED_READ_FUNCTIONS_BY_EXTENSION: dict[str, Callable] = {
 }
 
 # Certain extensions leverage a shared method but require additional static kwargs
-STATIC_KWARGS_BY_EXTENSION: dict[str, dict[str, Union[str, bool]]] = {".tsv": {"sep": "\t"}, ".jsonl": {"lines": True}}
+STATIC_KWARGS_BY_EXTENSION: dict[str, dict[str, str | bool]] = {".tsv": {"sep": "\t"}, ".jsonl": {"lines": True}}
 MISSING_SQL_QUERY_ERROR_MESSAGE = "Loading from a SQLite file requires a SQL query"
 
 
@@ -61,8 +62,8 @@ def load_pandas_dataset(
     path: str,
     *,
     pandas_kwargs: Any = None,  # noqa: ANN401
-    sql_query: Optional[str],
-) -> Union[pd.DataFrame, dict[Union[int, str], pd.DataFrame]]:
+    sql_query: str | None,
+) -> pd.DataFrame | dict[int | str, pd.DataFrame]:
     """Creates pandas DataFrame(s) from a file in the dataset
 
     Args:
@@ -99,7 +100,7 @@ def load_pandas_dataset(
     return result
 
 
-def _validate_read_function(file_extension: str, sql_query: Optional[str]) -> Callable:
+def _validate_read_function(file_extension: str, sql_query: str | None) -> Callable:
     if file_extension not in SUPPORTED_READ_FUNCTIONS_BY_EXTENSION:
         extension_error_message = (
             f"Unsupported file extension: '{file_extension}'. "
@@ -114,7 +115,7 @@ def _validate_read_function(file_extension: str, sql_query: Optional[str]) -> Ca
     return read_function
 
 
-def _build_args(read_function: Callable, path: str, sql_query: Optional[str]) -> list:
+def _build_args(read_function: Callable, path: str, sql_query: str | None) -> list:
     # The presence of the sql_query arg was already validated in _validate_read_function
     return [path] if read_function != wrapped_read_sql_query else [sql_query, path]
 

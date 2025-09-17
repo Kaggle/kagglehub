@@ -1,6 +1,5 @@
 import base64
 import logging
-from typing import Optional
 
 import requests
 
@@ -11,7 +10,7 @@ COMPUTE_HASH_CHUNK_SIZE = 8192
 logger = logging.getLogger(__name__)
 
 
-def get_md5_checksum_from_response(response: requests.Response) -> Optional[str]:
+def get_md5_checksum_from_response(response: requests.Response) -> str | None:
     # See https://cloud.google.com/storage/docs/xml-api/reference-headers#xgooghash
     # Format is: x-goog-hash: crc32c=n03x6A==,md5=Ojk9c3dhfxgoKVVHYwFbHQ==
     if GCS_HASH_HEADER in response.headers:

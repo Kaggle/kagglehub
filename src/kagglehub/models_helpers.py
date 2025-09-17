@@ -1,6 +1,5 @@
 import logging
 from http import HTTPStatus
-from typing import Optional
 
 from kagglehub.clients import BackendError, KaggleApiV1Client
 from kagglehub.exceptions import KaggleApiHTTPError
@@ -20,9 +19,9 @@ def _create_model(owner_slug: str, model_slug: str) -> None:
 def _create_model_instance(
     model_handle: ModelHandle,
     files_and_directories: UploadDirectoryInfo,
-    license_name: Optional[str] = None,
+    license_name: str | None = None,
     *,
-    sigstore: Optional[bool] = False,
+    sigstore: bool | None = False,
 ) -> None:
     serialized_data = files_and_directories.serialize()
     data = {
@@ -45,7 +44,7 @@ def _create_model_instance_version(
     files_and_directories: UploadDirectoryInfo,
     version_notes: str = "",
     *,
-    sigstore: Optional[bool] = False,
+    sigstore: bool | None = False,
 ) -> None:
     serialized_data = files_and_directories.serialize()
     data = {
@@ -67,10 +66,10 @@ def _create_model_instance_version(
 def create_model_instance_or_version(
     model_handle: ModelHandle,
     files: UploadDirectoryInfo,
-    license_name: Optional[str],
+    license_name: str | None,
     version_notes: str = "",
     *,
-    sigstore: Optional[bool] = False,
+    sigstore: bool | None = False,
 ) -> None:
     try:
         _create_model_instance(model_handle, files, license_name, sigstore=sigstore)
@@ -113,7 +112,7 @@ def delete_model(owner_slug: str, model_slug: str) -> None:
             raise (e)
 
 
-def signing_token(owner_slug: str, model_slug: str) -> Optional[str]:
+def signing_token(owner_slug: str, model_slug: str) -> str | None:
     "Returns a JWT for signing if authorized for /{owner_slug}/{model_slug}"
     try:
         api_client = KaggleApiV1Client()

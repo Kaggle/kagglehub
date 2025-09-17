@@ -2,6 +2,10 @@
 
 ## Next Release
 
+## v0.3.14 (September 17, 2025)
+
+* Dropped support for Python 3.9. The minimum required Python version is now 3.10.
+
 ## v0.3.13 (August 25, 2025)
 
 * Resolve an issue with the creation of datasets containing directories. ([#255](https://github.com/Kaggle/kagglehub/pull/255))

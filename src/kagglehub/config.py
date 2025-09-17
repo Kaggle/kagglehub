@@ -9,7 +9,6 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from kagglehub.env import is_in_colab_notebook
 
@@ -67,7 +66,7 @@ def get_kaggle_api_endpoint() -> str:
     return DEFAULT_KAGGLE_API_ENDPOINT
 
 
-def get_kaggle_credentials() -> Optional[KaggleApiCredentials]:
+def get_kaggle_credentials() -> KaggleApiCredentials | None:
     # Check for credentials in the global variable
     if _kaggle_credentials:
         return _kaggle_credentials
@@ -159,7 +158,7 @@ def _normalize_whitespace(s: str) -> str:
     return s.replace("\r", "").replace("\n", "").strip()
 
 
-def get_colab_credentials() -> Optional[KaggleApiCredentials]:
+def get_colab_credentials() -> KaggleApiCredentials | None:
     # userdata access is already thread-safe after b/318732641
     try:
         from google.colab import userdata  # type: ignore[import] # noqa: PLC0415

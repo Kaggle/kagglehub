@@ -1,4 +1,4 @@
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
 from kagglehub.resolver import Resolver
@@ -21,7 +21,7 @@ class MultiImplRegistry(Generic[T]):
     def add_implementation(self, impl: Resolver[T]) -> None:
         self._impls.append(impl)
 
-    def __call__(self, *args, **kwargs) -> tuple[str, Optional[int]]:  # noqa: ANN002, ANN003
+    def __call__(self, *args, **kwargs) -> tuple[str, int | None]:  # noqa: ANN002, ANN003
         fails = []
         for impl in reversed(self._impls):
             if impl.is_supported(*args, **kwargs):

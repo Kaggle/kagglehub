@@ -1,8 +1,9 @@
+from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Event, Thread
 from types import ModuleType
-from typing import Any, Callable, Union
+from typing import Any
 
 from kagglehub.packages import PackageScope, _apply_context_manager_to_module
 from tests.fixtures import BaseTestCase
@@ -106,7 +107,7 @@ class TestPackageMultithreading(BaseTestCase):
         thread_b.join(timeout=3)
 
 
-def import_fake_package_module(module_name_suffix: str, *members: Union[Callable[..., Any], type[Any]]) -> ModuleType:
+def import_fake_package_module(module_name_suffix: str, *members: Callable[..., Any] | type[Any]) -> ModuleType:
     """Makes a fake python module with our custom context manager decorations applied.
 
     Creates the module with the desired function and class members, and calls _apply_context_manager_to_module

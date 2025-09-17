@@ -2,7 +2,6 @@ import logging
 import os
 import tarfile
 import zipfile
-from typing import Optional
 
 import requests
 from tqdm.contrib.concurrent import thread_map
@@ -35,8 +34,8 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         return True
 
     def _resolve(
-        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: CompetitionHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         api_client = KaggleApiV1Client()
 
         cached_path = load_from_cache(h, path)
@@ -99,8 +98,8 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         return True
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: DatasetHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -144,8 +143,8 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return True
 
     def _resolve(
-        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: ModelHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -206,8 +205,8 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         return True
 
     def _resolve(
-        self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: NotebookHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         api_client = KaggleApiV1Client()
 
         if not h.is_versioned():
@@ -326,7 +325,7 @@ def _build_get_instance_url_path(h: ModelHandle) -> str:
     return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/get"
 
 
-def _build_model_download_url_path(h: ModelHandle, path: Optional[str]) -> str:
+def _build_model_download_url_path(h: ModelHandle, path: str | None) -> str:
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
@@ -355,7 +354,7 @@ def _build_get_notebook_url_path(h: NotebookHandle) -> str:
     return f"kernels/pull?user_name={h.owner}&kernel_slug={h.notebook}"
 
 
-def _build_dataset_download_url_path(h: DatasetHandle, path: Optional[str]) -> str:
+def _build_dataset_download_url_path(h: DatasetHandle, path: str | None) -> str:
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
@@ -367,7 +366,7 @@ def _build_dataset_download_url_path(h: DatasetHandle, path: Optional[str]) -> s
         return base_url
 
 
-def _build_notebook_download_url_path(h: NotebookHandle, path: Optional[str]) -> str:
+def _build_notebook_download_url_path(h: NotebookHandle, path: str | None) -> str:
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)

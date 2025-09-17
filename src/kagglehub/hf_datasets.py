@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 # WARNING: This module is intended to be imported only at runtime, with
 # specific error handling to inform users that they need to install the
@@ -21,7 +21,7 @@ def load_hf_dataset(
     path: str,
     *,
     pandas_kwargs: Any = None,  # noqa: ANN401
-    sql_query: Optional[str] = None,
+    sql_query: str | None = None,
     hf_kwargs: Any = None,  # noqa: ANN401
 ) -> Dataset:
     """Load a Kaggle Dataset into a Huggingface Dataset (via pandas)

@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timezone
-from typing import Optional
 
 import requests
 
@@ -46,7 +45,7 @@ class TestHttpCompetitionDownload(BaseTestCase):
         d: str,
         competition_handle: str,
         expected_subdir_or_subpath: str,
-        expected_files: Optional[list[str]] = None,
+        expected_files: list[str] | None = None,
         **kwargs,  # noqa: ANN003
     ) -> None:
         if not expected_files:

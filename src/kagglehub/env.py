@@ -3,7 +3,6 @@ import inspect
 import logging
 import os
 from importlib import metadata  # type: ignore
-from typing import Optional
 
 KAGGLE_NOTEBOOK_ENV_VAR_NAME = "KAGGLE_KERNEL_RUN_TYPE"
 KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME = "KAGGLE_DATA_PROXY_URL"
@@ -49,7 +48,7 @@ def read_kaggle_build_date() -> str:
         return "unknown"
 
 
-def search_lib_in_call_stack(lib_name: str) -> Optional[str]:
+def search_lib_in_call_stack(lib_name: str) -> str | None:
     """Search the call stack for a given library name and get its information.
 
     Args:

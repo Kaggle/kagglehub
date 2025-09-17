@@ -1,5 +1,5 @@
 import abc
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from kagglehub.handle import ResourceHandle
 from kagglehub.tracker import register_datasource_access
@@ -13,8 +13,8 @@ class Resolver(Generic[T]):
     __metaclass__ = abc.ABCMeta
 
     def __call__(
-        self, handle: T, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, handle: T, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
         Args:
@@ -35,8 +35,8 @@ class Resolver(Generic[T]):
 
     @abc.abstractmethod
     def _resolve(
-        self, handle: T, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, handle: T, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
         Args:
@@ -51,6 +51,6 @@ class Resolver(Generic[T]):
         pass
 
     @abc.abstractmethod
-    def is_supported(self, handle: T, path: Optional[str] = None) -> bool:
+    def is_supported(self, handle: T, path: str | None = None) -> bool:
         """Returns whether the current environment supports this handle/path."""
         pass
