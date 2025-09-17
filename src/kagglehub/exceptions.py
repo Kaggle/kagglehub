@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Any
 
 import requests
 
@@ -23,7 +23,7 @@ class ColabEnvironmentError(Exception):
 
 
 class BackendError(Exception):
-    def __init__(self, message: str, error_code: Optional[int] = None) -> None:
+    def __init__(self, message: str, error_code: int | None = None) -> None:
         self.error_code = error_code
         super().__init__(message)
 
@@ -37,12 +37,12 @@ class DataCorruptionError(Exception):
 
 
 class KaggleApiHTTPError(requests.HTTPError):
-    def __init__(self, message: str, response: Optional[requests.Response] = None) -> None:
+    def __init__(self, message: str, response: requests.Response | None = None) -> None:
         super().__init__(message, response=response)
 
 
 class ColabHTTPError(requests.HTTPError):
-    def __init__(self, message: str, response: Optional[requests.Response] = None) -> None:
+    def __init__(self, message: str, response: requests.Response | None = None) -> None:
         super().__init__(message, response=response)
 
 
@@ -57,7 +57,7 @@ class UserCancelledError(Exception):
     pass
 
 
-def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Optional[ResourceHandle] = None) -> None:
+def kaggle_api_raise_for_status(response: requests.Response, resource_handle: ResourceHandle | None = None) -> None:
     """
     Wrapper around `response.raise_for_status()` that provides nicer error messages
     See: https://requests.readthedocs.io/en/latest/api/#requests.Response.raise_for_status
@@ -106,7 +106,7 @@ def kaggle_api_raise_for_status(response: requests.Response, resource_handle: Op
         raise KaggleApiHTTPError(message, response=response) from e
 
 
-def colab_raise_for_status(response: requests.Response, resource_handle: Optional[ResourceHandle] = None) -> None:
+def colab_raise_for_status(response: requests.Response, resource_handle: ResourceHandle | None = None) -> None:
     """
     Wrapper around `response.raise_for_status()` that provides nicer error messages
     See: https://requests.readthedocs.io/en/latest/api/#requests.Response.raise_for_status

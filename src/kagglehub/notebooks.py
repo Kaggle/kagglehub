@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from kagglehub import registry
 from kagglehub.handle import parse_notebook_handle
@@ -8,7 +7,7 @@ from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 logger = logging.getLogger(__name__)
 
 
-def notebook_output_download(handle: str, path: Optional[str] = None, *, force_download: Optional[bool] = False) -> str:
+def notebook_output_download(handle: str, path: str | None = None, *, force_download: bool | None = False) -> str:
     """Download notebook output files.
 
     Args:

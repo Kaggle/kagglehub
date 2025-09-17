@@ -1,7 +1,6 @@
 import logging
 import sys
 from http import HTTPStatus
-from typing import Optional
 
 from kagglehub import registry
 from kagglehub.clients import KaggleApiV1Client
@@ -12,7 +11,7 @@ from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 logger = logging.getLogger(__name__)
 
 
-def utility_script_install(handle: str, *, force_download: Optional[bool] = False) -> str:
+def utility_script_install(handle: str, *, force_download: bool | None = False) -> str:
     """
     Downloads the utility script and adds the directory path to the system path.
 

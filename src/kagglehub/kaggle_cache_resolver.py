@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-from typing import Optional
 
 from kagglehub.clients import (
     DEFAULT_CONNECT_TIMEOUT,
@@ -38,8 +37,8 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
         return False
 
     def _resolve(
-        self, h: CompetitionHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: CompetitionHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         client = KaggleJwtClient()
         if force_download:
             logger.info(
@@ -102,8 +101,8 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
         return False
 
     def _resolve(
-        self, h: DatasetHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: DatasetHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
@@ -177,8 +176,8 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         return False
 
     def _resolve(
-        self, h: ModelHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: ModelHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
@@ -254,8 +253,8 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
         return False
 
     def _resolve(
-        self, h: NotebookHandle, path: Optional[str] = None, *, force_download: Optional[bool] = False
-    ) -> tuple[str, Optional[int]]:
+        self, h: NotebookHandle, path: str | None = None, *, force_download: bool | None = False
+    ) -> tuple[str, int | None]:
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",

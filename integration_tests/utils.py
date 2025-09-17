@@ -1,10 +1,10 @@
 import functools
 import os
 import unittest
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from typing import Any, Callable
+from typing import Any
 from unittest import mock
 
 from kagglehub.config import (

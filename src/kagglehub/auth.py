@@ -3,7 +3,6 @@ import io
 import logging
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Optional
 
 from kagglehub.clients import KaggleApiV1Client
 from kagglehub.config import set_kaggle_credentials
@@ -114,7 +113,7 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
     login_button.on_click(on_click_login_button)
 
 
-def _validate_credentials_helper(*, verbose: bool = True) -> Optional[str]:
+def _validate_credentials_helper(*, verbose: bool = True) -> str | None:
     api_client = KaggleApiV1Client()
     response = api_client.get("/hello")
     if "userName" in response:
@@ -165,7 +164,7 @@ def whoami(*, verbose: bool = True) -> dict:
         raise UnauthenticatedError() from e
 
 
-def get_username() -> Optional[str]:
+def get_username() -> str | None:
     """Returns the username of the authenticated logged-in user if configured, otherwise None."""
     try:
         return whoami(verbose=False)["username"]

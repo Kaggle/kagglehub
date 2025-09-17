@@ -6,7 +6,6 @@ import os
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -128,7 +127,7 @@ class KaggleApiV1Client:
                     f"please consider upgrading to the latest version ({latest_version})."
                 )
 
-    def get(self, path: str, resource_handle: Optional[ResourceHandle] = None) -> dict:
+    def get(self, path: str, resource_handle: ResourceHandle | None = None) -> dict:
         url = self._build_url(path)
         with requests.get(
             url,
@@ -159,8 +158,8 @@ class KaggleApiV1Client:
         self,
         path: str,
         out_file: str,
-        resource_handle: Optional[ResourceHandle] = None,
-        cached_path: Optional[str] = None,
+        resource_handle: ResourceHandle | None = None,
+        cached_path: str | None = None,
         *,
         extract_auto_compressed_file: bool = False,
     ) -> bool:
@@ -247,7 +246,7 @@ class KaggleApiV1Client:
     def has_credentials(self) -> bool:
         return self._get_auth() is not None
 
-    def _get_auth(self) -> Optional[requests.auth.AuthBase]:
+    def _get_auth(self) -> requests.auth.AuthBase | None:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():
@@ -266,7 +265,7 @@ def _download_file(
     response: requests.Response,
     out_file: str,
     size_read: int,
-    total_size: Optional[int],
+    total_size: int | None,
     hash_object,  # noqa: ANN001 - no public type for hashlib hash
 ) -> None:
     open_mode = "ab" if size_read > 0 else "wb"
@@ -287,7 +286,7 @@ def _download_file(
                     hash_object.update(chunk)
 
 
-def _download_needed(response: requests.Response, h: ResourceHandle, cached_path: Optional[str] = None) -> bool:
+def _download_needed(response: requests.Response, h: ResourceHandle, cached_path: str | None = None) -> bool:
     """
     Determine if a download is needed based on timestamp and cached path.
 
@@ -415,7 +414,7 @@ class ColabClient:
         self.credentials = get_kaggle_credentials()
         self.headers = {"Content-type": "application/json"}
 
-    def post(self, data: dict, handle_path: str, resource_handle: Optional[ResourceHandle] = None) -> Optional[dict]:
+    def post(self, data: dict, handle_path: str, resource_handle: ResourceHandle | None = None) -> dict | None:
         url = f"http://{self.endpoint}{handle_path}"
         with requests.post(
             url,
@@ -431,7 +430,7 @@ class ColabClient:
                 return response.json()
         return None
 
-    def _get_auth(self) -> Optional[requests.auth.AuthBase]:
+    def _get_auth(self) -> requests.auth.AuthBase | None:
         if self.credentials:
             return HTTPBasicAuth(self.credentials.username, self.credentials.key)
         elif is_in_kaggle_notebook():

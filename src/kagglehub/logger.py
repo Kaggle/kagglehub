@@ -1,10 +1,10 @@
 import logging
 import os
 import sys
+from collections.abc import Callable
 from logging import LogRecord
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Callable, Optional
 
 from kagglehub.config import get_log_verbosity
 
@@ -32,7 +32,7 @@ def _block_logrecord_factory(elements: list[str]) -> Callable[[LogRecord], bool]
     return _filter
 
 
-def _configure_logger(log_dir: Optional[Path] = None) -> None:
+def _configure_logger(log_dir: Path | None = None) -> None:
     library_name = __name__.split(".")[0]  # i.e. "kagglehub"
     library_logger = logging.getLogger(library_name)
     while library_logger.handlers:

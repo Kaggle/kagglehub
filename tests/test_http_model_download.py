@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 import requests
 
@@ -44,7 +43,7 @@ class TestHttpModelDownload(BaseTestCase):
         d: str,
         model_handle: str,
         expected_subdir_or_subpath: str,
-        expected_files: Optional[list[str]] = None,
+        expected_files: list[str] | None = None,
         **kwargs,  # noqa: ANN003
     ) -> None:
         # Download the full model and ensure all files are there.

@@ -3,11 +3,11 @@ import hashlib
 import mimetypes
 import os
 import sys
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Callable
+from typing import Any
 from unittest import mock
 
 from flask import Flask, Response

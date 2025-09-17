@@ -1,5 +1,5 @@
 import pathlib
-from typing import Any, Optional, Union
+from typing import Any
 
 import yaml
 
@@ -47,13 +47,13 @@ HANDLE_TYPE_PARSERS = {
 }
 
 # Maps requested ResourceHandle (which may include version) to version used
-VersionedDatasources = dict[ResourceHandle, Optional[int]]
+VersionedDatasources = dict[ResourceHandle, int | None]
 
 # Tracks datasources accessed in the current session
 _accessed_datasources: VersionedDatasources = {}
 
 
-def register_datasource_access(handle: ResourceHandle, version: Optional[int]) -> None:
+def register_datasource_access(handle: ResourceHandle, version: int | None) -> None:
     """Record that a datasource was accessed.
 
     Link the user-requested handle to the version retrieved."""
@@ -64,7 +64,7 @@ def get_accessed_datasources() -> VersionedDatasources:
     return _accessed_datasources.copy()
 
 
-def write_file(filepath: Union[str, pathlib.Path]) -> None:
+def write_file(filepath: str | pathlib.Path) -> None:
     """Write the datasources accessed during this session to a yaml file.
 
     Args:
@@ -79,7 +79,7 @@ def write_file(filepath: Union[str, pathlib.Path]) -> None:
         yaml.dump(data, f, sort_keys=False)
 
 
-def read_file(filepath: Union[str, pathlib.Path]) -> VersionedDatasources:
+def read_file(filepath: str | pathlib.Path) -> VersionedDatasources:
     """Read a yaml file with datasource + version records.
 
     Args:
@@ -103,7 +103,7 @@ def read_file(filepath: Union[str, pathlib.Path]) -> VersionedDatasources:
     return versioned_datasources
 
 
-def _serialize_datasource(h: ResourceHandle, version: Optional[int]) -> dict:
+def _serialize_datasource(h: ResourceHandle, version: int | None) -> dict:
     data: dict[str, Any] = {
         DATASOURCE_TYPE_FIELD: HANDLE_TYPE_NAMES[type(h)],
         DATASOURCE_REF_FIELD: str(h),
@@ -115,7 +115,7 @@ def _serialize_datasource(h: ResourceHandle, version: Optional[int]) -> dict:
     return data
 
 
-def _deserialize_datasource(data: dict) -> tuple[ResourceHandle, Optional[int]]:
+def _deserialize_datasource(data: dict) -> tuple[ResourceHandle, int | None]:
     parser = HANDLE_TYPE_PARSERS[data[DATASOURCE_TYPE_FIELD]]
     h = parser(data[DATASOURCE_REF_FIELD])
     version = _parse_version(data.get(DATASOURCE_VERSION_FIELD, None))
@@ -123,7 +123,7 @@ def _deserialize_datasource(data: dict) -> tuple[ResourceHandle, Optional[int]]:
     return h, version
 
 
-def _parse_version(version: Any) -> Optional[int]:  # noqa: ANN401
+def _parse_version(version: Any) -> int | None:  # noqa: ANN401
     if version is None or isinstance(version, int):
         return version
 

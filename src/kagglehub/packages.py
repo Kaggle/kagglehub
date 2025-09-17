@@ -10,8 +10,9 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+from collections.abc import Callable
 from types import ModuleType
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from kagglehub import registry
 from kagglehub.auth import get_username
@@ -47,7 +48,7 @@ KAGGLEHUB_REQUIREMENTS_FILENAME = "kagglehub_requirements.yaml"
 
 
 def package_import(
-    handle: str, *, force_download: Optional[bool] = False, bypass_confirmation: bool = False
+    handle: str, *, force_download: bool | None = False, bypass_confirmation: bool = False
 ) -> ModuleType:
     """Download a Kaggle Package and import it.
 
@@ -264,7 +265,7 @@ class PackageScope:
     # Global context variable tracking the context token stack for _current_scope_ctx to
     # revert to previous scope (if applicable) when exiting a given scope.
     # b/417707383: Use a ContextVar here to support multithreaded usage of an imported package.
-    _token_stack_ctx = contextvars.ContextVar[Optional[list[contextvars.Token]]](
+    _token_stack_ctx = contextvars.ContextVar[list[contextvars.Token] | None](
         "kagglehub_package_scope_token_stack", default=None
     )
 
@@ -296,7 +297,7 @@ class PackageScope:
         return PackageScope._current_scope_ctx.get()
 
     @staticmethod
-    def get_version(h: ResourceHandle) -> Optional[int]:
+    def get_version(h: ResourceHandle) -> int | None:
         """Gets version number for given resource within current PackageScope (if any).
 
         Returns None if no PackageScope is applied, or if it didn't contain the resource."""
