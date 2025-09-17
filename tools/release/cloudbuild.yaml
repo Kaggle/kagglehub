@@ -122,6 +122,6 @@ substitutions:
   _GITHUB_REPOSITORY: kagglehub
   # Before changing this, ensure there's a matching tag for our bre-built hatch image:
   # https://pantheon.corp.google.com/artifacts/docker/kaggle-cicd/us/tools/hatch?e=13803378&mods=-ai_platform_fake_service&project=kaggle-cicd
-  _PYTHON_VERSION: 3.9.18
+  _PYTHON_VERSION: 3.10.0
   _NEW_VERSION: default
 

@@ -45,4 +45,4 @@ steps:
 images: ['us-docker.pkg.dev/$PROJECT_ID/tools/hatch']
 
 substitutions:
-  _PYTHON_VERSION: 3.9.18
+  _PYTHON_VERSION: 3.10.0
