@@ -1,8 +1,19 @@
 import logging
 from http import HTTPStatus
 
-from kagglehub.clients import BackendError, KaggleApiV1Client
-from kagglehub.exceptions import KaggleApiHTTPError
+from kagglesdk.models.types.model_api_service import (
+    ApiCreateModelInstanceRequest,
+    ApiCreateModelInstanceRequestBody,
+    ApiCreateModelInstanceVersionRequest,
+    ApiCreateModelInstanceVersionRequestBody,
+    ApiCreateModelRequest,
+    ApiDeleteModelRequest,
+    ApiGetModelRequest,
+    CreateModelSigningTokenRequest,
+)
+
+from kagglehub.clients import BackendError, build_kaggle_client
+from kagglehub.exceptions import KaggleApiHTTPError, handle_call, handle_mutate_call
 from kagglehub.gcs_upload import UploadDirectoryInfo
 from kagglehub.handle import ModelHandle
 
@@ -10,57 +21,69 @@ logger = logging.getLogger(__name__)
 
 
 def _create_model(owner_slug: str, model_slug: str) -> None:
-    data = {"ownerSlug": owner_slug, "slug": model_slug, "title": model_slug, "isPrivate": True}
-    api_client = KaggleApiV1Client()
-    api_client.post("/models/create/new", data)
-    logger.info(f"Model '{model_slug}' Created.")
+    with build_kaggle_client() as api_client:
+        r = ApiCreateModelRequest()
+        r.owner_slug = owner_slug
+        r.slug = model_slug
+        r.title = model_slug
+        r.is_private = True
+        handle_mutate_call(lambda: api_client.models.model_api_client.create_model(r))
+        logger.info(f"Model '{model_slug}' Created.")
 
 
 def _create_model_instance(
     model_handle: ModelHandle,
-    files_and_directories: UploadDirectoryInfo,
+    upload_dir: UploadDirectoryInfo,
     license_name: str | None = None,
     *,
     sigstore: bool | None = False,
 ) -> None:
-    serialized_data = files_and_directories.serialize()
-    data = {
-        "instanceSlug": model_handle.variation,
-        "framework": model_handle.framework,
-        "files": [{"token": file_token} for file_token in files_and_directories.files],
-        "directories": serialized_data["directories"],
-        "sigstore": sigstore,
-    }
-    if license_name is not None:
-        data["licenseName"] = license_name
+    upload_proto = upload_dir.to_proto()
 
-    api_client = KaggleApiV1Client()
-    api_client.post(f"/models/{model_handle.owner}/{model_handle.model}/create/instance", data)
-    logger.info(f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}")
+    with build_kaggle_client() as api_client:
+        r = ApiCreateModelInstanceRequest()
+        r.owner_slug = model_handle.owner
+        r.model_slug = model_handle.model
+        r.body = ApiCreateModelInstanceRequestBody()
+        r.body.instance_slug = model_handle.variation
+        r.body.framework = model_handle.framework_enum()
+        r.body.files = upload_proto.files
+        r.body.directories = upload_proto.directories
+        r.body.sigstore = sigstore
+        if license_name is not None:
+            r.body.license_name = license_name
+        handle_mutate_call(lambda: api_client.models.model_api_client.create_model_instance(r))
+
+        logger.info(
+            f"Your model instance has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}"
+        )
 
 
 def _create_model_instance_version(
     model_handle: ModelHandle,
-    files_and_directories: UploadDirectoryInfo,
+    upload_dir: UploadDirectoryInfo,
     version_notes: str = "",
     *,
     sigstore: bool | None = False,
 ) -> None:
-    serialized_data = files_and_directories.serialize()
-    data = {
-        "versionNotes": version_notes,
-        "files": [{"token": file_token} for file_token in files_and_directories.files],
-        "directories": serialized_data["directories"],
-        "sigstore": sigstore,
-    }
-    api_client = KaggleApiV1Client()
-    api_client.post(
-        f"/models/{model_handle.owner}/{model_handle.model}/{model_handle.framework}/{model_handle.variation}/create/version",
-        data,
-    )
-    logger.info(
-        f"Your model instance version has been created.\nFiles are being processed...\nSee at: {model_handle.to_url()}"
-    )
+    upload_proto = upload_dir.to_proto()
+
+    with build_kaggle_client() as api_client:
+        r = ApiCreateModelInstanceVersionRequest()
+        r.owner_slug = model_handle.owner
+        r.model_slug = model_handle.model
+        r.framework = model_handle.framework_enum()
+        r.instance_slug = model_handle.variation
+        r.body = ApiCreateModelInstanceVersionRequestBody()
+        r.body.version_notes = version_notes
+        r.body.files = upload_proto.files
+        r.body.directories = upload_proto.directories
+        r.body.sigstore = sigstore
+        handle_mutate_call(lambda: api_client.models.model_api_client.create_model_instance_version(r))
+        logger.info(
+            f"Your model instance version has been created.\n"
+            f"Files are being processed...\nSee at: {model_handle.to_url()}"
+        )
 
 
 def create_model_instance_or_version(
@@ -83,8 +106,11 @@ def create_model_instance_or_version(
 
 def create_model_if_missing(owner_slug: str, model_slug: str) -> None:
     try:
-        api_client = KaggleApiV1Client()
-        api_client.get(f"/models/{owner_slug}/{model_slug}/get")
+        with build_kaggle_client() as api_client:
+            r = ApiGetModelRequest()
+            r.owner_slug = owner_slug
+            r.model_slug = model_slug
+            handle_call(lambda: api_client.models.model_api_client.get_model(r))
     except KaggleApiHTTPError as e:
         if e.response is not None and (
             e.response.status_code == HTTPStatus.NOT_FOUND  # noqa: PLR1714
@@ -96,15 +122,17 @@ def create_model_if_missing(owner_slug: str, model_slug: str) -> None:
             _create_model(owner_slug, model_slug)
         else:
             raise (e)
+    except Exception as e:
+        raise e
 
 
 def delete_model(owner_slug: str, model_slug: str) -> None:
     try:
-        api_client = KaggleApiV1Client()
-        api_client.post(
-            f"/models/{owner_slug}/{model_slug}/delete",
-            {},
-        )
+        with build_kaggle_client() as api_client:
+            r = ApiDeleteModelRequest()
+            r.owner_slug = owner_slug
+            r.model_slug = model_slug
+            handle_mutate_call(lambda: api_client.models.model_api_client.delete_model(r))
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
             logger.info(f"Could not delete Model '{model_slug}' for user '{owner_slug}'...")
@@ -115,9 +143,12 @@ def delete_model(owner_slug: str, model_slug: str) -> None:
 def signing_token(owner_slug: str, model_slug: str) -> str | None:
     "Returns a JWT for signing if authorized for /{owner_slug}/{model_slug}"
     try:
-        api_client = KaggleApiV1Client()
-        resp = api_client.post("/models/signing/token", {"ownerSlug": owner_slug, "modelSlug": model_slug})
-        return resp.get("id_token")
+        with build_kaggle_client() as api_client:
+            r = CreateModelSigningTokenRequest()
+            r.owner_slug = owner_slug
+            r.model_slug = model_slug
+            response = handle_call(lambda: api_client.models.model_api_client.create_model_signing_token(r))
+            return response.id_token
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:
             logger.info(

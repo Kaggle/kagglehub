@@ -1,5 +1,7 @@
 import logging
 
+from kagglesdk.blobs.types.blob_api_service import ApiBlobType
+
 from kagglehub import registry
 from kagglehub.gcs_upload import normalize_patterns, upload_files_and_directories
 from kagglehub.handle import parse_model_handle
@@ -86,7 +88,7 @@ def model_upload(
     # Upload the model files to GCS
     tokens = upload_files_and_directories(
         local_model_dir,
-        item_type="model",
+        item_type=ApiBlobType.MODEL,
         ignore_patterns=normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
     )
 

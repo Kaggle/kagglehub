@@ -60,7 +60,7 @@ class TestModelUpload(BaseTestCase):
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
-            model_upload("metaresearch/llama-2/pyTorch/7b", temp_dir, APACHE_LICENSE)
+            model_upload("metaresearch/llama-2/pyTorch/new-version", temp_dir, APACHE_LICENSE)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 

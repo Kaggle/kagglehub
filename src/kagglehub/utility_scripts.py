@@ -2,9 +2,11 @@ import logging
 import sys
 from http import HTTPStatus
 
+from kagglesdk.kernels.types.kernels_api_service import ApiGetKernelRequest
+
 from kagglehub import registry
-from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import KaggleApiHTTPError
+from kagglehub.clients import build_kaggle_client
+from kagglehub.exceptions import KaggleApiHTTPError, handle_call
 from kagglehub.handle import UtilityScriptHandle, parse_utility_script_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 
@@ -44,11 +46,12 @@ def utility_script_install(handle: str, *, force_download: bool | None = False) 
 
 def _is_notebook_utility_script(h: UtilityScriptHandle) -> bool:
     try:
-        api_client = KaggleApiV1Client()
-        json_response = api_client.get(f"kernels/pull/{h.owner}/{h.notebook}", h)
-
-        category_ids = json_response["metadata"]["categoryIds"]
-        return "utility script" in category_ids
+        with build_kaggle_client() as api_client:
+            r = ApiGetKernelRequest()
+            r.user_name = h.owner
+            r.kernel_slug = h.notebook
+            response = handle_call(lambda: api_client.kernels.kernels_api_client.get_kernel(r))
+            return "utility script" in response.metadata.category_ids
 
     except KaggleApiHTTPError as e:
         if e.response is not None and e.response.status_code == HTTPStatus.NOT_FOUND:

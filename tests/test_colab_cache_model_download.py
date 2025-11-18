@@ -14,7 +14,7 @@ VERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b/1"
 LATEST_MODEL_VERSION = 2
 UNVERSIONED_MODEL_HANDLE = "metaresearch/llama-2/pyTorch/13b"
 TEST_FILEPATH = "config.json"
-UNAVAILABLE_MODEL_HANDLE = "unavailable/model/handle/colab/1"
+UNAVAILABLE_MODEL_HANDLE = "unavailable/model/jax/colab/1"
 
 
 class TestColabCacheModelDownload(BaseTestCase):

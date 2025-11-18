@@ -12,9 +12,10 @@ from unittest import mock
 
 from flask import Flask, Response
 from flask.typing import ResponseReturnValue
+from kagglesdk.kaggle_env import get_endpoint, get_env
 
 import kagglehub
-from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME, get_kaggle_api_endpoint
+from kagglehub.config import CACHE_FOLDER_ENV_VAR_NAME
 from kagglehub.handle import ResourceHandle
 from kagglehub.integrity import GCS_HASH_HEADER, to_b64_digest
 
@@ -35,7 +36,7 @@ def resolve_endpoint(var_name: str = "KAGGLE_API_ENDPOINT") -> tuple[str, int]:
 
 
 def get_mocked_gcs_signed_url(file_name: str) -> str:
-    return f"{get_kaggle_api_endpoint()}{MOCK_GCS_BUCKET_BASE_PATH}/{file_name}?X-Goog-Headers=all-kinds-of-stuff"
+    return f"{get_endpoint(get_env())}{MOCK_GCS_BUCKET_BASE_PATH}/{file_name}?X-Goog-Headers=all-kinds-of-stuff"
 
 
 # All downloads, regardless of archive or file, happen via GCS signed URLs. We mock the 302 and handle

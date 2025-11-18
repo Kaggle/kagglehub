@@ -19,8 +19,8 @@ def error(e: Exception):  # noqa: ANN201
     return jsonify(data), 200
 
 
-@app.route("/api/v1/hello", methods=["GET"])
-def model_create() -> ResponseReturnValue:
+@app.route("/api/v1/api.v1.DiagnosticsService/Hello", methods=["POST"])
+def hello() -> ResponseReturnValue:
     auth = request.authorization
     if auth and auth.username == GOOD_CREDENTIALS_USERNAME and auth.password == GOOD_CREDENTIALS_API_KEY:
         data = {"message": "Hello from test server!", "userName": auth.username}

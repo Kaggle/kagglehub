@@ -25,6 +25,10 @@ dependencies = [
   "tqdm",
   "packaging",
   "pyyaml",
+  # DO NOT MERGE THIS CHANGE.
+  # Use 0.1.13 once published to pypi.
+  # "kagglesdk==0.1.13",
+  "kagglesdk @ git+https://github.com/Kaggle/kagglesdk@kagglehub-support",
 ]
 
 [project.urls]
@@ -237,3 +241,12 @@ exclude_lines = [
 
 [tool.mypy]
 mypy_path = "./stubs"
+
+# TODO(b/307576378): Generate type hints for kagglesdk
+[[tool.mypy.overrides]]
+module = "kagglesdk.*"
+ignore_missing_imports = true
+
+# TODO(rosbo): Remove once using published package from pypi.
+[tool.hatch.metadata]
+allow-direct-references = true

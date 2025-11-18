@@ -10,13 +10,11 @@ from kagglehub.config import (
     CREDENTIALS_FOLDER_ENV_VAR_NAME,
     DEFAULT_CACHE_FOLDER,
     DISABLE_KAGGLE_CACHE_ENV_VAR_NAME,
-    KAGGLE_API_ENDPOINT_ENV_VAR_NAME,
     KEY_ENV_VAR_NAME,
     LOG_VERBOSITY_ENV_VAR_NAME,
     USERNAME_ENV_VAR_NAME,
     clear_kaggle_credentials,
     get_cache_folder,
-    get_kaggle_api_endpoint,
     get_kaggle_credentials,
     get_log_verbosity,
     is_colab_cache_disabled,
@@ -29,13 +27,6 @@ from tests.fixtures import BaseTestCase
 class TestConfig(BaseTestCase):
     def test_get_cache_folder_default(self) -> None:
         self.assertEqual(DEFAULT_CACHE_FOLDER, get_cache_folder())
-
-    def test_get_kaggle_api_endpoint_default(self) -> None:
-        self.assertEqual("http://localhost:7777", get_kaggle_api_endpoint())
-
-    @mock.patch.dict(os.environ, {KAGGLE_API_ENDPOINT_ENV_VAR_NAME: "http://localhost"})
-    def test_get_kaggle_api_endpoint_environment_var_override(self) -> None:
-        self.assertEqual("http://localhost", get_kaggle_api_endpoint())
 
     @mock.patch.dict(os.environ, {CACHE_FOLDER_ENV_VAR_NAME: "/test_cache"})
     def test_get_cache_folder_environment_var_override(self) -> None:
