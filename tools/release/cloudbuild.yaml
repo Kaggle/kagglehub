@@ -10,10 +10,10 @@ steps:
     if [[ $_NEW_VERSION == "default" ]]; then
       echo "Specify _NEW_VERSION"
       exit 1
-    elif [[ $_NEW_VERSION =~ ^[0-9]+.[0-9]+.[0-9]+$ ]]; then
+    elif [[ $_NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
       echo "_NEW_VERSION format validated."
     else
-      echo "_NEW_VERSION=$_NEW_VERSION must follow the format '^[0-9]+.[0-9]+.[0-9]+$' (example: 1.2.3)"
+      echo "_NEW_VERSION=$_NEW_VERSION must follow the format '^[0-9]+\.[0-9]+\.[0-9]+$' (example: 1.2.3)"
       exit 1
     fi
 
