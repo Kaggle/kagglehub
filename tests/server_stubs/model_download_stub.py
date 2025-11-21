@@ -3,10 +3,16 @@ import os
 from collections.abc import Generator
 from typing import Any
 
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from flask.typing import ResponseReturnValue
+from kagglesdk.models.types.model_api_service import (
+    ApiDownloadModelInstanceVersionRequest,
+    ApiGetModelInstanceRequest,
+    ApiListModelInstanceVersionFilesRequest,
+    ApiModelInstance,
+)
 
-from kagglehub.http_resolver import MODEL_INSTANCE_VERSION_FIELD
+from kagglehub.enum import enum_to_str
 from kagglehub.integrity import to_b64_digest
 from tests.utils import get_test_file_path
 
@@ -25,20 +31,44 @@ def head() -> ResponseReturnValue:
     return "", 200
 
 
-@app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/get", methods=["GET"])
-def model_get_instance(org_slug: str, model_slug: str, framework: str, variation: str) -> ResponseReturnValue:
-    data = {
-        "message": f"Instance exists {org_slug}/{model_slug}/{framework}/{variation} !",
-        MODEL_INSTANCE_VERSION_FIELD: 3,
-    }
-    return jsonify(data), 200
+@app.route("/api/v1/models.ModelApiService/GetModelInstance", methods=["POST"])
+def model_get_instance() -> ResponseReturnValue:
+    r = ApiGetModelInstanceRequest.from_dict(request.get_json())
+    instance = ApiModelInstance()
+    instance.framework = r.framework
+    instance.slug = r.instance_slug
+    instance.version_number = 3
+    return instance.to_json(), 200
 
 
-@app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/<version>/download", methods=["GET"])
-def model_download_instance_version(
-    org_slug: str, model_slug: str, framework: str, variation: str, version: int
-) -> ResponseReturnValue:
-    handle = f"{org_slug}/{model_slug}/{framework}/{variation}/{version}"
+@app.route("/api/v1/models.ModelApiService/DownloadModelInstanceVersion", methods=["POST"])
+def model_download_instance_version() -> ResponseReturnValue:
+    r = ApiDownloadModelInstanceVersionRequest.from_dict(request.get_json())
+    handle = f"{r.owner_slug}/{r.model_slug}/{enum_to_str(r.framework)}/{r.instance_slug}/{r.version_number}"
+
+    if r.path:
+        test_file_path = get_test_file_path(r.path)
+
+        def generate_file_content() -> Generator[bytes, Any, None]:
+            with open(test_file_path, "rb") as f:
+                while True:
+                    chunk = f.read(4096)  # Read file in chunks
+                    if not chunk:
+                        break
+                    yield chunk
+
+        with open(test_file_path, "rb") as f:
+            content = f.read()
+            file_hash = hashlib.md5()
+            file_hash.update(content)
+            return (
+                Response(
+                    generate_file_content(),
+                    headers={GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}", "Content-Length": str(len(content))},
+                ),
+                200,
+            )
+
     if handle == INVALID_ARCHIVE_HANDLE:
         return "bad archive", 200
 
@@ -60,41 +90,10 @@ def model_download_instance_version(
         return resp, 200
 
 
-@app.route(
-    "/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/<version>/download/<path:subpath>", methods=["GET"]
-)
-def model_download_instance_version_path(
-    org_slug: str, model_slug: str, framework: str, variation: str, version: int, subpath: str
-) -> ResponseReturnValue:
-    _ = f"{org_slug}/{model_slug}/{framework}/{variation}/{version}"
-    test_file_path = get_test_file_path(subpath)
-
-    def generate_file_content() -> Generator[bytes, Any, None]:
-        with open(test_file_path, "rb") as f:
-            while True:
-                chunk = f.read(4096)  # Read file in chunks
-                if not chunk:
-                    break
-                yield chunk
-
-    with open(test_file_path, "rb") as f:
-        content = f.read()
-        file_hash = hashlib.md5()
-        file_hash.update(content)
-        return (
-            Response(
-                generate_file_content(),
-                headers={GCS_HASH_HEADER: f"md5={to_b64_digest(file_hash)}", "Content-Length": str(len(content))},
-            ),
-            200,
-        )
-
-
-@app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/<version>/files", methods=["GET"])
-def model_list_files(
-    org_slug: str, model_slug: str, framework: str, variation: str, version: int
-) -> ResponseReturnValue:
-    handle = f"{org_slug}/{model_slug}/{framework}/{variation}/{version}"
+@app.route("/api/v1/models.ModelApiService/ListModelInstanceVersionFiles", methods=["POST"])
+def model_list_files() -> ResponseReturnValue:
+    r = ApiListModelInstanceVersionFilesRequest.from_dict(request.get_json())
+    handle = f"{r.owner_slug}/{r.model_slug}/{enum_to_str(r.framework)}/{r.instance_slug}/{r.version_number}"
     if handle in (INVALID_ARCHIVE_HANDLE, TOO_MANY_FILES_FOR_PARALLEL_DOWNLOAD_HANDLE):
         data = {
             "files": [{"name": f"{i}.txt"} for i in range(1, 51)],

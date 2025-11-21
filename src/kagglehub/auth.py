@@ -4,8 +4,10 @@ import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from kagglehub.clients import KaggleApiV1Client
-from kagglehub.config import set_kaggle_credentials
+from kagglesdk.models.types.model_api_service import ApiGetModelRequest
+
+from kagglehub.clients import build_kaggle_client
+from kagglehub.config import get_kaggle_credentials, set_kaggle_credentials
 from kagglehub.exceptions import UnauthenticatedError
 
 _logger = logging.getLogger(__name__)
@@ -114,20 +116,24 @@ def _notebook_login(validate_credentials: bool) -> None:  # noqa: FBT001
 
 
 def _validate_credentials_helper(*, verbose: bool = True) -> str | None:
-    api_client = KaggleApiV1Client()
-    response = api_client.get("/hello")
-    if "userName" in response:
-        if verbose:
-            _logger.info("Kaggle credentials successfully validated.")
-        return response["userName"]
-    elif "code" in response and response["code"] == INVALID_CREDENTIALS_ERROR:
-        if verbose:
-            _logger.error(
-                "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
-            )
-    elif verbose:
-        _logger.warning("Unable to validate Kaggle credentials at this time.")
-    return None
+    with build_kaggle_client() as api_client:
+        # HACK(b/307576378): Remove once kagglesdk generates binding for the DiagnosticsService.
+        http_client = api_client.http_client()
+        http_client._init_session()
+        request = http_client._prepare_request("api.v1.DiagnosticsService", "Hello", ApiGetModelRequest())
+        response = http_client._session.send(request).json()
+        if "userName" in response:
+            if verbose:
+                _logger.info("Kaggle credentials successfully validated.")
+            return response["userName"]
+        elif "code" in response and response["code"] == INVALID_CREDENTIALS_ERROR:
+            if verbose:
+                _logger.error(
+                    "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account)."
+                )
+        elif verbose:
+            _logger.warning("Unable to validate Kaggle credentials at this time.")
+        return None
 
 
 def login(validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
@@ -152,8 +158,7 @@ def whoami(*, verbose: bool = True) -> dict:
     """
     Return a dictionary with the username of the authenticated Kaggle user or raise an error if unauthenticated.
     """
-    api_client = KaggleApiV1Client()
-    if not api_client.has_credentials():
+    if not get_kaggle_credentials():
         raise UnauthenticatedError()
     try:
         username = _validate_credentials_helper(verbose=verbose)

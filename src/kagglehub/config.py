@@ -10,6 +10,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from kagglesdk.kaggle_env import get_access_token_from_env
+
 from kagglehub.env import is_in_colab_notebook
 
 DEFAULT_CACHE_FOLDER = os.path.join(Path.home(), ".cache", "kagglehub")
@@ -19,7 +21,6 @@ DEFAULT_LOG_LEVEL = logging.INFO
 CREDENTIALS_FILENAME = "kaggle.json"
 
 CACHE_FOLDER_ENV_VAR_NAME = "KAGGLEHUB_CACHE"
-KAGGLE_API_ENDPOINT_ENV_VAR_NAME = "KAGGLE_API_ENDPOINT"
 USERNAME_ENV_VAR_NAME = "KAGGLE_USERNAME"
 KEY_ENV_VAR_NAME = "KAGGLE_KEY"
 CREDENTIALS_FOLDER_ENV_VAR_NAME = "KAGGLE_CONFIG_DIR"
@@ -50,8 +51,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class KaggleApiCredentials:
-    username: str
-    key: str
+    username: str | None = None
+    key: str | None = None
+    api_key: str | None = None
 
 
 def get_cache_folder() -> str:
@@ -60,19 +62,16 @@ def get_cache_folder() -> str:
     return DEFAULT_CACHE_FOLDER
 
 
-def get_kaggle_api_endpoint() -> str:
-    if KAGGLE_API_ENDPOINT_ENV_VAR_NAME in os.environ:
-        return os.environ[KAGGLE_API_ENDPOINT_ENV_VAR_NAME]
-    return DEFAULT_KAGGLE_API_ENDPOINT
-
-
 def get_kaggle_credentials() -> KaggleApiCredentials | None:
     # Check for credentials in the global variable
     if _kaggle_credentials:
         return _kaggle_credentials
 
-    creds_filepath = _get_kaggle_credentials_file()
+    api_key, _ = get_access_token_from_env()
+    if api_key:
+        return KaggleApiCredentials(api_key=api_key)
 
+    creds_filepath = _get_kaggle_credentials_file()
     env_var_username = os.getenv(USERNAME_ENV_VAR_NAME)
     env_var_key = os.getenv(KEY_ENV_VAR_NAME)
     if env_var_username and env_var_key:

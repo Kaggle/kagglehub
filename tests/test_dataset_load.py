@@ -2,13 +2,10 @@ import io
 import logging
 import os
 from typing import Any
-from unittest.mock import MagicMock, patch
 
 import polars as pl
-from requests import Response
 
 from kagglehub.datasets import KaggleDatasetAdapter, PolarsFrameType, dataset_load, logger
-from kagglehub.exceptions import KaggleApiHTTPError
 from tests.fixtures import BaseTestCase
 
 from .server_stubs import dataset_download_stub as stub
@@ -73,6 +70,7 @@ class TestLoadHfDataset(BaseTestCase):
         hf_dataset = dataset_load(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         self.assertEqual(SHAPES_ROW_COUNT, hf_dataset.num_rows)
         self.assertEqual(SHAPES_COLUMNS, hf_dataset.column_names)
+        self.assertIn("hugging_face_data_loader", stub.shared_data.last_download_user_agent)
 
     def _load_hf_dataset_with_valid_kwargs_and_assert_loaded(self) -> None:
         hf_dataset = dataset_load(
@@ -130,17 +128,6 @@ class TestLoadHfDataset(BaseTestCase):
     def test_hf_dataset_with_splits_succeeds(self) -> None:
         with create_test_cache():
             self._load_hf_dataset_with_splits_and_assert_loaded()
-
-    @patch("requests.get")
-    def test_hf_dataset_sends_user_agent(self, mock_get: MagicMock) -> None:
-        # Just mock a bad response since all we care to check is that the request headers are right
-        response = Response()
-        response.status_code = 400
-        mock_get.return_value = response
-
-        with self.assertRaises(KaggleApiHTTPError):
-            dataset_load(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
-        self.assertIn("hugging_face_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])
 
 
 class TestLoadPandasDataset(BaseTestCase):
@@ -211,6 +198,7 @@ class TestLoadPandasDataset(BaseTestCase):
         )
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
         self.assertEqual(expected_columns, list(df.columns))
+        self.assertIn("pandas_data_loader", stub.shared_data.last_download_user_agent)
 
     def _load_pandas_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
@@ -261,17 +249,6 @@ class TestLoadPandasDataset(BaseTestCase):
     def test_pandas_sqlite_dataset_succeeds(self) -> None:
         with create_test_cache():
             self._load_pandas_sqlite_dataset_and_assert_loaded()
-
-    @patch("requests.get")
-    def test_pandas_dataset_sends_user_agent(self, mock_get: MagicMock) -> None:
-        # Just mock a bad response since all we care to check is that the request headers are right
-        response = Response()
-        response.status_code = 400
-        mock_get.return_value = response
-
-        with self.assertRaises(KaggleApiHTTPError):
-            dataset_load(KaggleDatasetAdapter.PANDAS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
-        self.assertIn("pandas_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])
 
 
 class TestLoadPolarsDataset(BaseTestCase):
@@ -374,6 +351,7 @@ class TestLoadPolarsDataset(BaseTestCase):
         )
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
         self.assertEqual(expected_columns, list(df.columns))
+        self.assertIn("polars_data_loader", stub.shared_data.last_download_user_agent)
 
     def _load_polars_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
@@ -429,14 +407,3 @@ class TestLoadPolarsDataset(BaseTestCase):
     def test_polars_columns_subset_succeeds(self) -> None:
         with create_test_cache():
             self._load_polars_columns_subset_and_assert_loaded()
-
-    @patch("requests.get")
-    def test_polars_dataset_sends_user_agent(self, mock_get: MagicMock) -> None:
-        # Just mock a bad response since all we care to check is that the request headers are right
-        response = Response()
-        response.status_code = 400
-        mock_get.return_value = response
-
-        with self.assertRaises(KaggleApiHTTPError):
-            dataset_load(KaggleDatasetAdapter.POLARS, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
-        self.assertIn("polars_data_loader", mock_get.call_args.kwargs["headers"]["User-Agent"])

@@ -14,10 +14,12 @@ from collections.abc import Callable
 from types import ModuleType
 from typing import Any, Optional
 
+from kagglesdk.kaggle_env import is_in_kaggle_notebook
+
 from kagglehub import registry
 from kagglehub.auth import get_username
 from kagglehub.cache import get_cached_path
-from kagglehub.env import is_in_colab_notebook, is_in_kaggle_notebook
+from kagglehub.env import is_in_colab_notebook
 from kagglehub.exceptions import UserCancelledError
 from kagglehub.handle import PackageHandle, ResourceHandle, parse_package_handle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK

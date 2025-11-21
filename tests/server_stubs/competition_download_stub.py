@@ -1,8 +1,9 @@
 import hashlib
 import os
 
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from flask.typing import ResponseReturnValue
+from kagglesdk.competitions.types.competition_api_service import ApiDownloadDataFileRequest, ApiDownloadDataFilesRequest
 
 from kagglehub.integrity import to_b64_digest
 from tests.utils import AUTO_COMPRESSED_FILE_NAME, add_mock_gcs_route, get_gcs_redirect_response, get_test_file_path
@@ -23,9 +24,10 @@ def head() -> ResponseReturnValue:
     return "", 200
 
 
-@app.route("/api/v1/competitions/data/download-all/<competition_slug>", methods=["GET"])
-def competition_download(competition_slug: str) -> ResponseReturnValue:
-    handle = f"{competition_slug}"
+@app.route("/api/v1/competitions.CompetitionApiService/DownloadDataFiles", methods=["POST"])
+def competition_download() -> ResponseReturnValue:
+    r = ApiDownloadDataFilesRequest.from_dict(request.get_json())
+    handle = f"{r.competition_name}"
 
     test_file_path = get_test_file_path("foo.txt.zip")
     content_type = "application/zip"
@@ -47,12 +49,13 @@ def competition_download(competition_slug: str) -> ResponseReturnValue:
         return resp, 200
 
 
-@app.route("/api/v1/competitions/data/download/<competition_slug>/<file_name>", methods=["GET"])
-def competition_download_file(competition_slug: str, file_name: str) -> ResponseReturnValue:
-    _ = f"{competition_slug}"
+@app.route("/api/v1/competitions.CompetitionApiService/DownloadDataFile", methods=["POST"])
+def competition_download_file() -> ResponseReturnValue:
+    r = ApiDownloadDataFileRequest.from_dict(request.get_json())
+
     # This mimics behavior for our file downloads, where users request a file, but
     # receive a zipped version of the file from GCS.
-    test_file = f"{file_name}.zip" if file_name is AUTO_COMPRESSED_FILE_NAME else file_name
+    test_file = f"{r.file_name}.zip" if r.file_name is AUTO_COMPRESSED_FILE_NAME else r.file_name
     return get_gcs_redirect_response(test_file)
 
 

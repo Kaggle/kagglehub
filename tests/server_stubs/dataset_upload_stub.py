@@ -3,6 +3,10 @@ from dataclasses import dataclass, field
 
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
+from kagglesdk.datasets.types.dataset_api_service import (
+    ApiCreateDatasetRequest,
+    ApiCreateDatasetResponse,
+)
 
 from ..utils import resolve_endpoint
 
@@ -51,34 +55,27 @@ def head() -> ResponseReturnValue:
     return "", 200
 
 
-@app.route("/api/v1/datsets/view/<owner_slug>/<dataset_slug>", methods=["GET"])
-def dataset_get(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
-    data = {"message": f"Dataset exists {owner_slug}/{dataset_slug} !"}
-    return jsonify(data), 200
-
-
 @app.errorhandler(404)
 def error(e: Exception):  # noqa: ANN201
     data = {"message": "Some response data", "error": str(e)}
     return jsonify(data), 404
 
 
-@app.route("/api/v1/datasets/create/new", methods=["POST"])
+@app.route("/api/v1/datasets.DatasetApiService/CreateDataset", methods=["POST"])
 def dataset_create() -> ResponseReturnValue:
-    data = {"status": "success", "message": "Dataset created successfully"}
-    return jsonify(data), 200
+    r = ApiCreateDatasetRequest.from_dict(request.get_json())
+    response = ApiCreateDatasetResponse()
+    if r.slug == "newDatasetVersion":
+        response.error = "Already exists"
+    return response.to_json(), 200
 
 
-@app.route("/api/v1/datasets/create/version/<owner_slug>/<dataset_slug>", methods=["POST"])
-def dataset_create_version(owner_slug: str, dataset_slug: str) -> ResponseReturnValue:
-    data = {
-        "status": "success",
-        "message": f"Dataset Version {owner_slug}/{dataset_slug} created successfully",
-    }
-    return jsonify(data), 200
+@app.route("/api/v1/datasets.DatasetApiService/CreateDatasetVersion", methods=["POST"])
+def dataset_create_version() -> ResponseReturnValue:
+    return ApiCreateDatasetResponse().to_json(), 200
 
 
-@app.route("/api/v1/blobs/upload", methods=["POST"])
+@app.route("/api/v1/blobs.BlobApiService/StartBlobUpload", methods=["POST"])
 def blob_upload() -> ResponseReturnValue:
     if shared_data.simulate_308 and shared_data.blob_request_count < 0:
         _increment_blob_request()

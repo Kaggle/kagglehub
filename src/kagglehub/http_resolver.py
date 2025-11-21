@@ -4,6 +4,15 @@ import tarfile
 import zipfile
 
 import requests
+from kagglesdk.competitions.types.competition_api_service import ApiDownloadDataFileRequest, ApiDownloadDataFilesRequest
+from kagglesdk.datasets.types.dataset_api_service import ApiDownloadDatasetRequest, ApiGetDatasetRequest
+from kagglesdk.kaggle_client import KaggleClient
+from kagglesdk.kernels.types.kernels_api_service import ApiDownloadKernelOutputRequest, ApiGetKernelRequest
+from kagglesdk.models.types.model_api_service import (
+    ApiDownloadModelInstanceVersionRequest,
+    ApiGetModelInstanceRequest,
+    ApiListModelInstanceVersionFilesRequest,
+)
 from tqdm.contrib.concurrent import thread_map
 
 from kagglehub.cache import (
@@ -13,16 +22,13 @@ from kagglehub.cache import (
     load_from_cache,
     mark_as_complete,
 )
-from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import UnauthenticatedError
+from kagglehub.clients import build_kaggle_client, download_file
+from kagglehub.config import get_kaggle_credentials
+from kagglehub.exceptions import UnauthenticatedError, handle_call
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
 from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
 
-DATASET_CURRENT_VERSION_FIELD = "currentVersionNumber"
-NOTEBOOK_CURRENT_VERSION_FIELD = "currentVersionNumber"
-
-MODEL_INSTANCE_VERSION_FIELD = "versionNumber"
 MAX_NUM_FILES_DIRECT_DOWNLOAD = 25
 
 logger = logging.getLogger(__name__)
@@ -36,60 +42,65 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
     def _resolve(
         self, h: CompetitionHandle, path: str | None = None, *, force_download: bool | None = False
     ) -> tuple[str, int | None]:
-        api_client = KaggleApiV1Client()
+        with build_kaggle_client() as api_client:
+            cached_path = load_from_cache(h, path)
+            if cached_path and force_download:
+                delete_from_cache(h, path)
+                cached_path = None
 
-        cached_path = load_from_cache(h, path)
-        if cached_path and force_download:
-            delete_from_cache(h, path)
-            cached_path = None
-
-        if not api_client.has_credentials():
-            if cached_path:
-                return cached_path, None
-            raise UnauthenticatedError()
-
-        out_path = get_cached_path(h, path)
-        if path:
-            # For single file downloads.
-            url_path = _build_competition_download_file_url_path(h, path)
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
-
-            try:
-                download_needed = api_client.download_file(
-                    url_path, out_path, h, cached_path, extract_auto_compressed_file=True
-                )
-            except requests.exceptions.ConnectionError:
+            if not get_kaggle_credentials():
                 if cached_path:
                     return cached_path, None
-                raise
+                raise UnauthenticatedError()
 
-            if not download_needed and cached_path:
-                return cached_path, None
-        else:
-            # Download, extract, then delete the archive.
-            url_path = _build_competition_download_all_url_path(h)
-            archive_path = get_cached_archive_path(h)
-            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+            out_path = get_cached_path(h, path)
+            if path:
+                # For single file downloads.
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
-            try:
-                download_needed = api_client.download_file(url_path, archive_path, h, cached_path)
-            except requests.exceptions.ConnectionError:
-                if cached_path:
+                try:
+                    r = _build_competition_download_file_request(h, path)
+                    response = handle_call(
+                        lambda: api_client.competitions.competition_api_client.download_data_file(r), h
+                    )
+                    download_needed = download_file(
+                        response, out_path, h, cached_path, extract_auto_compressed_file=True
+                    )
+                except requests.exceptions.ConnectionError:
+                    if cached_path:
+                        return cached_path, None
+                    raise
+
+                if not download_needed and cached_path:
+                    return cached_path, None
+            else:
+                # Download, extract, then delete the archive.
+                r = _build_competition_download_files_request(h)
+                archive_path = get_cached_archive_path(h)
+                os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+
+                try:
+                    response = handle_call(
+                        lambda: api_client.competitions.competition_api_client.download_data_files(r), h
+                    )
+                    download_needed = download_file(response, archive_path, h, cached_path)
+                except requests.exceptions.ConnectionError:
+                    if cached_path:
+                        if os.path.exists(archive_path):
+                            os.remove(archive_path)
+                        return cached_path, None
+                    raise
+
+                if not download_needed and cached_path:
                     if os.path.exists(archive_path):
                         os.remove(archive_path)
                     return cached_path, None
-                raise
 
-            if not download_needed and cached_path:
-                if os.path.exists(archive_path):
-                    os.remove(archive_path)
-                return cached_path, None
+                _extract_archive(archive_path, out_path)
+                os.remove(archive_path)
 
-            _extract_archive(archive_path, out_path)
-            os.remove(archive_path)
-
-        mark_as_complete(h, path)
-        return out_path, None
+            mark_as_complete(h, path)
+            return out_path, None
 
 
 class DatasetHttpResolver(Resolver[DatasetHandle]):
@@ -100,41 +111,42 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
     def _resolve(
         self, h: DatasetHandle, path: str | None = None, *, force_download: bool | None = False
     ) -> tuple[str, int | None]:
-        api_client = KaggleApiV1Client()
+        with build_kaggle_client() as api_client:
+            if not h.is_versioned():
+                h = h.with_version(_get_current_version(api_client, h))
 
-        if not h.is_versioned():
-            h = h.with_version(_get_current_version(api_client, h))
+            dataset_path = load_from_cache(h, path)
+            if dataset_path and not force_download:
+                return dataset_path, h.version  # Already cached
+            elif dataset_path and force_download:
+                delete_from_cache(h, path)
 
-        dataset_path = load_from_cache(h, path)
-        if dataset_path and not force_download:
-            return dataset_path, h.version  # Already cached
-        elif dataset_path and force_download:
-            delete_from_cache(h, path)
+            r = _build_dataset_download_request(h, path)
+            out_path = get_cached_path(h, path)
 
-        url_path = _build_dataset_download_url_path(h, path)
-        out_path = get_cached_path(h, path)
+            # Create the intermediary directories
+            if path:
+                # Downloading a single file.
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                response = handle_call(lambda: api_client.datasets.dataset_api_client.download_dataset(r), h)
+                download_file(response, out_path, h, extract_auto_compressed_file=True)
+            else:
+                # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
+                # Downloading the full archived bundle.
+                archive_path = get_cached_archive_path(h)
+                os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
-        # Create the intermediary directories
-        if path:
-            # Downloading a single file.
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True)
-        else:
-            # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
-            # Downloading the full archived bundle.
-            archive_path = get_cached_archive_path(h)
-            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+                # First, we download the archive.
+                response = handle_call(lambda: api_client.datasets.dataset_api_client.download_dataset(r), h)
+                download_file(response, archive_path, h)
 
-            # First, we download the archive.
-            api_client.download_file(url_path, archive_path, h)
+                _extract_archive(archive_path, out_path)
 
-            _extract_archive(archive_path, out_path)
+                # Delete the archive
+                os.remove(archive_path)
 
-            # Delete the archive
-            os.remove(archive_path)
-
-        mark_as_complete(h, path)
-        return out_path, h.version
+            mark_as_complete(h, path)
+            return out_path, h.version
 
 
 class ModelHttpResolver(Resolver[ModelHandle]):
@@ -145,58 +157,65 @@ class ModelHttpResolver(Resolver[ModelHandle]):
     def _resolve(
         self, h: ModelHandle, path: str | None = None, *, force_download: bool | None = False
     ) -> tuple[str, int | None]:
-        api_client = KaggleApiV1Client()
+        with build_kaggle_client() as api_client:
+            if not h.is_versioned():
+                h = h.with_version(_get_current_version(api_client, h))
 
-        if not h.is_versioned():
-            h = h.with_version(_get_current_version(api_client, h))
+            model_path = load_from_cache(h, path)
+            if model_path and not force_download:
+                return model_path, h.version  # Already cached
+            elif model_path and force_download:
+                delete_from_cache(h, path)
 
-        model_path = load_from_cache(h, path)
-        if model_path and not force_download:
-            return model_path, h.version  # Already cached
-        elif model_path and force_download:
-            delete_from_cache(h, path)
+            r = _build_model_download_request(h, path)
+            out_path = get_cached_path(h, path)
 
-        url_path = _build_model_download_url_path(h, path)
-        out_path = get_cached_path(h, path)
-
-        # Create the intermediary directories
-        if path:
-            # Downloading a single file.
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True)
-        else:
-            # List the files and decide how to download them:
-            # - <= 25 files: Download files in parallel
-            # > 25 files: Download the archive and uncompress
-            (files, has_more) = _list_files(api_client, h)
-            if has_more:
-                # Downloading the full archived bundle.
-                archive_path = get_cached_archive_path(h)
-                os.makedirs(os.path.dirname(archive_path), exist_ok=True)
-
-                # First, we download the archive.
-                api_client.download_file(url_path, archive_path, h)
-
-                _extract_archive(archive_path, out_path)
-
-                # Delete the archive
-                os.remove(archive_path)
+            # Create the intermediary directories
+            if path:
+                # Downloading a single file.
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                response = handle_call(lambda: api_client.models.model_api_client.download_model_instance_version(r), h)
+                download_file(response, out_path, h, extract_auto_compressed_file=True)
             else:
-                # Download files individually in parallel
-                def _inner_download_file(file: str) -> None:
-                    file_out_path = out_path + "/" + file
-                    os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
-                    api_client.download_file(url_path + "/" + file, file_out_path, h)
+                # List the files and decide how to download them:
+                # - <= 25 files: Download files in parallel
+                # > 25 files: Download the archive and uncompress
+                (files, has_more) = _list_model_files(api_client, h)
+                if has_more:
+                    # Downloading the full archived bundle.
+                    archive_path = get_cached_archive_path(h)
+                    os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
-                thread_map(
-                    _inner_download_file,
-                    files,
-                    desc=f"Downloading {len(files)} files",
-                    max_workers=8,  # Never use more than 8 threads in parallel to download files.
-                )
+                    # First, we download the archive.
+                    response = handle_call(
+                        lambda: api_client.models.model_api_client.download_model_instance_version(r), h
+                    )
+                    download_file(response, archive_path, h)
 
-        mark_as_complete(h, path)
-        return out_path, h.version
+                    _extract_archive(archive_path, out_path)
+
+                    # Delete the archive
+                    os.remove(archive_path)
+                else:
+                    # Download files individually in parallel
+                    def _inner_download_file(file: str) -> None:
+                        file_out_path = out_path + "/" + file
+                        os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
+                        r = _build_model_download_request(h, file)
+                        response = handle_call(
+                            lambda: api_client.models.model_api_client.download_model_instance_version(r), h
+                        )
+                        download_file(response, file_out_path, h)
+
+                    thread_map(
+                        _inner_download_file,
+                        files,
+                        desc=f"Downloading {len(files)} files",
+                        max_workers=8,  # Never use more than 8 threads in parallel to download files.
+                    )
+
+            mark_as_complete(h, path)
+            return out_path, h.version
 
 
 class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
@@ -207,52 +226,41 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
     def _resolve(
         self, h: NotebookHandle, path: str | None = None, *, force_download: bool | None = False
     ) -> tuple[str, int | None]:
-        api_client = KaggleApiV1Client()
+        with build_kaggle_client() as api_client:
+            if not h.is_versioned():
+                h = h.with_version(_get_current_version(api_client, h))
 
-        if not h.is_versioned():
-            h = h.with_version(_get_current_version(api_client, h))
+            notebook_path = load_from_cache(h, path)
+            if notebook_path and not force_download:
+                return notebook_path, h.version  # Already cached
+            elif notebook_path and force_download:
+                delete_from_cache(h, path)
 
-        notebook_path = load_from_cache(h, path)
-        if notebook_path and not force_download:
-            return notebook_path, h.version  # Already cached
-        elif notebook_path and force_download:
-            delete_from_cache(h, path)
+            r = _build_notebook_download_request(h, path)
+            out_path = get_cached_path(h, path)
 
-        url_path = _build_notebook_download_url_path(h, path)
-        out_path = get_cached_path(h, path)
+            if path:
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                response = handle_call(lambda: api_client.kernels.kernels_api_client.download_kernel_output(r), h)
+                download_file(response, out_path, h, extract_auto_compressed_file=True)
+            else:
+                # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
+                # Downloading the full archived bundle.
+                archive_path = get_cached_archive_path(h)
+                os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
-        if path:
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            api_client.download_file(url_path, out_path, h, extract_auto_compressed_file=True)
-        else:
-            # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
-            # Downloading the full archived bundle.
-            archive_path = get_cached_archive_path(h)
-            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+                # First, we download the archive.
+                response = handle_call(lambda: api_client.kernels.kernels_api_client.download_kernel_output(r), h)
+                download_file(response, archive_path, h)
 
-            # First, we download the archive.
-            api_client.download_file(url_path, archive_path, h)
+                _extract_archive(archive_path, out_path)
 
-            _extract_archive(archive_path, out_path)
+                # Delete the archive
+                os.remove(archive_path)
 
-            # Delete the archive
-            os.remove(archive_path)
+            mark_as_complete(h, path)
 
-        mark_as_complete(h, path)
-
-        return out_path, h.version
-
-    def _list_files(self, api_client: KaggleApiV1Client, h: NotebookHandle) -> tuple[list[str], bool]:
-        query = f"kernels/output/list/{h.owner}/{h.notebook}?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
-        json_response = api_client.get(query, h)
-        if "files" not in json_response:
-            msg = "Invalid ApiListKernelSessionOutput API response. Expected to include a 'files' field"
-            raise ValueError(msg)
-
-        files = [f["fileName"].lstrip("/") for f in json_response["files"]]
-        has_more = "nextPageToken" in json_response and json_response["nextPageToken"] != ""
-
-        return (files, has_more)
+            return out_path, h.version
 
 
 def _extract_archive(archive_path: str, out_path: str) -> None:
@@ -271,116 +279,122 @@ def _extract_archive(archive_path: str, out_path: str) -> None:
         raise ValueError(msg)
 
 
-def _get_current_version(api_client: KaggleApiV1Client, h: ResourceHandle) -> int:
+def _get_current_version(api_client: KaggleClient, h: ResourceHandle) -> int:
     # Check if there's a Package in scope which has stored a version number used when it was created.
     version_from_package_scope = PackageScope.get_version(h)
     if version_from_package_scope is not None:
         return version_from_package_scope
 
     if isinstance(h, ModelHandle):
-        json_response = api_client.get(_build_get_instance_url_path(h), h)
-        if MODEL_INSTANCE_VERSION_FIELD not in json_response:
-            msg = f"Invalid GetModelInstance API response. Expected to include a {MODEL_INSTANCE_VERSION_FIELD} field"
-            raise ValueError(msg)
-
-        return json_response[MODEL_INSTANCE_VERSION_FIELD]
+        r = ApiGetModelInstanceRequest()
+        r.owner_slug = h.owner
+        r.model_slug = h.model
+        r.framework = h.framework_enum()
+        r.instance_slug = h.variation
+        model_instance = handle_call(lambda: api_client.models.model_api_client.get_model_instance(r))
+        return model_instance.version_number
 
     elif isinstance(h, DatasetHandle):
-        json_response = api_client.get(_build_get_dataset_url_path(h), h)
-        if DATASET_CURRENT_VERSION_FIELD not in json_response:
-            msg = f"Invalid GetDataset API response. Expected to include a {DATASET_CURRENT_VERSION_FIELD} field"
-            raise ValueError(msg)
-
-        return json_response[DATASET_CURRENT_VERSION_FIELD]
+        r = ApiGetDatasetRequest()
+        r.owner_slug = h.owner
+        r.dataset_slug = h.dataset
+        dataset = handle_call(lambda: api_client.datasets.dataset_api_client.get_dataset(r))
+        return dataset.current_version_number
 
     elif isinstance(h, NotebookHandle):
-        json_response = api_client.get(_build_get_notebook_url_path(h), h)
-        if NOTEBOOK_CURRENT_VERSION_FIELD not in json_response["metadata"]:
-            msg = f"Invalid GetKernel API response. Expected to include a {NOTEBOOK_CURRENT_VERSION_FIELD} field"
-            raise ValueError(msg)
+        r = ApiGetKernelRequest()
+        r.user_name = h.owner
+        r.kernel_slug = h.notebook
+        response = handle_call(lambda: api_client.kernels.kernels_api_client.get_kernel(r))
 
-        return json_response["metadata"][NOTEBOOK_CURRENT_VERSION_FIELD]
+        return response.metadata.current_version_number
 
     else:
         msg = f"Invalid ResourceHandle type {h}"
         raise ValueError(msg)
 
 
-def _list_files(api_client: KaggleApiV1Client, h: ModelHandle) -> tuple[list[str], bool]:
-    json_response = api_client.get(_build_list_model_instance_version_files_url_path(h), h)
-    if "files" not in json_response:
-        msg = "Invalid ListModelInstanceVersionFiles API response. Expected to include a 'files' field"
-        raise ValueError(msg)
+def _list_model_files(api_client: KaggleClient, h: ModelHandle) -> tuple[list[str], bool]:
+    r = _build_list_model_instance_version_files_request(h)
+    response = handle_call(lambda: api_client.models.model_api_client.list_model_instance_version_files(r))
 
     files = []
-    for f in json_response["files"]:
-        files.append(f["name"])
+    for f in response.files:
+        files.append(f.name)
 
-    has_more = "nextPageToken" in json_response and json_response["nextPageToken"] != ""
-
+    has_more = response.next_page_token != ""
     return (files, has_more)
 
 
-def _build_get_instance_url_path(h: ModelHandle) -> str:
-    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/get"
-
-
-def _build_model_download_url_path(h: ModelHandle, path: str | None) -> str:
+def _build_model_download_request(h: ModelHandle, path: str | None) -> str:
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
 
-    base_url = f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/download"
+    r = ApiDownloadModelInstanceVersionRequest()
+    r.owner_slug = h.owner
+    r.model_slug = h.model
+    r.framework = h.framework_enum()
+    r.instance_slug = h.variation
+    r.version_number = h.version
     if path:
-        return f"{base_url}/{path}"
-    else:
-        return base_url
+        r.path = path
+
+    return r
 
 
-def _build_list_model_instance_version_files_url_path(h: ModelHandle) -> str:
+def _build_list_model_instance_version_files_request(h: ModelHandle) -> ApiListModelInstanceVersionFilesRequest:
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
 
-    return f"models/{h.owner}/{h.model}/{h.framework}/{h.variation}/{h.version}/files\
-?page_size={MAX_NUM_FILES_DIRECT_DOWNLOAD}"
+    r = ApiListModelInstanceVersionFilesRequest()
+    r.owner_slug = h.owner
+    r.model_slug = h.model
+    r.framework = h.framework_enum()
+    r.instance_slug = h.variation
+    r.version_number = h.version
+    r.page_size = MAX_NUM_FILES_DIRECT_DOWNLOAD
+    return r
 
 
-def _build_get_dataset_url_path(h: DatasetHandle) -> str:
-    return f"datasets/view/{h.owner}/{h.dataset}"
-
-
-def _build_get_notebook_url_path(h: NotebookHandle) -> str:
-    return f"kernels/pull?user_name={h.owner}&kernel_slug={h.notebook}"
-
-
-def _build_dataset_download_url_path(h: DatasetHandle, path: str | None) -> str:
+def _build_dataset_download_request(h: DatasetHandle, path: str | None) -> ApiDownloadDatasetRequest:
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
 
-    base_url = f"datasets/download/{h.owner}/{h.dataset}?dataset_version_number={h.version}"
+    r = ApiDownloadDatasetRequest()
+    r.owner_slug = h.owner
+    r.dataset_slug = h.dataset
+    r.dataset_version_number = h.version
     if path:
-        return f"{base_url}&file_name={path}"
-    else:
-        return base_url
+        r.file_name = path
+    return r
 
 
-def _build_notebook_download_url_path(h: NotebookHandle, path: str | None) -> str:
+def _build_notebook_download_request(h: NotebookHandle, path: str | None) -> ApiDownloadKernelOutputRequest:
     if not h.is_versioned():
         msg = "No version provided"
         raise ValueError(msg)
 
-    base_url = f"kernels/output/download/{h.owner}/{h.notebook}?version_number={h.version}"
+    r = ApiDownloadKernelOutputRequest()
+    r.owner_slug = h.owner
+    r.kernel_slug = h.notebook
+    r.version_number = h.version
     if path:
-        return f"{base_url}&file_path={path}"
-    else:
-        return base_url
+        r.file_path = path
+
+    return r
 
 
-def _build_competition_download_all_url_path(h: CompetitionHandle) -> str:
-    return f"competitions/data/download-all/{h.competition}"
+def _build_competition_download_files_request(h: CompetitionHandle) -> ApiDownloadDataFilesRequest:
+    r = ApiDownloadDataFilesRequest()
+    r.competition_name = h.competition
+    return r
 
 
-def _build_competition_download_file_url_path(h: CompetitionHandle, file: str) -> str:
-    return f"competitions/data/download/{h.competition}/{file}"
+def _build_competition_download_file_request(h: CompetitionHandle, file: str) -> ApiDownloadDataFileRequest:
+    r = ApiDownloadDataFileRequest()
+    r.competition_name = h.competition
+    r.file_name = file
+    return r

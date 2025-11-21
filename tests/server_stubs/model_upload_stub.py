@@ -8,6 +8,12 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
+from kagglesdk.models.types.model_api_service import (
+    ApiCreateModelInstanceRequest,
+    ApiCreateModelResponse,
+    ApiGetModelRequest,
+    ApiModel,
+)
 
 from ..utils import resolve_endpoint
 
@@ -59,24 +65,15 @@ def head() -> ResponseReturnValue:
     return "", 200
 
 
-@app.route("/api/v1/models/<org_slug>/<model_slug>/get", methods=["GET"])
-def model_get(org_slug: str, model_slug: str) -> ResponseReturnValue:
-    data = {"message": f"Model exists {org_slug}/{model_slug} !"}
-    return jsonify(data), 200
+@app.route("/api/v1/models.ModelApiService/GetModel", methods=["POST"])
+def model_get() -> ResponseReturnValue:
+    r = ApiGetModelRequest.from_dict(request.get_json())
+    model = ApiModel()
+    model.author = r.owner_slug
+    model.slug = r.model_slug
 
-
-@app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/get", methods=["GET"])
-def model_get_instance(org_slug: str, model_slug: str, framework: str, variation: str) -> ResponseReturnValue:
-    data = {"message": f"Instance exists {org_slug}/{model_slug}/{framework}/{variation} !"}
-    return jsonify(data), 200
-
-
-@app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/<version>/get", methods=["GET"])
-def model_get_instance_version(
-    org_slug: str, model_slug: str, framework: str, variation: str, version: int
-) -> ResponseReturnValue:
-    data = {"message": f"Instance exists {org_slug}/{model_slug}/{framework}/{variation}/{version} !"}
-    return jsonify(data), 200
+    response = ApiCreateModelResponse()
+    return response.to_json(), 200
 
 
 @app.errorhandler(404)
@@ -85,38 +82,30 @@ def error(e: Exception):  # noqa: ANN201
     return jsonify(data), 404
 
 
-@app.route("/api/v1/models/create/new", methods=["POST"])
+@app.route("/api/v1/models.ModelApiService/CreateModel", methods=["POST"])
 def model_create() -> ResponseReturnValue:
     data = {"status": "success", "message": "Model created successfully"}
     return jsonify(data), 200
 
 
-@app.route("/api/v1/models/<org_slug>/<model_slug>/create/instance", methods=["POST"])
-def model_instance_create_instance(org_slug: str, model_slug: str) -> ResponseReturnValue:
-    post_data = request.get_json()
-    if post_data.get("licenseName", "") not in ALLOWED_LICENSE_VALUES:
-        data = {"error": f"bad: {request.path}"}
-        return jsonify(data), 200
-    data = {"status": "success", "message": f"Model Instance {org_slug}/{model_slug} created successfully"}
-    return jsonify(data), 200
+@app.route("/api/v1/models.ModelApiService/CreateModelInstance", methods=["POST"])
+def model_instance_create_instance() -> ResponseReturnValue:
+    r = ApiCreateModelInstanceRequest.from_dict(request.get_json())
+    response = ApiCreateModelResponse()
+    if r.body.license_name not in ALLOWED_LICENSE_VALUES:
+        response.error = f"bad: {request.path}"
+    if r.body.instance_slug == "new-version":
+        response.error = "Already exists"
+        response.error_code = 409  # Conflict
+    return response.to_json(), 200
 
 
-@app.route("/api/v1/models/<org_slug>/<model_slug>/<framework>/<variation>/create/version", methods=["POST"])
-def model_instance_create_version(
-    org_slug: str, model_slug: str, framework: str, variation: str
-) -> ResponseReturnValue:
-    post_data = request.get_json()
-    if post_data.get("licenseName", "") not in ALLOWED_LICENSE_VALUES:
-        data = {"error": f"bad: {request.path}"}
-        return jsonify(data), 200
-    data = {
-        "status": "success",
-        "message": f"Model Version {org_slug}/{model_slug}/{framework}/{variation} created successfully",
-    }
-    return jsonify(data), 200
+@app.route("/api/v1/models.ModelApiService/CreateModelInstanceVersion", methods=["POST"])
+def model_instance_create_version() -> ResponseReturnValue:
+    return ApiCreateModelResponse().to_json(), 200
 
 
-@app.route("/api/v1/blobs/upload", methods=["POST"])
+@app.route("/api/v1/blobs.BlobApiService/StartBlobUpload", methods=["POST"])
 def blob_upload() -> ResponseReturnValue:
     if shared_data.simulate_308 and shared_data.blob_request_count < 0:
         _increment_blob_request()
@@ -140,7 +129,7 @@ def model_instance_create() -> ResponseReturnValue:
     return jsonify(data), 200
 
 
-@app.route("/api/v1/models/signing/token", methods=["POST"])
+@app.route("/api/v1/models.ModelApiService/CreateModelSigningToken", methods=["POST"])
 def model_signing_token() -> ResponseReturnValue:
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     # Generate the private key

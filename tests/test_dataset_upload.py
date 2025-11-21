@@ -31,15 +31,23 @@ class TestDatasetUpload(BaseTestCase):
                 test_filepath.touch()  # Create a temporary file in the temporary directory
                 dataset_upload("invalid/invalid/invalid", temp_dir)
 
-    def test_dataset_upload_with_valid_handle(self) -> None:
+    def test_dataset_upload_succeeds(self) -> None:
         with TemporaryDirectory() as temp_dir:
             test_filepath = Path(temp_dir) / TEMP_TEST_FILE
             test_filepath.touch()  # Create a temporary file in the temporary directory
-            dataset_upload("jeward/newDataset", temp_dir, "dataset-type")
+            dataset_upload("jeward/newDataset", temp_dir)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
-    def test_dataset_upload_instance_with_nested_directories(self) -> None:
+    def test_dataset_version_upload_succeeds(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            test_filepath = Path(temp_dir) / TEMP_TEST_FILE
+            test_filepath.touch()  # Create a temporary file in the temporary directory
+            dataset_upload("jeward/newDatasetVersion", temp_dir)
+            self.assertEqual(len(stub.shared_data.files), 1)
+            self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
+
+    def test_dataset_upload_with_nested_directories(self) -> None:
         with TemporaryDirectory() as temp_dir:
             # Create a nested directory structure
             nested_dir = Path(temp_dir) / "nested"
@@ -47,7 +55,7 @@ class TestDatasetUpload(BaseTestCase):
             # Create a temporary file in the nested directory
             test_filepath = nested_dir / TEMP_TEST_FILE
             test_filepath.touch()
-            dataset_upload("jeward/newDataset", temp_dir, "dataset_type")
+            dataset_upload("jeward/newDataset", temp_dir)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)
 
@@ -57,7 +65,7 @@ class TestDatasetUpload(BaseTestCase):
             for i in range(MAX_FILES_TO_UPLOAD + 1):
                 test_filepath = Path(temp_dir) / f"temp_test_file_{i}"
                 test_filepath.touch()
-            dataset_upload("jeward/newDataset", temp_dir, "dataset_type")
+            dataset_upload("jeward/newDataset", temp_dir)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_ARCHIVE_FILE, stub.shared_data.files)
 
@@ -68,7 +76,7 @@ class TestDatasetUpload(BaseTestCase):
             test_filepath.touch()
             with open(test_filepath, "wb") as f:
                 f.write(os.urandom(1000))
-            dataset_upload("jeward/newDataset", temp_dir, "dataset_type")
+            dataset_upload("jeward/newDataset", temp_dir)
             self.assertGreaterEqual(stub.shared_data.blob_request_count, 1)
             self.assertEqual(len(stub.shared_data.files), 1)
             self.assertIn(TEMP_TEST_FILE, stub.shared_data.files)

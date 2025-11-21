@@ -2,17 +2,21 @@ import os
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
+from kagglesdk.datasets.types.dataset_api_service import ApiDownloadDatasetRequest
+
 import kagglehub
-from kagglehub import clients
-from kagglehub.clients import KaggleApiV1Client
-from kagglehub.exceptions import DataCorruptionError, KaggleApiHTTPError
+from kagglehub.clients import build_kaggle_client, download_file, get_user_agent
+from kagglehub.exceptions import DataCorruptionError
+from kagglehub.handle import DatasetHandle
 from tests.fixtures import BaseTestCase
 
 from .server_stubs import kaggle_api_stub as stub
 from .server_stubs import serv
 
+DUMMY_HANDLE = DatasetHandle("dummy", "dataset")
 
-class TestKaggleApiV1Client(BaseTestCase):
+
+class TestKaggleClient(BaseTestCase):
     @classmethod
     def setUpClass(cls):
         cls.server = serv.start_server(stub.app)
@@ -25,8 +29,12 @@ class TestKaggleApiV1Client(BaseTestCase):
         with TemporaryDirectory() as d:
             out_file = os.path.join(d, "out")
 
-            api_client = KaggleApiV1Client()
-            api_client.download_file("good", out_file)
+            with build_kaggle_client() as api_client:
+                r = ApiDownloadDatasetRequest()
+                r.dataset_slug = "no-integrity"
+
+                response = api_client.datasets.dataset_api_client.download_dataset(r)
+                download_file(response, out_file, DUMMY_HANDLE)
 
             with open(out_file) as f:
                 self.assertEqual("foo", f.read())
@@ -39,10 +47,15 @@ class TestKaggleApiV1Client(BaseTestCase):
             with open(out_file, "w") as f:
                 f.write("fo")  # Should download the remaining "o".
 
-            api_client = KaggleApiV1Client()
             with self.assertLogs("kagglehub", level="INFO") as cm:
-                api_client.download_file("good", out_file)
-                self.assertIn("INFO:kagglehub.clients:Resuming download from 2 bytes (1 bytes left)...", cm.output)
+                with build_kaggle_client() as api_client:
+                    r = ApiDownloadDatasetRequest()
+                    r.dataset_slug = "good"
+
+                    response = api_client.datasets.dataset_api_client.download_dataset(r)
+                    download_file(response, out_file, DUMMY_HANDLE)
+
+                    self.assertIn("INFO:kagglehub.clients:Resuming download from 2 bytes (1 bytes left)...", cm.output)
 
             with open(out_file) as f:
                 self.assertEqual("foo", f.read())
@@ -51,8 +64,12 @@ class TestKaggleApiV1Client(BaseTestCase):
         with TemporaryDirectory() as d:
             out_file = os.path.join(d, "out")
 
-            api_client = KaggleApiV1Client()
-            api_client.download_file("no-integrity", out_file)
+            with build_kaggle_client() as api_client:
+                r = ApiDownloadDatasetRequest()
+                r.dataset_slug = "no-integrity"
+
+                response = api_client.datasets.dataset_api_client.download_dataset(r)
+                download_file(response, out_file, DUMMY_HANDLE)
 
             with open(out_file) as f:
                 self.assertEqual("foo", f.read())
@@ -61,34 +78,26 @@ class TestKaggleApiV1Client(BaseTestCase):
         with TemporaryDirectory() as d:
             out_file = os.path.join(d, "out")
 
-            api_client = KaggleApiV1Client()
-            with self.assertRaises(DataCorruptionError):
-                api_client.download_file("corrupted", out_file)
+            with build_kaggle_client() as api_client:
+                r = ApiDownloadDatasetRequest()
+                r.dataset_slug = "corrupted"
+
+                with self.assertRaises(DataCorruptionError):
+                    response = api_client.datasets.dataset_api_client.download_dataset(r)
+                    download_file(response, out_file, DUMMY_HANDLE)
 
             # Assert the corrupted file has been deleted.
             self.assertFalse(os.path.exists(out_file))
 
-    def test_error_message(self) -> None:
-        api_client = KaggleApiV1Client()
-        with self.assertRaises(KaggleApiHTTPError) as ex:
-            api_client.get("/error")
-        self.assertIn("The server reported the following issues:", str(ex.exception))
-
-    def test_error_message_with_mismatch(self) -> None:
-        api_client = KaggleApiV1Client()
-        with self.assertRaises(KaggleApiHTTPError) as ex:
-            api_client.get("/content_type_mismatch")
-        self.assertNotIn("The server reported the following issues:", str(ex.exception))
-
     @patch.dict("os.environ", {})
     def test_get_user_agent(self) -> None:
-        self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__}")
+        self.assertEqual(get_user_agent(), f"kagglehub/{kagglehub.__version__}")
 
     @patch.dict(
         "os.environ", {"KAGGLE_KERNEL_RUN_TYPE": "Interactive", "KAGGLE_DATA_PROXY_URL": "https://dp.kaggle.net"}
     )
     def test_get_user_agent_kkb(self) -> None:
-        self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__} kkb/unknown")
+        self.assertEqual(get_user_agent(), f"kagglehub/{kagglehub.__version__} kkb/unknown")
 
     @patch.dict(
         "os.environ",
@@ -99,7 +108,7 @@ class TestKaggleApiV1Client(BaseTestCase):
     @patch("kagglehub.env._is_google_colab", True)
     def test_get_user_agent_colab(self) -> None:
         self.assertEqual(
-            clients.get_user_agent(),
+            get_user_agent(),
             f"kagglehub/{kagglehub.__version__} colab/release-colab-20230531-060125-RC00-unmanaged",
         )
 
@@ -119,7 +128,7 @@ class TestKaggleApiV1Client(BaseTestCase):
         ]
         mock_is_module.return_value = True
         mock_version.return_value = "0.15.0"
-        self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__} keras_nlp/0.15.0")
+        self.assertEqual(get_user_agent(), f"kagglehub/{kagglehub.__version__} keras_nlp/0.15.0")
 
     @patch("importlib.metadata.version")
     @patch("inspect.ismodule")
@@ -137,7 +146,7 @@ class TestKaggleApiV1Client(BaseTestCase):
         ]
         mock_is_module.return_value = True
         mock_version.return_value = "0.17.0"
-        self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__} keras_hub/0.17.0")
+        self.assertEqual(get_user_agent(), f"kagglehub/{kagglehub.__version__} keras_hub/0.17.0")
 
     @patch("importlib.metadata.version")
     @patch("inspect.ismodule")
@@ -155,4 +164,4 @@ class TestKaggleApiV1Client(BaseTestCase):
         ]
         mock_is_module.return_value = True
         mock_version.return_value = "0.18.0"
-        self.assertEqual(clients.get_user_agent(), f"kagglehub/{kagglehub.__version__} torchtune/0.18.0")
+        self.assertEqual(get_user_agent(), f"kagglehub/{kagglehub.__version__} torchtune/0.18.0")

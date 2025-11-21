@@ -23,6 +23,16 @@ class TestCompetitionDownload(unittest.TestCase):
 
             assert_files(self, actual_path, expected_files)
 
+    def test_competition_single_file_succeeds(self) -> None:
+        with create_test_cache():
+            expected_files = [
+                "gender_submission.csv",
+            ]
+
+            actual_path = competition_download(HANDLE, "gender_submission.csv")
+
+            assert_files(self, actual_path, expected_files)
+
     def test_competition_competition_rules_accepted_succeeds(self) -> None:
         with create_test_cache():
             expected_files = [

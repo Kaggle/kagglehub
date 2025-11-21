@@ -25,6 +25,7 @@ dependencies = [
   "tqdm",
   "packaging",
   "pyyaml",
+  "kagglesdk==0.1.13",
 ]
 
 [project.urls]
@@ -237,3 +238,8 @@ exclude_lines = [
 
 [tool.mypy]
 mypy_path = "./stubs"
+
+# TODO(b/307576378): Generate type hints for kagglesdk
+[[tool.mypy.overrides]]
+module = "kagglesdk.*"
+ignore_missing_imports = true

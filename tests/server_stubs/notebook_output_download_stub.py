@@ -1,7 +1,11 @@
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
+from kagglesdk.kernels.types.kernels_api_service import (
+    ApiDownloadKernelOutputRequest,
+    ApiGetKernelResponse,
+    ApiKernelMetadata,
+)
 
-from kagglehub.http_resolver import NOTEBOOK_CURRENT_VERSION_FIELD
 from tests.utils import (
     AUTO_COMPRESSED_FILE_NAME,
     add_mock_gcs_route,
@@ -25,8 +29,8 @@ def head() -> ResponseReturnValue:
     return "", 200
 
 
-@app.route("/api/v1/hello", methods=["GET"])
-def model_create() -> ResponseReturnValue:
+@app.route("/api/v1/api.v1.DiagnosticsService/Hello", methods=["POST"])
+def hello() -> ResponseReturnValue:
     auth = request.authorization
     if auth and auth.username == GOOD_CREDENTIALS_USERNAME and auth.password == GOOD_CREDENTIALS_API_KEY:
         data = {"message": "Hello from test server!", "userName": auth.username}
@@ -35,32 +39,26 @@ def model_create() -> ResponseReturnValue:
         return jsonify({"code": 401}), 200
 
 
-@app.route("/api/v1/kernels/pull", methods=["GET"])
+@app.route("/api/v1/kernels.KernelsApiService/GetKernel", methods=["POST"])
 def notebook_get() -> ResponseReturnValue:
-    user_name = request.args.get("user_name")
-    kernel_slug = request.args.get("kernel_slug")
-    data = {"message": f"Notebook exists {user_name}/{kernel_slug} !", "metadata": {NOTEBOOK_CURRENT_VERSION_FIELD: 2}}
-    return jsonify(data), 200
+    response = ApiGetKernelResponse()
+    response.metadata = ApiKernelMetadata()
+    response.metadata.current_version_number = 2
+
+    return response.to_json(), 200
 
 
-@app.route("/api/v1/kernels/output/download/<owner_slug>/<kernel_slug>", methods=["GET"])
-def notebook_output_download(owner_slug: str, kernel_slug: str) -> ResponseReturnValue:
-    # Name to prevent linter from complaining about unused variables.
-    _ = f"{owner_slug}/{kernel_slug}"
+@app.route("/api/v1/kernels.KernelsApiService/DownloadKernelOutput", methods=["POST"])
+def notebook_output_download() -> ResponseReturnValue:
+    r = ApiDownloadKernelOutputRequest.from_dict(request.get_json())
 
     # First, determine if we're fetching a file or the whole notebook output
-    file_name_query_param = request.args.get("file_path")
-    if kernel_slug == "package-test":
-        version = request.args.get("version_number", type=int)
-        test_file_name = f"package-v{version}.zip"
-    elif file_name_query_param:
+    if r.kernel_slug == "package-test":
+        test_file_name = f"package-v{r.version_number}.zip"
+    elif r.file_path:
         # This mimics behavior for our file downloads, where users request a file, but
         # receive a zipped version of the file from GCS.
-        test_file_name = (
-            f"{AUTO_COMPRESSED_FILE_NAME}.zip"
-            if file_name_query_param == AUTO_COMPRESSED_FILE_NAME
-            else file_name_query_param
-        )
+        test_file_name = f"{AUTO_COMPRESSED_FILE_NAME}.zip" if r.file_path == AUTO_COMPRESSED_FILE_NAME else r.file_path
     else:
         test_file_name = "foo.txt.zip"
 

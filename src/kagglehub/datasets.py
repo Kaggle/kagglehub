@@ -2,6 +2,8 @@ import logging
 import warnings
 from typing import Any
 
+from kagglesdk.blobs.types.blob_api_service import ApiBlobType
+
 from kagglehub import registry
 from kagglehub.datasets_enums import KaggleDatasetAdapter, PolarsFrameType
 from kagglehub.datasets_helpers import create_dataset_or_version
@@ -71,7 +73,7 @@ def dataset_upload(
 
     tokens = upload_files_and_directories(
         local_dataset_dir,
-        item_type="dataset",
+        item_type=ApiBlobType.DATASET,
         ignore_patterns=normalize_patterns(default=DEFAULT_IGNORE_PATTERNS, additional=ignore_patterns),
     )
 
