@@ -25,10 +25,7 @@ dependencies = [
   "tqdm",
   "packaging",
   "pyyaml",
-  # DO NOT MERGE THIS CHANGE.
-  # Use 0.1.13 once published to pypi.
-  # "kagglesdk==0.1.13",
-  "kagglesdk @ git+https://github.com/Kaggle/kagglesdk@kagglehub-support",
+  "kagglesdk==0.1.13",
 ]
 
 [project.urls]
@@ -246,7 +243,3 @@ mypy_path = "./stubs"
 [[tool.mypy.overrides]]
 module = "kagglesdk.*"
 ignore_missing_imports = true
-
-# TODO(rosbo): Remove once using published package from pypi.
-[tool.hatch.metadata]
-allow-direct-references = true
