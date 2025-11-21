@@ -2,12 +2,13 @@ import logging
 import os
 import time
 
+from kagglesdk.kaggle_env import is_in_kaggle_notebook
+
 from kagglehub.clients import (
     DEFAULT_CONNECT_TIMEOUT,
     KaggleJwtClient,
 )
 from kagglehub.config import is_kaggle_cache_disabled
-from kagglehub.env import is_in_kaggle_notebook
 from kagglehub.exceptions import BackendError
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK

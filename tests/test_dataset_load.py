@@ -70,6 +70,7 @@ class TestLoadHfDataset(BaseTestCase):
         hf_dataset = dataset_load(KaggleDatasetAdapter.HUGGING_FACE, DATASET_HANDLE, AUTO_COMPRESSED_FILE_NAME)
         self.assertEqual(SHAPES_ROW_COUNT, hf_dataset.num_rows)
         self.assertEqual(SHAPES_COLUMNS, hf_dataset.column_names)
+        self.assertIn("hugging_face_data_loader", stub.shared_data.last_download_user_agent)
 
     def _load_hf_dataset_with_valid_kwargs_and_assert_loaded(self) -> None:
         hf_dataset = dataset_load(
@@ -197,6 +198,7 @@ class TestLoadPandasDataset(BaseTestCase):
         )
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
         self.assertEqual(expected_columns, list(df.columns))
+        self.assertIn("pandas_data_loader", stub.shared_data.last_download_user_agent)
 
     def _load_pandas_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:
@@ -349,6 +351,7 @@ class TestLoadPolarsDataset(BaseTestCase):
         )
         self.assertEqual(SHAPES_ROW_COUNT, len(df))
         self.assertEqual(expected_columns, list(df.columns))
+        self.assertIn("polars_data_loader", stub.shared_data.last_download_user_agent)
 
     def _load_polars_dataset_with_invalid_kwargs_and_assert_raises(self) -> None:
         with self.assertRaises(ValueError) as cm:

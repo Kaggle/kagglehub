@@ -7,7 +7,7 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-# TODO(b/461859420): Move to kagglesdk
+# TODO(b/461859420): Consider moving to kagglesdk
 def to_enum(enum_class: type[T], enum_str: str) -> T:
     enum_key = _camel_to_snake(enum_str).upper()
 

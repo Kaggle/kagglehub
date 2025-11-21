@@ -5,13 +5,13 @@ import logging
 import os
 import zipfile
 from datetime import datetime, timezone
-from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
 import requests.auth
 from kagglesdk.kaggle_client import KaggleClient
-from kagglesdk.kaggle_env import KaggleEnv, get_env
+from kagglesdk.kaggle_env import KaggleEnv, get_env, is_in_kaggle_notebook
+from kagglesdk.kaggle_http_client import KaggleHttpClient
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
@@ -21,9 +21,7 @@ from kagglehub.config import get_kaggle_credentials
 from kagglehub.datasets_enums import KaggleDatasetAdapter
 from kagglehub.env import (
     KAGGLE_DATA_PROXY_URL_ENV_VAR_NAME,
-    KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME,
     is_in_colab_notebook,
-    is_in_kaggle_notebook,
     read_kaggle_build_date,
     search_lib_in_call_stack,
 )
@@ -377,24 +375,9 @@ class ColabClient:
         return None
 
     def _get_auth(self) -> requests.auth.AuthBase | None:
-        if self.credentials and self.credentials.username and self.credentials.key:
-            return HTTPBasicAuth(self.credentials.username, self.credentials.key)
-        elif is_in_kaggle_notebook():
-            return KaggleTokenAuth()
+        if self.credentials:
+            if self.credentials.username and self.credentials.key:
+                return HTTPBasicAuth(self.credentials.username, self.credentials.key)
+            if self.credentials.api_key:
+                return KaggleHttpClient.BearerAuth(self.credentials.api_key)
         return None
-
-
-class KaggleTokenAuth(requests.auth.AuthBase):
-    def __call__(self, r: requests.PreparedRequest):
-        token_dir = os.environ.get(KAGGLE_TOKEN_KEY_DIR_ENV_VAR_NAME)
-        if token_dir:
-            token_path = Path(token_dir)
-            if token_path.exists():
-                token = token_path.read_text().replace("\n", "")
-                r.headers["Authorization"] = f"Bearer {token}"
-            return r
-        logger.warning(
-            "Expected Token in notebook environment. Skipping token assignment."
-            "Notebook auth might not function properly."
-        )
-        return r

@@ -1,3 +1,6 @@
+import threading
+from dataclasses import dataclass
+
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
 from kagglesdk.datasets.types.dataset_api_service import ApiDataset, ApiDownloadDatasetRequest, ApiGetDatasetRequest
@@ -8,6 +11,15 @@ app = Flask(__name__)
 add_mock_gcs_route(app)
 
 TARGZ_ARCHIVE_HANDLE = "testuser/zip-dataset/versions/1"
+
+
+@dataclass
+class SharedData:
+    last_download_user_agent = ""
+
+
+shared_data: SharedData = SharedData()
+lock = threading.Lock()
 
 
 @app.route("/", methods=["HEAD"])
@@ -29,6 +41,10 @@ def dataset_get() -> ResponseReturnValue:
 # by a file_name query param
 @app.route("/api/v1/datasets.DatasetApiService/DownloadDataset", methods=["POST"])
 def dataset_download() -> ResponseReturnValue:
+    lock.acquire()
+    shared_data.last_download_user_agent = request.headers.get("User-Agent")
+    lock.release()
+
     r = ApiDownloadDatasetRequest.from_dict(request.get_json())
 
     handle = f"{r.owner_slug}/{r.dataset_slug}"
