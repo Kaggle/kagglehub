@@ -42,7 +42,7 @@ def dataset_get() -> ResponseReturnValue:
 @app.route("/api/v1/datasets.DatasetApiService/DownloadDataset", methods=["POST"])
 def dataset_download() -> ResponseReturnValue:
     lock.acquire()
-    shared_data.last_download_user_agent = request.headers.get("User-Agent")
+    shared_data.last_download_user_agent = request.headers.get("User-Agent", "")
     lock.release()
 
     r = ApiDownloadDatasetRequest.from_dict(request.get_json())
