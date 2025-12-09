@@ -30,10 +30,10 @@ Authenticating is **only** needed to access public resources requiring user cons
 
 First, you will need a Kaggle account. You can sign up [here](https://www.kaggle.com/account/login).
 
-After login, you can download your Kaggle API credentials at https://www.kaggle.com/settings by clicking on the "Create New Token" button under the "API" section.
+After login, you can download your Kaggle API credentials at https://www.kaggle.com/settings by clicking on the "Generate New Token" button under the "API" section.
 
-You have four different options to authenticate. Note that if you use `kaggle-api` (the `kaggle` command-line tool) you have
-already done Option 3 and can skip this.
+You have several options to authenticate. Note that if you use `kaggle-api` (the `kaggle` command-line tool) you have
+already configured authentication and can skip this.
 
 #### Option 1: Calling kagglehub.login()
 
@@ -47,20 +47,16 @@ kagglehub.login()
 
 #### Option 2: Read credentials from environment variables
 
-You can also choose to export your Kaggle username and token to the environment:
+You can also choose to export your Kaggle token to the environment:
 
 ```sh
-export KAGGLE_USERNAME=datadinosaur
-export KAGGLE_KEY=xxxxxxxxxxxxxx
+export KAGGLE_API_TOKEN=xxxxxxxxxxxxxx # Copied from the settings UI
 ```
 
-#### Option 3: Read credentials from `kaggle.json`
+#### Option 3: Read credentials from `access.token`
 
-Store your `kaggle.json` credentials file at `~/.kaggle/kaggle.json`.
-
-Alternatively, you can set the `KAGGLE_CONFIG_DIR` environment variable to change this location to `$KAGGLE_CONFIG_DIR/kaggle.json`.
-
-Note for Windows users: The default directory is `%HOMEPATH%/kaggle.json`.
+Store your Kaggle API credentials in a file at `~/.kaggle/access_token`. It may optionally have a `.txt` suffix. If you
+have a legacy `~/.kaggle/kaggle.json` file containing username and key, it will continue to work.
 
 #### Option 4: Read credentials from Google Colab secrets
 
