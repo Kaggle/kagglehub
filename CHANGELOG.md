@@ -2,6 +2,10 @@
 
 ## Next Release
 
+## v0.3.15 (December 18, 2025)
+
+* Restored version-checking logic.
+
 ## v0.3.14 (September 17, 2025)
 
 * Dropped support for Python 3.9. The minimum required Python version is now 3.10.

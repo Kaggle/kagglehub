@@ -5,6 +5,7 @@ import logging
 import os
 import zipfile
 from datetime import datetime, timezone
+from packaging.version import parse
 from urllib.parse import urlparse
 
 import requests
@@ -16,6 +17,7 @@ from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 import kagglehub
+from kagglehub import clients
 from kagglehub.cache import delete_from_cache, get_cached_archive_path
 from kagglehub.config import get_kaggle_credentials
 from kagglehub.datasets_enums import KaggleDatasetAdapter
@@ -45,6 +47,8 @@ DEFAULT_CONNECT_TIMEOUT = 5  # seconds
 DEFAULT_READ_TIMEOUT = 15  # seconds
 ACCEPT_RANGE_HTTP_HEADER = "Accept-Ranges"
 HTTP_STATUS_404 = 404
+
+already_printed_version_warning: bool = False
 
 _CHECKSUM_MISMATCH_MSG_TEMPLATE = """\
 The X-Goog-Hash header indicated a MD5 checksum of:
@@ -102,6 +106,26 @@ def get_user_agent() -> str:
     return " ".join(user_agents)
 
 
+def get_response_processor():
+    return _check_response_version
+
+
+def _check_response_version(response: requests.Response):
+    if clients.already_printed_version_warning:
+        return
+    latest_version_str = response.headers.get("X-Kaggle-APIVersion")
+    if latest_version_str:
+        current_version = parse(kagglehub.__version__)
+        latest_version = parse(latest_version_str)
+        if latest_version > current_version:
+            print(
+                f"Warning: Looks like you're using an outdated `kagglehub`` "
+                "version (installed: {current_version}), please consider "
+                "upgrading to the latest version ({latest_version_str})"
+            )
+            clients.already_printed_version_warning = True
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -124,6 +148,7 @@ def build_kaggle_client() -> KaggleClient:
         password=credentials.key,
         api_token=credentials.api_key,
         user_agent=get_user_agent(),
+        response_processor=get_response_processor(),
     )
 
 
@@ -183,19 +208,19 @@ def download_file(
     # For individual file downloads, the downloaded file may be a zip of the file rather
     # than the file name/type that was requested (e.g. my-big-table.csv.zip and not my-big-table.csv).
     # If that's the case, we should auto-extract it so users get what they expect.
-    expected_downloded_file_name = urlparse(out_file).path.split("/")[-1]
+    expected_downloaded_file_name = urlparse(out_file).path.split("/")[-1]
     actual_downloaded_file_name = urlparse(response.url).path.split("/")[-1]
     if (
         extract_auto_compressed_file
-        and f"{expected_downloded_file_name}.zip" == actual_downloaded_file_name
+        and f"{expected_downloaded_file_name}.zip" == actual_downloaded_file_name
         and zipfile.is_zipfile(out_file)
     ):
-        logger.info(f"Extracting zip of {expected_downloded_file_name}...")
+        logger.info(f"Extracting zip of {expected_downloaded_file_name}...")
         # Rename the file to match what it really is and make space to write to the expected location
         renamed_auto_compressed_path = f"{out_file}.zip"
         os.rename(out_file, renamed_auto_compressed_path)
         with zipfile.ZipFile(renamed_auto_compressed_path, "r") as f:
-            f.extract(expected_downloded_file_name, os.path.dirname(out_file))
+            f.extract(expected_downloaded_file_name, os.path.dirname(out_file))
         # We don't need the zipped version anymore
         os.remove(renamed_auto_compressed_path)
     return True
