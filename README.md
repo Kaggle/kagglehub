@@ -53,7 +53,7 @@ You can also choose to export your Kaggle token to the environment:
 export KAGGLE_API_TOKEN=xxxxxxxxxxxxxx # Copied from the settings UI
 ```
 
-#### Option 3: Read credentials from `access.token`
+#### Option 3: Read credentials from `access_token`
 
 Store your Kaggle API credentials in a file at `~/.kaggle/access_token`. It may optionally have a `.txt` suffix. If you
 have a legacy `~/.kaggle/kaggle.json` file containing username and key, it will continue to work.
