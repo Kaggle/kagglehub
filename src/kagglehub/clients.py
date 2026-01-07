@@ -108,7 +108,7 @@ def get_user_agent() -> str:
     return " ".join(user_agents)
 
 
-def get_response_processor() -> Callable[..., None] :
+def get_response_processor() -> Callable[..., None]:
     return _check_response_version
 
 

@@ -26,7 +26,6 @@ dependencies = [
   "packaging",
   "pyyaml",
   "kagglesdk >= 0.1.14, < 1.0", # sync with kaggle-api
-  "typing",
 ]
 
 [project.urls]
@@ -87,7 +86,6 @@ dependencies = [
   "types-tqdm",
   "pandas_stubs",
   "polars",
-  "typing",
 ]
 
 [tool.hatch.envs.lint.scripts]
