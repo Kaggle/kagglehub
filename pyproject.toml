@@ -195,6 +195,8 @@ ignore = [
   "B027",
   # Allow boolean positional values in function calls, like `dict.get(... True)`
   "FBT003",
+  # Unsorted imports detected even after sorting
+  "I001", "PLW0603",
   # Ignore checks for possible passwords
   "S105", "S106", "S107",
   # Ignore md5
