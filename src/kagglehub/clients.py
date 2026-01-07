@@ -9,9 +9,16 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
-import kagglehub
 import requests
 import requests.auth
+from kagglesdk.kaggle_client import KaggleClient
+from kagglesdk.kaggle_env import KaggleEnv, get_env, is_in_kaggle_notebook
+from kagglesdk.kaggle_http_client import KaggleHttpClient
+from packaging.version import parse
+from requests.auth import HTTPBasicAuth
+from tqdm import tqdm
+
+import kagglehub
 from kagglehub.cache import delete_from_cache, get_cached_archive_path
 from kagglehub.config import get_kaggle_credentials
 from kagglehub.datasets_enums import KaggleDatasetAdapter
@@ -32,12 +39,6 @@ from kagglehub.exceptions import (
 )
 from kagglehub.handle import CompetitionHandle, ResourceHandle
 from kagglehub.integrity import get_md5_checksum_from_response, to_b64_digest, update_hash_from_file
-from kagglesdk.kaggle_client import KaggleClient
-from kagglesdk.kaggle_env import KaggleEnv, get_env, is_in_kaggle_notebook
-from kagglesdk.kaggle_http_client import KaggleHttpClient
-from packaging.version import parse
-from requests.auth import HTTPBasicAuth
-from tqdm import tqdm
 
 CHUNK_SIZE = 1048576
 # The `connect` timeout is the number of seconds `requests` will wait for your client to establish a connection.
@@ -114,7 +115,7 @@ def _check_response_version(response: requests.Response) -> None:
     global already_printed_version_warning  # noqa: PLW0603
     if already_printed_version_warning:
         return
-    latest_version_str = response.headers.get("X-Kaggle-APIVersion")
+    latest_version_str = response.headers.get("X-Kaggle-HubVersion")
     if latest_version_str:
         current_version = parse(kagglehub.__version__)
         latest_version = parse(latest_version_str)
