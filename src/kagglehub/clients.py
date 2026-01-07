@@ -113,7 +113,7 @@ def get_response_processor() -> Callable[..., None] :
 
 
 def _check_response_version(response: requests.Response) -> None:
-    global already_printed_version_warning
+    global already_printed_version_warning  # noqa: PLW0603
     if already_printed_version_warning:
         return
     latest_version_str = response.headers.get("X-Kaggle-APIVersion")
