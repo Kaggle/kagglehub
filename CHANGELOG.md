@@ -2,14 +2,11 @@
 
 ## Next Release
 
-## v0.4 (January 7, 2026)
+## v0.4.0 (January 7, 2026)
 
 * Restored version-checking logic. ([#272](https://github.com/Kaggle/kagglehub/pull/272))
 * Document new auth technique. ([#270](https://github.com/Kaggle/kagglehub/pull/270))
 * Use `kagglesdk` instead of custom HTTP implementation. ([#268](https://github.com/Kaggle/kagglehub/pull/268))
-
-## v0.3.14 (September 17, 2025) (Not released)
-
 * Dropped support for Python 3.9. The minimum required Python version is now 3.10. ([#260](https://github.com/Kaggle/kagglehub/pull/260))
 
 ## v0.3.13 (August 25, 2025)
