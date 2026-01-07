@@ -5,8 +5,8 @@ import logging
 import os
 import sys
 import zipfile
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Callable
 from urllib.parse import urlparse
 
 import kagglehub
@@ -48,7 +48,9 @@ DEFAULT_READ_TIMEOUT = 15  # seconds
 ACCEPT_RANGE_HTTP_HEADER = "Accept-Ranges"
 HTTP_STATUS_404 = 404
 
-already_printed_version_warning: bool = False
+
+already_printed_version_warning = False
+
 
 _CHECKSUM_MISMATCH_MSG_TEMPLATE = """\
 The X-Goog-Hash header indicated a MD5 checksum of:
@@ -111,6 +113,7 @@ def get_response_processor() -> Callable[..., None] :
 
 
 def _check_response_version(response: requests.Response) -> None:
+    global already_printed_version_warning
     if already_printed_version_warning:
         return
     latest_version_str = response.headers.get("X-Kaggle-APIVersion")
