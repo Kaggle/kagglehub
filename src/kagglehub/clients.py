@@ -48,9 +48,7 @@ DEFAULT_READ_TIMEOUT = 15  # seconds
 ACCEPT_RANGE_HTTP_HEADER = "Accept-Ranges"
 HTTP_STATUS_404 = 404
 
-
 already_printed_version_warning = False
-
 
 _CHECKSUM_MISMATCH_MSG_TEMPLATE = """\
 The X-Goog-Hash header indicated a MD5 checksum of:
