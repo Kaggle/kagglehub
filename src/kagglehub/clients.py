@@ -3,6 +3,7 @@ import inspect
 import json
 import logging
 import os
+import sys
 import zipfile
 from datetime import datetime, timezone
 from packaging.version import parse
@@ -110,7 +111,7 @@ def get_response_processor():
     return _check_response_version
 
 
-def _check_response_version(response: requests.Response):
+def _check_response_version(response: requests.Response) -> None:
     if clients.already_printed_version_warning:
         return
     latest_version_str = response.headers.get("X-Kaggle-APIVersion")
@@ -118,7 +119,7 @@ def _check_response_version(response: requests.Response):
         current_version = parse(kagglehub.__version__)
         latest_version = parse(latest_version_str)
         if latest_version > current_version:
-            print(
+            sys.stdout.write(
                 "Warning: Looks like you're using an outdated `kagglehub` "
                 f"version (installed: {current_version}), please consider "
                 f"upgrading to the latest version ({latest_version_str})"
