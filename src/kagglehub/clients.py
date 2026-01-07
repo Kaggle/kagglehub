@@ -119,9 +119,9 @@ def _check_response_version(response: requests.Response):
         latest_version = parse(latest_version_str)
         if latest_version > current_version:
             print(
-                f"Warning: Looks like you're using an outdated `kagglehub`` "
-                "version (installed: {current_version}), please consider "
-                "upgrading to the latest version ({latest_version_str})"
+                "Warning: Looks like you're using an outdated `kagglehub` "
+                f"version (installed: {current_version}), please consider "
+                f"upgrading to the latest version ({latest_version_str})"
             )
             clients.already_printed_version_warning = True
 
