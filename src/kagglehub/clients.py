@@ -5,8 +5,8 @@ import logging
 import os
 import sys
 import zipfile
+from collections.abc import Callable
 from datetime import datetime, timezone
-from packaging.version import parse
 from urllib.parse import urlparse
 
 import requests
@@ -14,11 +14,11 @@ import requests.auth
 from kagglesdk.kaggle_client import KaggleClient
 from kagglesdk.kaggle_env import KaggleEnv, get_env, is_in_kaggle_notebook
 from kagglesdk.kaggle_http_client import KaggleHttpClient
+from packaging.version import parse
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
 
 import kagglehub
-from kagglehub import clients
 from kagglehub.cache import delete_from_cache, get_cached_archive_path
 from kagglehub.config import get_kaggle_credentials
 from kagglehub.datasets_enums import KaggleDatasetAdapter
@@ -49,7 +49,7 @@ DEFAULT_READ_TIMEOUT = 15  # seconds
 ACCEPT_RANGE_HTTP_HEADER = "Accept-Ranges"
 HTTP_STATUS_404 = 404
 
-already_printed_version_warning: bool = False
+already_printed_version_warning = False
 
 _CHECKSUM_MISMATCH_MSG_TEMPLATE = """\
 The X-Goog-Hash header indicated a MD5 checksum of:
@@ -107,14 +107,15 @@ def get_user_agent() -> str:
     return " ".join(user_agents)
 
 
-def get_response_processor():
+def get_response_processor() -> Callable[..., None]:
     return _check_response_version
 
 
 def _check_response_version(response: requests.Response) -> None:
-    if clients.already_printed_version_warning:
+    global already_printed_version_warning  # noqa: PLW0603
+    if already_printed_version_warning:
         return
-    latest_version_str = response.headers.get("X-Kaggle-APIVersion")
+    latest_version_str = response.headers.get("X-Kaggle-HubVersion")
     if latest_version_str:
         current_version = parse(kagglehub.__version__)
         latest_version = parse(latest_version_str)
@@ -124,7 +125,7 @@ def _check_response_version(response: requests.Response) -> None:
                 f"version (installed: {current_version}), please consider "
                 f"upgrading to the latest version ({latest_version_str})"
             )
-            clients.already_printed_version_warning = True
+            already_printed_version_warning = True
 
 
 logger = logging.getLogger(__name__)
