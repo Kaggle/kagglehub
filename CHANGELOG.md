@@ -2,6 +2,10 @@
 
 ## Next Release
 
+## v0.4.1 (January 20, 2026)
+
+* Use new API tokens for `kagglehub.login()` and Colab secrets auth. ([#279](https://github.com/Kaggle/kagglehub/pull/279))
+
 ## v0.4.0 (January 7, 2026)
 
 * Restored version-checking logic. ([#272](https://github.com/Kaggle/kagglehub/pull/272))
