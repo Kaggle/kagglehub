@@ -180,7 +180,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 # List the files and decide how to download them:
                 # - <= 25 files: Download files in parallel
                 # > 25 files: Download the archive and uncompress
-                (files, has_more) = _list_model_files(api_client, h)
+                files, has_more = _list_model_files(api_client, h)
                 if has_more:
                     # Downloading the full archived bundle.
                     archive_path = get_cached_archive_path(h)

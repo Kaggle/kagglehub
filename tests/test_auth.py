@@ -23,47 +23,37 @@ class TestAuth(BaseTestCase):
         cls.server.shutdown()
 
     def test_login_updates_global_credentials(self) -> None:
-        login("lastplacelarry", "some-key")
+        login("some-token")
 
         # Verify that the global variable contains the updated credentials
         credentials = get_kaggle_credentials()
         if credentials is None:
             self.fail("Credentials should not be None")
-        self.assertEqual("lastplacelarry", credentials.username)
-        self.assertEqual("some-key", credentials.key)
+        self.assertEqual("some-token", credentials.api_key)
 
     def test_login_updates_global_credentials_no_validation(self) -> None:
-        login("lastplacelarry", "some-key", validate_credentials=False)
+        login("some-token", validate_credentials=False)
 
         # Verify that the global variable contains the updated credentials
         credentials = get_kaggle_credentials()
         if credentials is None:
             self.fail("Credentials should not be None")
-        self.assertEqual("lastplacelarry", credentials.username)
-        self.assertEqual("some-key", credentials.key)
+        self.assertEqual("some-token", credentials.api_key)
 
-    def test_set_kaggle_credentials_raises_error_with_empty_username(self) -> None:
+    def test_login_raises_error_with_empty_api_token(self) -> None:
         with self.assertRaises(ValueError):
-            login("", "some-key")
-
-    def test_set_kaggle_credentials_raises_error_with_empty_api_key(self) -> None:
-        with self.assertRaises(ValueError):
-            login("lastplacelarry", "")
-
-    def test_set_kaggle_credentials_raises_error_with_empty_username_api_key(self) -> None:
-        with self.assertRaises(ValueError):
-            login("", "")
+            login("")
 
     def test_login_returns_403_for_bad_credentials(self) -> None:
         output_stream = io.StringIO()
         handler = logging.StreamHandler(output_stream)
         logger.addHandler(handler)
-        login("invalid", "invalid")
+        login("invalid")
 
         captured_output = output_stream.getvalue()
         self.assertEqual(
             captured_output,
-            "Invalid Kaggle credentials. You can check your credentials on the [Kaggle settings page](https://www.kaggle.com/settings/account).\n",
+            "Invalid Kaggle credentials. You can obtain a Kaggle API token on your [Kaggle settings page](https://www.kaggle.com/settings/account).\n",
         )
 
     def test_capture_logger_output(self) -> None:
@@ -78,7 +68,7 @@ class TestAuth(BaseTestCase):
             kagglehub.whoami()
 
     def test_whoami_success(self) -> None:
-        login("lastplacelarry", "some-key")
+        login("some-token")
 
         result = kagglehub.whoami()
         self.assertEqual(result, {"username": "lastplacelarry"})

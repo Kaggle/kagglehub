@@ -30,14 +30,14 @@ Authenticating is **only** needed to access public resources requiring user cons
 
 First, you will need a Kaggle account. You can sign up [here](https://www.kaggle.com/account/login).
 
-After login, you can download your Kaggle API credentials at https://www.kaggle.com/settings by clicking on the "Generate New Token" button under the "API" section.
+After login, you can download your Kaggle API token at https://www.kaggle.com/settings by clicking on the "Generate New Token" button under the "API" section.
 
 You have several options to authenticate. Note that if you use `kaggle-api` (the `kaggle` command-line tool) you have
 already configured authentication and can skip this.
 
-#### Option 1: Calling kagglehub.login()
+#### Option 1: kagglehub.login()
 
-This will prompt you to enter your username and token:
+This will prompt you to enter your Kaggle API token:
 
 ```python
 import kagglehub
@@ -45,7 +45,7 @@ import kagglehub
 kagglehub.login()
 ```
 
-#### Option 2: Read credentials from environment variables
+#### Option 2: Environment variable
 
 You can also choose to export your Kaggle token to the environment:
 
@@ -53,16 +53,19 @@ You can also choose to export your Kaggle token to the environment:
 export KAGGLE_API_TOKEN=xxxxxxxxxxxxxx # Copied from the settings UI
 ```
 
-#### Option 3: Read credentials from `access_token`
+#### Option 3: API token file
 
-Store your Kaggle API credentials in a file at `~/.kaggle/access_token`. It may optionally have a `.txt` suffix. If you
-have a legacy `~/.kaggle/kaggle.json` file containing username and key, it will continue to work.
+Store your Kaggle API token obtained from your [Kaggle account settings page](https://www.kaggle.com/settings) in a file at `~/.kaggle/access_token`.
 
-#### Option 4: Read credentials from Google Colab secrets
+#### Option 4: Google Colab secret
 
-Store your username and key token as Colab secrets `KAGGLE_USERNAME` and `KAGGLE_KEY`.
+Store your Kaggle API token obtained from your [Kaggle account settings page](https://www.kaggle.com/settings) in a Colab secret named `KAGGLE_API_TOKEN`.
 
 Instructions on adding secrets in both Colab and Colab Enterprise can be found in [this article](https://www.googlecloudcommunity.com/gc/Cloud-Hub/How-do-I-add-secrets-in-Google-Colab-Enterprise/m-p/784866).
+
+#### Option 5: Legacy API credentials file
+
+From your [Kaggle account settings page](https://www.kaggle.com/settings), under "Legacy API Credentials", click on the "Create Legacy API Key" button to generate a `kaggle.json` file and store it at `~/.kaggle/kaggle.json`.
 
 ### Download Model
 

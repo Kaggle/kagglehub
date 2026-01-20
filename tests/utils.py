@@ -108,12 +108,10 @@ def handle_mock_gcs_redirect(file_name: str) -> ResponseReturnValue:
         )
 
 
-def login(username: str, api_key: str, validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
-    with mock.patch("builtins.input") as mock_input:
-        with mock.patch("getpass.getpass") as mock_getpass:
-            mock_input.side_effect = [username]
-            mock_getpass.return_value = api_key
-            kagglehub.login(validate_credentials=validate_credentials)
+def login(api_token: str, validate_credentials: bool = True) -> None:  # noqa: FBT002, FBT001
+    with mock.patch("getpass.getpass") as mock_getpass:
+        mock_getpass.return_value = api_token
+        kagglehub.login(validate_credentials=validate_credentials)
 
 
 def clear_imported_kaggle_packages() -> None:

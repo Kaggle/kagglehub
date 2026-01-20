@@ -10,7 +10,7 @@ def head() -> ResponseReturnValue:
 
 
 GOOD_CREDENTIALS_USERNAME = "lastplacelarry"
-GOOD_CREDENTIALS_API_KEY = "some-key"
+GOOD_CREDENTIALS_API_TOKEN = "some-token"
 
 
 @app.errorhandler(404)
@@ -22,8 +22,8 @@ def error(e: Exception):  # noqa: ANN201
 @app.route("/api/v1/api.v1.DiagnosticsService/Hello", methods=["POST"])
 def hello() -> ResponseReturnValue:
     auth = request.authorization
-    if auth and auth.username == GOOD_CREDENTIALS_USERNAME and auth.password == GOOD_CREDENTIALS_API_KEY:
-        data = {"message": "Hello from test server!", "userName": auth.username}
+    if auth and auth.token == GOOD_CREDENTIALS_API_TOKEN:
+        data = {"message": "Hello from test server!", "userName": GOOD_CREDENTIALS_USERNAME}
         return jsonify(data), 200
     else:
         return jsonify({"code": 401}), 200
