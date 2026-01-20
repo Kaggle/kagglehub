@@ -19,7 +19,7 @@ from kagglehub.config import (
     get_log_verbosity,
     is_colab_cache_disabled,
     is_kaggle_cache_disabled,
-    set_kaggle_credentials,
+    set_kaggle_api_token,
 )
 from tests.fixtures import BaseTestCase
 
@@ -36,15 +36,15 @@ class TestConfig(BaseTestCase):
         self.assertEqual(None, get_kaggle_credentials())
 
     @mock.patch.dict(os.environ, {USERNAME_ENV_VAR_NAME: "lastplacelarry"})
-    def test_get_kaggle_credentials_missing_key_returns_none(self) -> None:
+    def test_legacy_get_kaggle_credentials_missing_key_returns_none(self) -> None:
         self.assertEqual(None, get_kaggle_credentials())
 
     @mock.patch.dict(os.environ, {KEY_ENV_VAR_NAME: "some-key"})
-    def test_get_kaggle_credentials_missing_username_returns_none(self) -> None:
+    def test_legacy_get_kaggle_credentials_missing_username_returns_none(self) -> None:
         self.assertEqual(None, get_kaggle_credentials())
 
     @mock.patch.dict(os.environ, {USERNAME_ENV_VAR_NAME: "lastplacelarry", KEY_ENV_VAR_NAME: "some-key"})
-    def test_get_kaggle_credentials_missing_username_succeeds(self) -> None:
+    def test_legacy_get_kaggle_credentials_succeeds(self) -> None:
         credentials = get_kaggle_credentials()
         if credentials is None:
             self.fail("Credentials should not be None")
@@ -52,7 +52,28 @@ class TestConfig(BaseTestCase):
         self.assertEqual("lastplacelarry", credentials.username)
         self.assertEqual("some-key", credentials.key)
 
+    @mock.patch.dict(os.environ, {"KAGGLE_API_TOKEN": "some-token"})
+    def test_get_kaggle_credentials_succeeds(self) -> None:
+        credentials = get_kaggle_credentials()
+        if credentials is None:
+            self.fail("Credentials should not be None")
+
+        self.assertEqual("some-token", credentials.api_key)
+
     def test_get_kaggle_credentials_file_succeeds(self) -> None:
+        with TemporaryDirectory() as d:
+            token_filepath = os.path.join(d, "access_token")
+            with mock.patch.dict(os.environ, {"KAGGLE_API_TOKEN": token_filepath}):
+                with open(token_filepath, "x") as token_file:
+                    token_file.write("some-token")
+
+                credentials = get_kaggle_credentials()
+                if credentials is None:
+                    self.fail("Credentials should not be None")
+
+                self.assertEqual("some-token", credentials.api_key)
+
+    def test_legacy_get_kaggle_credentials_file_succeeds(self) -> None:
         with TemporaryDirectory() as d:
             with mock.patch.dict(os.environ, {CREDENTIALS_FOLDER_ENV_VAR_NAME: d}):
                 with open(os.path.join(d, CREDENTIALS_FILENAME), "x") as creds_file:
@@ -65,7 +86,7 @@ class TestConfig(BaseTestCase):
                 self.assertEqual("kerneler", credentials.username)
                 self.assertEqual("another-key", credentials.key)
 
-    def test_get_kaggle_credentials_invalid_json_file_raises(self) -> None:
+    def test_legacy_get_kaggle_credentials_invalid_json_file_raises(self) -> None:
         with TemporaryDirectory() as d:
             with mock.patch.dict(os.environ, {CREDENTIALS_FOLDER_ENV_VAR_NAME: d}):
                 with open(os.path.join(d, CREDENTIALS_FILENAME), "x") as creds_file:
@@ -73,7 +94,7 @@ class TestConfig(BaseTestCase):
 
                 self.assertRaises(ValueError, get_kaggle_credentials)
 
-    def test_get_kaggle_credentials_json_missing_username_raises(self) -> None:
+    def test_legacy_get_kaggle_credentials_json_missing_username_raises(self) -> None:
         with TemporaryDirectory() as d:
             with mock.patch.dict(os.environ, {CREDENTIALS_FOLDER_ENV_VAR_NAME: d}):
                 with open(os.path.join(d, CREDENTIALS_FILENAME), "x") as creds_file:
@@ -87,7 +108,7 @@ class TestConfig(BaseTestCase):
 
                 self.assertRaises(ValueError, get_kaggle_credentials)
 
-    def test_get_kaggle_credentials_json_missing_key_raises(self) -> None:
+    def test_legacy_get_kaggle_credentials_json_missing_key_raises(self) -> None:
         with TemporaryDirectory() as d:
             with mock.patch.dict(os.environ, {CREDENTIALS_FOLDER_ENV_VAR_NAME: d}):
                 with open(os.path.join(d, CREDENTIALS_FILENAME), "x") as creds_file:
@@ -136,22 +157,19 @@ class TestConfig(BaseTestCase):
             with mock.patch.dict(os.environ, {DISABLE_KAGGLE_CACHE_ENV_VAR_NAME: env_var_value}):
                 self.assertEqual(expected, is_kaggle_cache_disabled())
 
-    def test_set_kaggle_credentials_raises_error_with_whitespace(self) -> None:
+    def test_set_kaggle_api_token_raises_error_with_whitespace(self) -> None:
         with self.assertRaises(ValueError):
-            set_kaggle_credentials(username=" ", api_key="some-key")
-        with self.assertRaises(ValueError):
-            set_kaggle_credentials(username="lastplacelarry", api_key=" ")
+            set_kaggle_api_token(" ")
 
     def test_set_and_clear_kaggle_credentials(self) -> None:
         # Set valid credentials
-        set_kaggle_credentials("lastplacelarry", "some-key")
+        set_kaggle_api_token("some-token")
 
         # Get and assert credentials
         credentials = get_kaggle_credentials()
         if credentials is None:
             self.fail("Credentials should not be None")
-        self.assertEqual("lastplacelarry", credentials.username)
-        self.assertEqual("some-key", credentials.key)
+        self.assertEqual("some-token", credentials.api_key)
 
         # Clear credentials
         clear_kaggle_credentials()

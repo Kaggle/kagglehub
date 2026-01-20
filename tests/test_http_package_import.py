@@ -57,7 +57,7 @@ class TestHttpPackageImport(BaseTestCase):
             self.assertFalse(os.path.exists(archive_path))
 
     def test_package_versioned_user_owned_succeeds(self) -> None:
-        login("dster", "some-key")
+        login("some-token")
 
         with create_test_cache():
             package = kagglehub.package_import(VERSIONED_PACKAGE_HANDLE, bypass_confirmation=True)

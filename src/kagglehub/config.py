@@ -34,6 +34,7 @@ CREDENTIALS_JSON_KEY = "key"
 
 COLAB_SECRET_USERNAME = "KAGGLE_USERNAME"
 COLAB_SECRET_KEY = "KAGGLE_KEY"
+COLAB_SECRET_API_TOKEN = "KAGGLE_API_TOKEN"
 
 _kaggle_credentials = None
 
@@ -71,6 +72,7 @@ def get_kaggle_credentials() -> KaggleApiCredentials | None:
     if api_key:
         return KaggleApiCredentials(api_key=api_key)
 
+    # Legacy credentials support.
     creds_filepath = _get_kaggle_credentials_file()
     env_var_username = os.getenv(USERNAME_ENV_VAR_NAME)
     env_var_key = os.getenv(KEY_ENV_VAR_NAME)
@@ -96,7 +98,7 @@ def get_kaggle_credentials() -> KaggleApiCredentials | None:
                 username=creds_dict[CREDENTIALS_JSON_USERNAME], key=creds_dict[CREDENTIALS_JSON_KEY]
             )
     if is_in_colab_notebook() and (colab_secret := get_colab_credentials()) is not None:
-        return KaggleApiCredentials(username=colab_secret.username, key=colab_secret.key)
+        return colab_secret
 
     return None
 
@@ -136,15 +138,14 @@ def _is_env_var_truthy(env_var_name: str) -> bool:
     return env_var_name in os.environ and os.environ[env_var_name].lower() in TRUTHY_VALUES
 
 
-def set_kaggle_credentials(username: str, api_key: str) -> None:
-    stripped_username = username.strip()
-    stripped_api_key = api_key.strip()
-    if not stripped_username or not stripped_api_key:
-        error_message = "Both username and API key cannot be empty or whitespace"
+def set_kaggle_api_token(api_token: str) -> None:
+    stripped_token = api_token.strip()
+    if not stripped_token:
+        error_message = "The API token cannot be empty"
         raise ValueError(error_message)
 
     global _kaggle_credentials  # noqa: PLW0603
-    _kaggle_credentials = KaggleApiCredentials(username=username, key=api_key)
+    _kaggle_credentials = KaggleApiCredentials(api_key=api_token)
     logger.info("Kaggle credentials set.")
 
 
@@ -165,6 +166,11 @@ def get_colab_credentials() -> KaggleApiCredentials | None:
         return None
 
     try:
+        api_token = _normalize_whitespace(userdata.get(COLAB_SECRET_API_TOKEN))
+        if api_token:
+            return KaggleApiCredentials(api_key=api_token)
+
+        # Legacy credentials support.
         username = _normalize_whitespace(userdata.get(COLAB_SECRET_USERNAME))
         key = _normalize_whitespace(userdata.get(COLAB_SECRET_KEY))
         if username and key:
