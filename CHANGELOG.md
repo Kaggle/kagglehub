@@ -2,6 +2,10 @@
 
 ## Next Release
 
+## v0.4.2 (January 29, 2026)
+
+* Add `set_kaggle_credentials` method back to avoid breakage on libraries depending on setting legacy credentials. ([#281](https://github.com/Kaggle/kagglehub/pull/281))
+
 ## v0.4.1 (January 20, 2026)
 
 * Use new API tokens for `kagglehub.login()` and Colab secrets auth. ([#279](https://github.com/Kaggle/kagglehub/pull/279))
