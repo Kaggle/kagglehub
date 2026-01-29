@@ -14,13 +14,13 @@ from kagglehub.config import (
     LOG_VERBOSITY_ENV_VAR_NAME,
     USERNAME_ENV_VAR_NAME,
     clear_kaggle_credentials,
-    set_kaggle_credentials,
     get_cache_folder,
     get_kaggle_credentials,
     get_log_verbosity,
     is_colab_cache_disabled,
     is_kaggle_cache_disabled,
     set_kaggle_api_token,
+    set_kaggle_credentials,
 )
 from tests.fixtures import BaseTestCase
 
@@ -178,7 +178,7 @@ class TestConfig(BaseTestCase):
         # Get and assert credentials are cleared
         credentials = get_kaggle_credentials()
         self.assertIsNone(credentials)
-    
+
     def test_set_kaggle_credentials_raises_error_with_whitespace(self) -> None:
         with self.assertRaises(ValueError):
             set_kaggle_credentials(username=" ", api_key="some-key")
