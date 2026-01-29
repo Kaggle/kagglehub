@@ -7,7 +7,12 @@ from contextlib import contextmanager
 from kagglesdk.models.types.model_api_service import ApiGetModelRequest
 
 from kagglehub.clients import build_kaggle_client
-from kagglehub.config import get_kaggle_credentials, set_kaggle_api_token
+from kagglehub.config import (
+    get_kaggle_credentials,
+    set_kaggle_api_token,
+    # This import is necessary to avoid breaking torchtune: https://github.com/meta-pytorch/torchtune/issues/2946
+    set_kaggle_credentials,  # noqa: F401
+)
 from kagglehub.exceptions import UnauthenticatedError
 
 _logger = logging.getLogger(__name__)

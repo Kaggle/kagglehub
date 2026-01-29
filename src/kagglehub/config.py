@@ -138,6 +138,18 @@ def _is_env_var_truthy(env_var_name: str) -> bool:
     return env_var_name in os.environ and os.environ[env_var_name].lower() in TRUTHY_VALUES
 
 
+def set_kaggle_credentials(username: str, api_key: str) -> None:
+    stripped_username = username.strip()
+    stripped_api_key = api_key.strip()
+    if not stripped_username or not stripped_api_key:
+        error_message = "Both username and API key cannot be empty or whitespace"
+        raise ValueError(error_message)
+
+    global _kaggle_credentials  # noqa: PLW0603
+    _kaggle_credentials = KaggleApiCredentials(username=username, key=api_key)
+    logger.info("Kaggle credentials set.")
+
+
 def set_kaggle_api_token(api_token: str) -> None:
     stripped_token = api_token.strip()
     if not stripped_token:
