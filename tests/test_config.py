@@ -14,6 +14,7 @@ from kagglehub.config import (
     LOG_VERBOSITY_ENV_VAR_NAME,
     USERNAME_ENV_VAR_NAME,
     clear_kaggle_credentials,
+    set_kaggle_credentials,
     get_cache_folder,
     get_kaggle_credentials,
     get_log_verbosity,
@@ -161,7 +162,7 @@ class TestConfig(BaseTestCase):
         with self.assertRaises(ValueError):
             set_kaggle_api_token(" ")
 
-    def test_set_and_clear_kaggle_credentials(self) -> None:
+    def test_set_and_clear_kaggle_api_token(self) -> None:
         # Set valid credentials
         set_kaggle_api_token("some-token")
 
@@ -177,3 +178,23 @@ class TestConfig(BaseTestCase):
         # Get and assert credentials are cleared
         credentials = get_kaggle_credentials()
         self.assertIsNone(credentials)
+    
+    def test_set_kaggle_credentials_raises_error_with_whitespace(self) -> None:
+        with self.assertRaises(ValueError):
+            set_kaggle_credentials(username=" ", api_key="some-key")
+        with self.assertRaises(ValueError):
+            set_kaggle_credentials(username="lastplacelarry", api_key=" ")
+
+    def test_set_and_clear_kaggle_credentials(self) -> None:
+        # Set valid credentials
+        set_kaggle_credentials("lastplacelarry", "some-key")
+
+        # Get and assert credentials
+        credentials = get_kaggle_credentials()
+        if credentials is None:
+            self.fail("Credentials should not be None")
+        self.assertEqual("lastplacelarry", credentials.username)
+        self.assertEqual("some-key", credentials.key)
+
+        # Clear credentials
+        clear_kaggle_credentials()
