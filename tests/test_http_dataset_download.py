@@ -1,4 +1,5 @@
 import os
+from tempfile import TemporaryDirectory
 
 import kagglehub
 from kagglehub.cache import DATASETS_CACHE_SUBFOLDER, get_cached_archive_path
@@ -108,6 +109,32 @@ class TestHttpDatasetDownload(BaseTestCase):
     def test_versioned_dataset_download_with_auto_compressed_path(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded_auto_compressed(d, VERSIONED_DATASET_HANDLE)
+
+    def test_versioned_dataset_download_with_destination_dir(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, destination=dest)
+                self.assertEqual(dest, dataset_path)
+                self.assertEqual(["foo.txt"], sorted(os.listdir(dest)))
+
+    def test_versioned_dataset_download_with_path_and_destination_dir(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH, destination=dest)
+                self.assertEqual(os.path.join(dest, TEST_FILEPATH), dataset_path)
+                with open(dataset_path) as dataset_file:
+                    self.assertEqual(TEST_CONTENTS, dataset_file.read())
+
+    def test_versioned_dataset_download_with_path_and_destination_file(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                dest_file = os.path.join(dest, "renamed.txt")
+                dataset_path = kagglehub.dataset_download(
+                    VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH, destination=dest_file
+                )
+                self.assertEqual(dest_file, dataset_path)
+                with open(dataset_path) as dataset_file:
+                    self.assertEqual(TEST_CONTENTS, dataset_file.read())
 
     def test_unversioned_dataset_download_with_force_download(self) -> None:
         with create_test_cache() as d:

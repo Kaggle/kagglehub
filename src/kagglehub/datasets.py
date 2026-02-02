@@ -1,4 +1,6 @@
 import logging
+import os
+import shutil
 import warnings
 from typing import Any
 
@@ -31,19 +33,66 @@ _DATASET_LOAD_VALID_KWARGS_MAP = {
 }
 
 
-def dataset_download(handle: str, path: str | None = None, *, force_download: bool | None = False) -> str:
+def dataset_download(
+    handle: str,
+    path: str | None = None,
+    *,
+    force_download: bool | None = False,
+    destination: str | None = None,
+) -> str:
     """Download dataset files
     Args:
         handle: (string) the dataset handle
         path: (string) Optional path to a file within a dataset
         force_download: (bool) Optional flag to force download a dataset, even if it's cached
+        destination: (string) Optional path to copy the dataset or file to after downloading
     Returns:
-        A string requesting the path to the requested dataset files.
+        A string requesting the path to the requested dataset files. If destination is provided, returns the
+        destination path.
     """
     h = parse_dataset_handle(handle)
     logger.info(f"Downloading Dataset: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    path, _ = registry.dataset_resolver(h, path, force_download=force_download)
-    return path
+    resolved_path, _ = registry.dataset_resolver(h, path, force_download=force_download)
+    if destination is None:
+        return resolved_path
+    return _copy_dataset_download_to_destination(resolved_path, destination, path)
+
+
+def _copy_dataset_download_to_destination(resolved_path: str, destination: str, path: str | None) -> str:
+    if path is None:
+        if os.path.exists(destination) and not os.path.isdir(destination):
+            msg = f"Destination '{destination}' must be a directory when downloading a full dataset."
+            raise ValueError(msg)
+        os.makedirs(destination, exist_ok=True)
+        _copy_dir_contents(resolved_path, destination)
+        return destination
+
+    destination_is_dir = destination.endswith(os.path.sep) or destination.endswith("/")
+    if os.path.isdir(destination):
+        destination_is_dir = True
+
+    if destination_is_dir:
+        os.makedirs(destination, exist_ok=True)
+        final_path = os.path.join(destination, os.path.basename(resolved_path))
+    else:
+        destination_dir = os.path.dirname(destination)
+        if destination_dir:
+            os.makedirs(destination_dir, exist_ok=True)
+        final_path = destination
+
+    shutil.copy2(resolved_path, final_path)
+    return final_path
+
+
+def _copy_dir_contents(src_dir: str, dest_dir: str) -> None:
+    for entry in os.listdir(src_dir):
+        src_path = os.path.join(src_dir, entry)
+        dest_path = os.path.join(dest_dir, entry)
+        if os.path.isdir(src_path):
+            shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
+        else:
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            shutil.copy2(src_path, dest_path)
 
 
 def dataset_upload(

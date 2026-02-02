@@ -1,4 +1,5 @@
 import os
+from tempfile import TemporaryDirectory
 from unittest import mock
 
 import requests
@@ -86,3 +87,10 @@ class TestKaggleCacheDatasetDownload(BaseTestCase):
         with stub.create_env():
             dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, force_download=False)
             self.assertEqual(["foo.txt"], sorted(os.listdir(dataset_path)))
+
+    def test_versioned_dataset_download_with_destination_dir(self) -> None:
+        with stub.create_env():
+            with TemporaryDirectory() as dest:
+                dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, destination=dest)
+                self.assertEqual(dest, dataset_path)
+                self.assertEqual(["foo.txt"], sorted(os.listdir(dest)))
