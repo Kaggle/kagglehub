@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import tarfile
 import zipfile
 
@@ -16,6 +17,7 @@ from kagglesdk.models.types.model_api_service import (
 from tqdm.contrib.concurrent import thread_map
 
 from kagglehub.cache import (
+    Cache,
     delete_from_cache,
     get_cached_archive_path,
     get_cached_path,
@@ -40,7 +42,13 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         return True
 
     def _resolve(
-        self, h: CompetitionHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: CompetitionHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
             cached_path = load_from_cache(h, path)
@@ -109,20 +117,33 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         return True
 
     def _resolve(
-        self, h: DatasetHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: DatasetHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
 
-            dataset_path = load_from_cache(h, path)
+            cache = Cache(override_dir=output_dir)
+            dataset_path = cache.load_from_cache(h, path)
             if dataset_path and not force_download:
                 return dataset_path, h.version  # Already cached
+
+            if output_dir:
+                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
+                if dataset_path and force_download and not overwrite:
+                    msg = "output_dir already contains the requested dataset; set overwrite=True to replace it."
+                    raise FileExistsError(msg)
             elif dataset_path and force_download:
                 delete_from_cache(h, path)
 
             r = _build_dataset_download_request(h, path)
-            out_path = get_cached_path(h, path)
+            out_path = cache.get_path(h, path)
 
             # Create the intermediary directories
             if path:
@@ -133,7 +154,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             else:
                 # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
                 # Downloading the full archived bundle.
-                archive_path = get_cached_archive_path(h)
+                archive_path = cache.get_archive_path(h)
                 os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
                 # First, we download the archive.
@@ -145,7 +166,7 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
                 # Delete the archive
                 os.remove(archive_path)
 
-            mark_as_complete(h, path)
+            cache.mark_as_complete(h, path)
             return out_path, h.version
 
 
@@ -155,7 +176,13 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         return True
 
     def _resolve(
-        self, h: ModelHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: ModelHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
@@ -224,7 +251,13 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         return True
 
     def _resolve(
-        self, h: NotebookHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: NotebookHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
@@ -277,6 +310,39 @@ def _extract_archive(archive_path: str, out_path: str) -> None:
     else:
         msg = "Unsupported archive type."
         raise ValueError(msg)
+
+
+def _prepare_output_dir(output_dir: str, path: str | None, *, overwrite: bool) -> None:
+    if path:
+        target_path = os.path.join(output_dir, path)
+        if os.path.exists(target_path):
+            if not overwrite:
+                msg = f"File already exists at output_dir: {target_path}. Set overwrite=True to replace it."
+                raise FileExistsError(msg)
+            os.remove(target_path)
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        return
+
+    if os.path.exists(output_dir):
+        if os.path.isfile(output_dir):
+            msg = f"output_dir points to a file: {output_dir}"
+            raise FileExistsError(msg)
+        if os.listdir(output_dir):
+            if not overwrite:
+                msg = f"output_dir is not empty: {output_dir}. Set overwrite=True to replace it."
+                raise FileExistsError(msg)
+            _clear_directory(output_dir)
+    else:
+        os.makedirs(output_dir, exist_ok=True)
+
+
+def _clear_directory(directory: str) -> None:
+    for entry in os.listdir(directory):
+        entry_path = os.path.join(directory, entry)
+        if os.path.isdir(entry_path):
+            shutil.rmtree(entry_path)
+        else:
+            os.remove(entry_path)
 
 
 def _get_current_version(api_client: KaggleClient, h: ResourceHandle) -> int:

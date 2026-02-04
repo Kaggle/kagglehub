@@ -12,6 +12,77 @@ MODELS_CACHE_SUBFOLDER = "models"
 FILE_COMPLETION_MARKER_FOLDER = ".complete"
 
 
+class Cache:
+    """Cache helper that optionally overrides the default cache directory."""
+
+    def __init__(self, override_dir: str | None = None) -> None:
+        self._override_dir = override_dir
+
+    def get_path(self, handle: ResourceHandle, path: str | None = None) -> str:
+        if self._override_dir:
+            return os.path.join(self._override_dir, path) if path else self._override_dir
+        return get_cached_path(handle, path)
+
+    def get_archive_path(self, handle: ResourceHandle) -> str:
+        if self._override_dir:
+            return os.path.join(self._override_dir, f"{handle.version!s}.archive")
+        return get_cached_archive_path(handle)
+
+    def get_completion_marker_filepath(self, handle: ResourceHandle, path: str | None = None) -> str:
+        if not self._override_dir:
+            return _get_completion_marker_filepath(handle, path)
+
+        marker_base = os.path.join(
+            self._override_dir,
+            FILE_COMPLETION_MARKER_FOLDER,
+            _get_override_marker_base(handle),
+        )
+        if path:
+            safe_path = path.lstrip(os.path.sep)
+            return os.path.join(marker_base, f"{safe_path}.complete")
+        return os.path.join(marker_base, "bundle.complete")
+
+    def load_from_cache(self, handle: ResourceHandle, path: str | None = None) -> str | None:
+        """Return path for the requested resource from the cache or output_dir."""
+        marker_path = self.get_completion_marker_filepath(handle, path)
+        full_path = self.get_path(handle, path)
+        return full_path if os.path.exists(marker_path) and os.path.exists(full_path) else None
+
+    def mark_as_complete(self, handle: ResourceHandle, path: str | None = None) -> None:
+        marker_path = self.get_completion_marker_filepath(handle, path)
+        os.makedirs(os.path.dirname(marker_path), exist_ok=True)
+        Path(marker_path).touch()
+
+    def mark_as_incomplete(self, handle: ResourceHandle, path: str | None = None) -> None:
+        marker_path = self.get_completion_marker_filepath(handle, path)
+        self._delete_path(marker_path)
+
+    def delete_from_cache(self, handle: ResourceHandle, path: str | None = None) -> str | None:
+        """Delete resource from the cache, even if incomplete."""
+        self.mark_as_incomplete(handle, path)
+        full_path = self.get_path(handle, path)
+        return self._delete_path(full_path)
+
+    def _delete_path(self, path: str) -> str | None:
+        if not os.path.exists(path):
+            return None
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+
+        if self._override_dir:
+            return path
+
+        # Remove empty folders in the given path, up until the cache folder.
+        # Avoid using removedirs() because it may remove parents of the cache folder.
+        curr_dir = os.path.dirname(path)
+        while len(os.listdir(curr_dir)) == 0 and curr_dir != get_cache_folder():
+            parent_dir = os.path.dirname(curr_dir)
+            os.rmdir(curr_dir)
+            curr_dir = parent_dir
+        return path
+
 def load_from_cache(handle: ResourceHandle, path: str | None = None) -> str | None:
     """Return path for the requested resource from the cache.
 
@@ -272,3 +343,27 @@ def _get_competitions_completion_marker_filepath(handle: CompetitionHandle, path
         COMPETITIONS_CACHE_SUBFOLDER,
         f"{handle.competition}.complete",
     )
+
+
+def _get_override_marker_base(handle: ResourceHandle) -> str:
+    if isinstance(handle, ModelHandle):
+        version = handle.version if handle.is_versioned() else "unknown"
+        return os.path.join(
+            "models",
+            handle.owner,
+            handle.model,
+            handle.framework,
+            handle.variation,
+            str(version),
+        )
+    elif isinstance(handle, DatasetHandle):
+        version = handle.version if handle.is_versioned() else "unknown"
+        return os.path.join("datasets", handle.owner, handle.dataset, str(version))
+    elif isinstance(handle, CompetitionHandle):
+        return os.path.join("competitions", handle.competition)
+    elif isinstance(handle, NotebookHandle):
+        version = handle.version if handle.is_versioned() else "unknown"
+        return os.path.join("notebooks", handle.owner, handle.notebook, str(version))
+    else:
+        msg = "Invalid handle"
+        raise ValueError(msg)

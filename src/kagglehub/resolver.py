@@ -13,7 +13,13 @@ class Resolver(Generic[T]):
     __metaclass__ = abc.ABCMeta
 
     def __call__(
-        self, handle: T, path: str | None = None, *, force_download: bool | None = False
+        self,
+        handle: T,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
@@ -26,7 +32,13 @@ class Resolver(Generic[T]):
             A tuple of: (string representing the path, version number of resolved datasource if present)
             Some cases where version number might be missing: Competition datasource, API-based models.
         """
-        path, version = self._resolve(handle, path, force_download=force_download)
+        path, version = self._resolve(
+            handle,
+            path,
+            force_download=force_download,
+            output_dir=output_dir,
+            overwrite=overwrite,
+        )
 
         # Note handles are immutable, so _resolve() could not have altered our reference
         register_datasource_access(handle, version)
@@ -35,7 +47,13 @@ class Resolver(Generic[T]):
 
     @abc.abstractmethod
     def _resolve(
-        self, handle: T, path: str | None = None, *, force_download: bool | None = False
+        self,
+        handle: T,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
@@ -51,6 +69,13 @@ class Resolver(Generic[T]):
         pass
 
     @abc.abstractmethod
-    def is_supported(self, handle: T, path: str | None = None) -> bool:
+    def is_supported(
+        self,
+        handle: T,
+        path: str | None = None,
+        *,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
+    ) -> bool:
         """Returns whether the current environment supports this handle/path."""
         pass

@@ -38,7 +38,13 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
         return False
 
     def _resolve(
-        self, h: CompetitionHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: CompetitionHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         client = KaggleJwtClient()
         if force_download:
@@ -102,8 +108,19 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
         return False
 
     def _resolve(
-        self, h: DatasetHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: DatasetHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
+        if output_dir:
+            logger.info(
+                "Ignoring `output_dir` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
@@ -177,7 +194,13 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         return False
 
     def _resolve(
-        self, h: ModelHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: ModelHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if force_download:
             logger.info(
@@ -254,7 +277,13 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
         return False
 
     def _resolve(
-        self, h: NotebookHandle, path: str | None = None, *, force_download: bool | None = False
+        self,
+        h: NotebookHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if force_download:
             logger.info(

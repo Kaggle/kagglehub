@@ -88,9 +88,9 @@ class TestKaggleCacheDatasetDownload(BaseTestCase):
             dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, force_download=False)
             self.assertEqual(["foo.txt"], sorted(os.listdir(dataset_path)))
 
-    def test_versioned_dataset_download_with_destination_dir(self) -> None:
+    def test_versioned_dataset_download_with_output_dir(self) -> None:
         with stub.create_env():
             with TemporaryDirectory() as dest:
-                dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, destination=dest)
-                self.assertEqual(dest, dataset_path)
-                self.assertEqual(["foo.txt"], sorted(os.listdir(dest)))
+                dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, output_dir=dest)
+                self.assertNotEqual(dest, dataset_path)
+                self.assertEqual(["foo.txt"], sorted(os.listdir(dataset_path)))
