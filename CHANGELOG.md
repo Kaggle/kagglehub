@@ -2,7 +2,7 @@
 
 ## Next Release
 
-* Add `destination` parameter to `dataset_download` to copy datasets or files to a custom location.
+* Add `output_dir` parameter to `dataset_download` to download datasets or files to a custom location.
 
 ## v0.4.2 (January 29, 2026)
 

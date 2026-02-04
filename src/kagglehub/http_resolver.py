@@ -128,6 +128,8 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
+            if overwrite and not output_dir:
+                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
 
             cache = Cache(override_dir=output_dir)
             dataset_path = cache.load_from_cache(h, path)

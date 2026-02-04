@@ -121,6 +121,11 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
                 "Ignoring `output_dir` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
+        if overwrite:
+            logger.warning(
+                "Ignoring `overwrite` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Kaggle notebook environment.",
