@@ -46,9 +46,16 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        if output_dir or overwrite:
-            msg = "`output_dir` and `overwrite` are only supported for dataset_download."
-            raise ValueError(msg)
+        if output_dir:
+            logger.info(
+                "Ignoring `output_dir` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+        if overwrite:
+            logger.warning(
+                "Ignoring `overwrite` argument when running inside the Kaggle notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
         client = KaggleJwtClient()
         if force_download:
             logger.info(

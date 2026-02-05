@@ -19,10 +19,7 @@ from tqdm.contrib.concurrent import thread_map
 from kagglehub.cache import (
     Cache,
     delete_from_cache,
-    get_cached_archive_path,
-    get_cached_path,
     load_from_cache,
-    mark_as_complete,
 )
 from kagglehub.clients import build_kaggle_client, download_file
 from kagglehub.config import get_kaggle_credentials
@@ -50,9 +47,6 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        if output_dir or overwrite:
-            msg = "`output_dir` and `overwrite` are not supported for competition_download yet."
-            raise ValueError(msg)
         with build_kaggle_client() as api_client:
             cached_path = load_from_cache(h, path)
             if cached_path and force_download:
@@ -64,7 +58,19 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                     return cached_path, None
                 raise UnauthenticatedError()
 
-            out_path = get_cached_path(h, path)
+            if overwrite and not output_dir:
+                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
+
+            cache = Cache(override_dir=output_dir)
+            out_path = cache.get_path(h, path)
+            if output_dir:
+                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
+                if cached_path and force_download and not overwrite:
+                    msg = (
+                        "output_dir already contains the requested competition data; "
+                        "set overwrite=True to replace it."
+                    )
+                    raise FileExistsError(msg)
             if path:
                 # For single file downloads.
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -87,7 +93,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
             else:
                 # Download, extract, then delete the archive.
                 r = _build_competition_download_files_request(h)
-                archive_path = get_cached_archive_path(h)
+                archive_path = cache.get_archive_path(h)
                 os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
                 try:
@@ -110,7 +116,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 _extract_archive(archive_path, out_path)
                 os.remove(archive_path)
 
-            mark_as_complete(h, path)
+            cache.mark_as_complete(h, path)
             return out_path, None
 
 

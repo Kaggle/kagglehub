@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+from tempfile import TemporaryDirectory
 
 import requests
 
@@ -137,6 +138,78 @@ class TestHttpCompetitionDownload(BaseTestCase):
     def test_competition_download_with_path_auto_compressed(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded_auto_compressed(d, COMPETITION_HANDLE)
+
+    def test_competition_download_with_output_dir(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                competition_path = kagglehub.competition_download(COMPETITION_HANDLE, output_dir=dest)
+                self.assertEqual(dest, competition_path)
+                self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
+
+    def test_competition_download_with_path_and_output_dir(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                competition_path = kagglehub.competition_download(
+                    COMPETITION_HANDLE,
+                    path=TEST_FILEPATH,
+                    output_dir=dest,
+                )
+                self.assertEqual(os.path.join(dest, TEST_FILEPATH), competition_path)
+                with open(competition_path) as competition_file:
+                    self.assertEqual(TEST_CONTENTS, competition_file.readline())
+
+    def test_competition_download_with_path_and_output_dir_existing_file_fails(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                dest_file = os.path.join(dest, TEST_FILEPATH)
+                with open(dest_file, "w") as output_file:
+                    output_file.write("old")
+                with self.assertRaises(FileExistsError):
+                    kagglehub.competition_download(
+                        COMPETITION_HANDLE,
+                        path=TEST_FILEPATH,
+                        output_dir=dest,
+                    )
+
+    def test_competition_download_with_output_dir_existing_dir_fails(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                    output_file.write("old")
+                with self.assertRaises(FileExistsError):
+                    kagglehub.competition_download(
+                        COMPETITION_HANDLE,
+                        output_dir=dest,
+                    )
+
+    def test_competition_download_with_output_dir_overwrite(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                    output_file.write("old")
+                competition_path = kagglehub.competition_download(
+                    COMPETITION_HANDLE,
+                    output_dir=dest,
+                    overwrite=True,
+                )
+                self.assertEqual(dest, competition_path)
+                self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
+
+    def test_competition_download_with_path_and_output_dir_overwrite(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                dest_file = os.path.join(dest, TEST_FILEPATH)
+                with open(dest_file, "w") as output_file:
+                    output_file.write("old")
+                competition_path = kagglehub.competition_download(
+                    COMPETITION_HANDLE,
+                    path=TEST_FILEPATH,
+                    output_dir=dest,
+                    overwrite=True,
+                )
+                self.assertEqual(dest_file, competition_path)
+                with open(competition_path) as competition_file:
+                    self.assertEqual(TEST_CONTENTS, competition_file.readline())
 
 
 class TestHttpNoInternet(BaseTestCase):

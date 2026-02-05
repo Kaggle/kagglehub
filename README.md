@@ -390,6 +390,12 @@ kagglehub.competition_download('digit-recognizer', path='train.csv')
 
 # Download a competition or file, even if previously downloaded to cache. 
 kagglehub.competition_download('digit-recognizer', force_download=True)
+
+# Download competition data to a custom output directory.
+kagglehub.competition_download('digit-recognizer', output_dir='./competition')
+
+# Overwrite an existing output directory.
+kagglehub.competition_download('digit-recognizer', output_dir='./competition', overwrite=True)
 ```
 
 ### Download Notebook Outputs
