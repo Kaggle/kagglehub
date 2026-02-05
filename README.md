@@ -85,6 +85,12 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', path=
 
 # Download a model or file, even if previously downloaded to cache.
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', force_download=True)
+
+# Download to a custom local directory.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', output_dir='./models')
+
+# Overwrite files in output_dir if they already exist.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', output_dir='./models', overwrite=True)
 ```
 
 ### Upload Model
@@ -390,6 +396,12 @@ kagglehub.competition_download('digit-recognizer', path='train.csv')
 
 # Download a competition or file, even if previously downloaded to cache. 
 kagglehub.competition_download('digit-recognizer', force_download=True)
+
+# Download competition data to a custom output directory.
+kagglehub.competition_download('digit-recognizer', output_dir='./competition')
+
+# Overwrite an existing output directory.
+kagglehub.competition_download('digit-recognizer', output_dir='./competition', overwrite=True)
 ```
 
 ### Download Notebook Outputs
@@ -404,6 +416,12 @@ kagglehub.notebook_output_download('alexisbcook/titanic-tutorial')
 
 # Download a specific version of the notebook output.
 kagglehub.notebook_output_download('alexisbcook/titanic-tutorial/versions/1')
+
+# Download notebook output to a custom output directory.
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial', output_dir='./output')
+
+# Overwrite an existing output directory.
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial', output_dir='./output', overwrite=True)
 
 # Download a single file.
 kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submission.csv')

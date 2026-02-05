@@ -19,10 +19,7 @@ from tqdm.contrib.concurrent import thread_map
 from kagglehub.cache import (
     Cache,
     delete_from_cache,
-    get_cached_archive_path,
-    get_cached_path,
     load_from_cache,
-    mark_as_complete,
 )
 from kagglehub.clients import build_kaggle_client, download_file
 from kagglehub.config import get_kaggle_credentials
@@ -50,9 +47,6 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        if output_dir or overwrite:
-            msg = "`output_dir` and `overwrite` are only supported for dataset_download."
-            raise ValueError(msg)
         with build_kaggle_client() as api_client:
             cached_path = load_from_cache(h, path)
             if cached_path and force_download:
@@ -64,7 +58,19 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                     return cached_path, None
                 raise UnauthenticatedError()
 
-            out_path = get_cached_path(h, path)
+            if overwrite and not output_dir:
+                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
+
+            cache = Cache(override_dir=output_dir)
+            out_path = cache.get_path(h, path)
+            if output_dir:
+                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
+                if cached_path and force_download and not overwrite:
+                    msg = (
+                        "output_dir already contains the requested competition data; "
+                        "set overwrite=True to replace it."
+                    )
+                    raise FileExistsError(msg)
             if path:
                 # For single file downloads.
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -87,7 +93,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
             else:
                 # Download, extract, then delete the archive.
                 r = _build_competition_download_files_request(h)
-                archive_path = get_cached_archive_path(h)
+                archive_path = cache.get_archive_path(h)
                 os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
                 try:
@@ -110,7 +116,7 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                 _extract_archive(archive_path, out_path)
                 os.remove(archive_path)
 
-            mark_as_complete(h, path)
+            cache.mark_as_complete(h, path)
             return out_path, None
 
 
@@ -189,21 +195,26 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        if output_dir or overwrite:
-            msg = "`output_dir` and `overwrite` are only supported for dataset_download."
-            raise ValueError(msg)
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
+            if overwrite and not output_dir:
+                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
 
-            model_path = load_from_cache(h, path)
+            cache = Cache(override_dir=output_dir)
+            model_path = cache.load_from_cache(h, path)
             if model_path and not force_download:
                 return model_path, h.version  # Already cached
+            if output_dir:
+                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
+                if model_path and force_download and not overwrite:
+                    msg = "output_dir already contains the requested model; set overwrite=True to replace it."
+                    raise FileExistsError(msg)
             elif model_path and force_download:
                 delete_from_cache(h, path)
 
             r = _build_model_download_request(h, path)
-            out_path = get_cached_path(h, path)
+            out_path = cache.get_path(h, path)
 
             # Create the intermediary directories
             if path:
@@ -218,7 +229,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 files, has_more = _list_model_files(api_client, h)
                 if has_more:
                     # Downloading the full archived bundle.
-                    archive_path = get_cached_archive_path(h)
+                    archive_path = cache.get_archive_path(h)
                     os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
                     # First, we download the archive.
@@ -234,7 +245,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                 else:
                     # Download files individually in parallel
                     def _inner_download_file(file: str) -> None:
-                        file_out_path = out_path + "/" + file
+                        file_out_path = os.path.join(out_path, file)
                         os.makedirs(os.path.dirname(file_out_path), exist_ok=True)
                         r = _build_model_download_request(h, file)
                         response = handle_call(
@@ -249,7 +260,7 @@ class ModelHttpResolver(Resolver[ModelHandle]):
                         max_workers=8,  # Never use more than 8 threads in parallel to download files.
                     )
 
-            mark_as_complete(h, path)
+            cache.mark_as_complete(h, path)
             return out_path, h.version
 
 
@@ -267,21 +278,26 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        if output_dir or overwrite:
-            msg = "`output_dir` and `overwrite` are only supported for dataset_download."
-            raise ValueError(msg)
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
+            if overwrite and not output_dir:
+                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
 
-            notebook_path = load_from_cache(h, path)
+            cache = Cache(override_dir=output_dir)
+            notebook_path = cache.load_from_cache(h, path)
             if notebook_path and not force_download:
                 return notebook_path, h.version  # Already cached
+            if output_dir:
+                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
+                if notebook_path and force_download and not overwrite:
+                    msg = "output_dir already contains the requested notebook output; set overwrite=True to replace it."
+                    raise FileExistsError(msg)
             elif notebook_path and force_download:
                 delete_from_cache(h, path)
 
             r = _build_notebook_download_request(h, path)
-            out_path = get_cached_path(h, path)
+            out_path = cache.get_path(h, path)
 
             if path:
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -290,7 +306,7 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
             else:
                 # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
                 # Downloading the full archived bundle.
-                archive_path = get_cached_archive_path(h)
+                archive_path = cache.get_archive_path(h)
                 os.makedirs(os.path.dirname(archive_path), exist_ok=True)
 
                 # First, we download the archive.
@@ -302,7 +318,7 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
                 # Delete the archive
                 os.remove(archive_path)
 
-            mark_as_complete(h, path)
+            cache.mark_as_complete(h, path)
 
             return out_path, h.version
 
