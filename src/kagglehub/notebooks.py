@@ -7,13 +7,22 @@ from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 logger = logging.getLogger(__name__)
 
 
-def notebook_output_download(handle: str, path: str | None = None, *, force_download: bool | None = False) -> str:
+def notebook_output_download(
+    handle: str,
+    path: str | None = None,
+    *,
+    force_download: bool | None = False,
+    output_dir: str | None = None,
+    overwrite: bool | None = False,
+) -> str:
     """Download notebook output files.
 
     Args:
         handle: (string) the notebook handle under https://kaggle.com/code.
         path: (string) Optional path to a file within the notebook output.
         force_download: (bool) Optional flag to force download motebook output, even if it's cached.
+        output_dir: (string) Optional output directory for direct download, bypassing the default cache.
+        overwrite: (bool) Optional flag to overwrite files in output_dir if they already exist.
 
 
     Returns:
@@ -21,5 +30,11 @@ def notebook_output_download(handle: str, path: str | None = None, *, force_down
     """
     h = parse_notebook_handle(handle)
     logger.info(f"Downloading Notebook Output: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
-    path, _ = registry.notebook_output_resolver(h, path, force_download=force_download)
+    path, _ = registry.notebook_output_resolver(
+        h,
+        path,
+        force_download=force_download,
+        output_dir=output_dir,
+        overwrite=overwrite,
+    )
     return path
