@@ -1,4 +1,5 @@
 import os
+from tempfile import TemporaryDirectory
 
 import requests
 
@@ -149,6 +150,67 @@ class TestHttpModelDownload(BaseTestCase):
     def test_unversioned_model_download_with_path_with_force_download(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, UNVERSIONED_MODEL_HANDLE, force_download=True)
+
+    def test_versioned_model_download_with_output_dir(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, output_dir=dest)
+                self.assertEqual(dest, model_path)
+                self.assertEqual([".complete", "config.json", "model.keras"], sorted(os.listdir(dest)))
+
+    def test_versioned_model_download_with_path_and_output_dir(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH, output_dir=dest)
+                self.assertEqual(os.path.join(dest, TEST_FILEPATH), model_path)
+                with open(model_path) as model_file:
+                    self.assertEqual(TEST_CONTENTS, model_file.readline())
+
+    def test_versioned_model_download_with_path_and_output_dir_existing_file_fails(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                dest_file = os.path.join(dest, TEST_FILEPATH)
+                with open(dest_file, "w") as output_file:
+                    output_file.write("old")
+                with self.assertRaises(FileExistsError):
+                    kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH, output_dir=dest)
+
+    def test_versioned_model_download_with_output_dir_existing_dir_fails(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                    output_file.write("old")
+                with self.assertRaises(FileExistsError):
+                    kagglehub.model_download(VERSIONED_MODEL_HANDLE, output_dir=dest)
+
+    def test_versioned_model_download_with_output_dir_overwrite(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                    output_file.write("old")
+                model_path = kagglehub.model_download(
+                    VERSIONED_MODEL_HANDLE,
+                    output_dir=dest,
+                    overwrite=True,
+                )
+                self.assertEqual(dest, model_path)
+                self.assertEqual([".complete", "config.json", "model.keras"], sorted(os.listdir(dest)))
+
+    def test_versioned_model_download_with_path_and_output_dir_overwrite(self) -> None:
+        with create_test_cache():
+            with TemporaryDirectory() as dest:
+                dest_file = os.path.join(dest, TEST_FILEPATH)
+                with open(dest_file, "w") as output_file:
+                    output_file.write("old")
+                model_path = kagglehub.model_download(
+                    VERSIONED_MODEL_HANDLE,
+                    path=TEST_FILEPATH,
+                    output_dir=dest,
+                    overwrite=True,
+                )
+                self.assertEqual(dest_file, model_path)
+                with open(model_path) as model_file:
+                    self.assertEqual(TEST_CONTENTS, model_file.readline())
 
     def test_versioned_model_download_already_cached(self) -> None:
         with create_test_cache() as d:
