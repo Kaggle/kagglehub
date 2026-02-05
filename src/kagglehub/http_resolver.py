@@ -50,7 +50,9 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        _ = output_dir, overwrite
+        if output_dir or overwrite:
+            msg = "`output_dir` and `overwrite` are only supported for dataset_download."
+            raise ValueError(msg)
         with build_kaggle_client() as api_client:
             cached_path = load_from_cache(h, path)
             if cached_path and force_download:
@@ -187,7 +189,9 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        _ = output_dir, overwrite
+        if output_dir or overwrite:
+            msg = "`output_dir` and `overwrite` are only supported for dataset_download."
+            raise ValueError(msg)
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
@@ -263,7 +267,9 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
-        _ = output_dir, overwrite
+        if output_dir or overwrite:
+            msg = "`output_dir` and `overwrite` are only supported for dataset_download."
+            raise ValueError(msg)
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))

@@ -25,7 +25,7 @@ class Cache:
 
     def get_archive_path(self, handle: ResourceHandle) -> str:
         if self._override_dir:
-            return os.path.join(self._override_dir, f"{handle.version!s}.archive")
+            return os.path.join(self._override_dir, _get_override_archive_name(handle))
         return get_cached_archive_path(handle)
 
     def get_completion_marker_filepath(self, handle: ResourceHandle, path: str | None = None) -> str:
@@ -82,6 +82,7 @@ class Cache:
             os.rmdir(curr_dir)
             curr_dir = parent_dir
         return path
+
 
 def load_from_cache(handle: ResourceHandle, path: str | None = None) -> str | None:
     """Return path for the requested resource from the cache.
@@ -364,6 +365,23 @@ def _get_override_marker_base(handle: ResourceHandle) -> str:
     elif isinstance(handle, NotebookHandle):
         version = handle.version if handle.is_versioned() else "unknown"
         return os.path.join("notebooks", handle.owner, handle.notebook, str(version))
+    else:
+        msg = "Invalid handle"
+        raise ValueError(msg)
+
+
+def _get_override_archive_name(handle: ResourceHandle) -> str:
+    if isinstance(handle, ModelHandle):
+        version = handle.version if handle.is_versioned() else "unknown"
+        return f"{version!s}.archive"
+    elif isinstance(handle, DatasetHandle):
+        version = handle.version if handle.is_versioned() else "unknown"
+        return f"{version!s}.archive"
+    elif isinstance(handle, NotebookHandle):
+        version = handle.version if handle.is_versioned() else "unknown"
+        return f"output-{version!s}.archive"
+    elif isinstance(handle, CompetitionHandle):
+        return f"{handle.competition}.archive"
     else:
         msg = "Invalid handle"
         raise ValueError(msg)
