@@ -2,10 +2,7 @@
 
 ## Next Release
 
-* Add `output_dir` parameter to `dataset_download` to download datasets or files to a custom location.
-* Add `output_dir` and `overwrite` parameters to `model_download` for direct model downloads.
-* Add `output_dir` and `overwrite` parameters to `notebook_output_download` for direct notebook output downloads.
-* Add `output_dir` and `overwrite` parameters to `competition_download` for direct competition downloads.
+* Add `output_dir` and `overwrite` parameters to `dataset_download`, `model_download`, `notebook_output_download` and `competition_download` for direct download to custom directory. ([#283](https://github.com/Kaggle/kagglehub/pull/283), [#284](https://github.com/Kaggle/kagglehub/pull/284))
 
 ## v0.4.2 (January 29, 2026)
 

@@ -85,6 +85,12 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', path=
 
 # Download a model or file, even if previously downloaded to cache.
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', force_download=True)
+
+# Download to a custom local directory.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', output_dir='./models')
+
+# Overwrite files in output_dir if they already exist.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', output_dir='./models', overwrite=True)
 ```
 
 ### Upload Model
