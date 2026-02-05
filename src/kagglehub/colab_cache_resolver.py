@@ -49,6 +49,7 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
         output_dir: str | None = None,
         overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
+        _ = output_dir, overwrite
         if force_download:
             logger.info(
                 "Ignoring `force_download` argument when running inside the Colab notebook environment.",
