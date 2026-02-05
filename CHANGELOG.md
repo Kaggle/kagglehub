@@ -2,6 +2,8 @@
 
 ## Next Release
 
+* Add `output_dir` parameter to `dataset_download` to download datasets or files to a custom location.
+
 ## v0.4.2 (January 29, 2026)
 
 * Add `set_kaggle_credentials` method back to avoid breakage on libraries depending on setting legacy credentials. ([#281](https://github.com/Kaggle/kagglehub/pull/281))

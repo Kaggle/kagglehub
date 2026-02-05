@@ -337,6 +337,15 @@ kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv
 
 # Download a dataset or file, even if previously downloaded to cache.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', force_download=True)
+
+# Download a dataset to a custom output directory.
+kagglehub.dataset_download('bricevergnou/spotify-recommendation', output_dir='./data')
+
+# Download a single file to a custom output directory.
+kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv', output_dir='./data')
+
+# Overwrite an existing output directory.
+kagglehub.dataset_download('bricevergnou/spotify-recommendation', output_dir='./data', overwrite=True)
 ```
 
 ### Upload Dataset
