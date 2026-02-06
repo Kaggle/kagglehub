@@ -2,6 +2,10 @@
 
 ## Next Release
 
+*
+
+## v0.4.3 (February 6, 2026)
+
 * Add `output_dir` parameter to `dataset_download`, `model_download`, `notebook_output_download` and `competition_download` for direct download to custom directory. ([#283](https://github.com/Kaggle/kagglehub/pull/283), [#284](https://github.com/Kaggle/kagglehub/pull/284), [#285](https://github.com/Kaggle/kagglehub/pull/285))
 
 ## v0.4.2 (January 29, 2026)
