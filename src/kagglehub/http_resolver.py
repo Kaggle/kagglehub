@@ -16,11 +16,7 @@ from kagglesdk.models.types.model_api_service import (
 )
 from tqdm.contrib.concurrent import thread_map
 
-from kagglehub.cache import (
-    Cache,
-    delete_from_cache,
-    load_from_cache,
-)
+from kagglehub.cache import Cache
 from kagglehub.clients import build_kaggle_client, download_file
 from kagglehub.config import get_kaggle_credentials
 from kagglehub.exceptions import UnauthenticatedError, handle_call
@@ -45,12 +41,12 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
-            cached_path = load_from_cache(h, path)
+            cache = Cache(override_dir=output_dir)
+            cached_path = cache.load_from_cache(h, path)
             if cached_path and force_download:
-                delete_from_cache(h, path)
+                cache.delete_from_cache(h, path)
                 cached_path = None
 
             if not get_kaggle_credentials():
@@ -58,19 +54,10 @@ class CompetitionHttpResolver(Resolver[CompetitionHandle]):
                     return cached_path, None
                 raise UnauthenticatedError()
 
-            if overwrite and not output_dir:
-                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
-
-            cache = Cache(override_dir=output_dir)
             out_path = cache.get_path(h, path)
+
             if output_dir:
-                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
-                if cached_path and force_download and not overwrite:
-                    msg = (
-                        "output_dir already contains the requested competition data; "
-                        "set overwrite=True to replace it."
-                    )
-                    raise FileExistsError(msg)
+                _prepare_output_dir(output_dir, path, force_download=bool(force_download))
             if path:
                 # For single file downloads.
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -132,26 +119,20 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
-            if overwrite and not output_dir:
-                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
 
             cache = Cache(override_dir=output_dir)
             dataset_path = cache.load_from_cache(h, path)
             if dataset_path and not force_download:
                 return dataset_path, h.version  # Already cached
+            elif dataset_path and force_download:
+                cache.delete_from_cache(h, path)
 
             if output_dir:
-                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
-                if dataset_path and force_download and not overwrite:
-                    msg = "output_dir already contains the requested dataset; set overwrite=True to replace it."
-                    raise FileExistsError(msg)
-            elif dataset_path and force_download:
-                delete_from_cache(h, path)
+                _prepare_output_dir(output_dir, path, force_download=bool(force_download))
 
             r = _build_dataset_download_request(h, path)
             out_path = cache.get_path(h, path)
@@ -193,25 +174,19 @@ class ModelHttpResolver(Resolver[ModelHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
-            if overwrite and not output_dir:
-                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
 
             cache = Cache(override_dir=output_dir)
             model_path = cache.load_from_cache(h, path)
             if model_path and not force_download:
                 return model_path, h.version  # Already cached
             if output_dir:
-                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
-                if model_path and force_download and not overwrite:
-                    msg = "output_dir already contains the requested model; set overwrite=True to replace it."
-                    raise FileExistsError(msg)
+                _prepare_output_dir(output_dir, path, force_download=bool(force_download))
             elif model_path and force_download:
-                delete_from_cache(h, path)
+                cache.delete_from_cache(h, path)
 
             r = _build_model_download_request(h, path)
             out_path = cache.get_path(h, path)
@@ -276,25 +251,18 @@ class NotebookOutputHttpResolver(Resolver[NotebookHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
-            if overwrite and not output_dir:
-                logger.warning("Ignoring `overwrite` argument because `output_dir` was not provided.")
-
             cache = Cache(override_dir=output_dir)
             notebook_path = cache.load_from_cache(h, path)
             if notebook_path and not force_download:
                 return notebook_path, h.version  # Already cached
             if output_dir:
-                _prepare_output_dir(output_dir, path, overwrite=bool(overwrite))
-                if notebook_path and force_download and not overwrite:
-                    msg = "output_dir already contains the requested notebook output; set overwrite=True to replace it."
-                    raise FileExistsError(msg)
+                _prepare_output_dir(output_dir, path, force_download=bool(force_download))
             elif notebook_path and force_download:
-                delete_from_cache(h, path)
+                cache.delete_from_cache(h, path)
 
             r = _build_notebook_download_request(h, path)
             out_path = cache.get_path(h, path)
@@ -339,12 +307,13 @@ def _extract_archive(archive_path: str, out_path: str) -> None:
         raise ValueError(msg)
 
 
-def _prepare_output_dir(output_dir: str, path: str | None, *, overwrite: bool) -> None:
+def _prepare_output_dir(output_dir: str, path: str | None, *, force_download: bool) -> None:
     if path:
         target_path = os.path.join(output_dir, path)
         if os.path.exists(target_path):
-            if not overwrite:
-                msg = f"File already exists at output_dir: {target_path}. Set overwrite=True to replace it."
+            # This happens when a file is present at output_dir / path but the completion marker isn't set.
+            if not force_download:
+                msg = f"File already exists at output_dir: {target_path}. Set force_download=True to replace it."
                 raise FileExistsError(msg)
             os.remove(target_path)
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
@@ -355,8 +324,9 @@ def _prepare_output_dir(output_dir: str, path: str | None, *, overwrite: bool) -
             msg = f"output_dir points to a file: {output_dir}"
             raise FileExistsError(msg)
         if os.listdir(output_dir):
-            if not overwrite:
-                msg = f"output_dir is not empty: {output_dir}. Set overwrite=True to replace it."
+            # This happens when a output_dir has files but the completion marker isn't set.
+            if not force_download:
+                msg = f"output_dir is not empty: {output_dir}. Set force_download=True to replace it."
                 raise FileExistsError(msg)
             _clear_directory(output_dir)
     else:

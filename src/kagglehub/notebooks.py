@@ -13,16 +13,15 @@ def notebook_output_download(
     *,
     force_download: bool | None = False,
     output_dir: str | None = None,
-    overwrite: bool | None = False,
 ) -> str:
     """Download notebook output files.
 
     Args:
         handle: (string) the notebook handle under https://kaggle.com/code.
         path: (string) Optional path to a file within the notebook output.
-        force_download: (bool) Optional flag to force download motebook output, even if it's cached.
+        force_download: (bool) Optional flag to force download a notebook output, even if it's cached or already in
+            output_dir.
         output_dir: (string) Optional output directory for direct download, bypassing the default cache.
-        overwrite: (bool) Optional flag to overwrite files in output_dir if they already exist.
 
 
     Returns:
@@ -35,6 +34,5 @@ def notebook_output_download(
         path,
         force_download=force_download,
         output_dir=output_dir,
-        overwrite=overwrite,
     )
     return path

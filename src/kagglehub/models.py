@@ -21,16 +21,14 @@ def model_download(
     *,
     force_download: bool | None = False,
     output_dir: str | None = None,
-    overwrite: bool | None = False,
 ) -> str:
     """Download model files.
 
     Args:
         handle: (string) the model handle.
         path: (string) Optional path to a file within the model bundle.
-        force_download: (bool) Optional flag to force download a model, even if it's cached.
+        force_download: (bool) Optional flag to force download a model, even if it's cached or already in output_dir.
         output_dir: (string) Optional output directory for direct download, bypassing the default cache.
-        overwrite: (bool) Optional flag to overwrite files in output_dir if they already exist.
 
     Returns:
         A string representing the path to the requested model files.
@@ -42,7 +40,6 @@ def model_download(
         path,
         force_download=force_download,
         output_dir=output_dir,
-        overwrite=overwrite,
     )
     return path
 

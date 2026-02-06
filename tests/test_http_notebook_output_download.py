@@ -80,73 +80,80 @@ class TestHttpNotebookOutputDownload(BaseTestCase):
             self._download_test_file_and_assert_downloaded(d, VERSIONED_NOTEBOOK_OUTPUT_HANDLE)
 
     def test_versioned_notebook_output_download_with_output_dir(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                notebook_path = kagglehub.notebook_output_download(VERSIONED_NOTEBOOK_OUTPUT_HANDLE, output_dir=dest)
-                self.assertEqual(dest, notebook_path)
-                self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
+        with TemporaryDirectory() as dest:
+            notebook_path = kagglehub.notebook_output_download(VERSIONED_NOTEBOOK_OUTPUT_HANDLE, output_dir=dest)
+            self.assertEqual(dest, notebook_path)
+            self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
 
     def test_versioned_notebook_output_download_with_path_and_output_dir(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                notebook_path = kagglehub.notebook_output_download(
-                    VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
-                    path=TEST_FILEPATH,
-                    output_dir=dest,
-                )
-                self.assertEqual(os.path.join(dest, TEST_FILEPATH), notebook_path)
-                with open(notebook_path) as notebook_file:
-                    self.assertEqual(TEST_CONTENTS, notebook_file.read())
+        with TemporaryDirectory() as dest:
+            notebook_path = kagglehub.notebook_output_download(
+                VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
+                path=TEST_FILEPATH,
+                output_dir=dest,
+            )
+            self.assertEqual(os.path.join(dest, TEST_FILEPATH), notebook_path)
+            with open(notebook_path) as notebook_file:
+                self.assertEqual(TEST_CONTENTS, notebook_file.read())
 
     def test_versioned_notebook_output_download_with_path_and_output_dir_existing_file_fails(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                dest_file = os.path.join(dest, TEST_FILEPATH)
-                with open(dest_file, "w") as output_file:
-                    output_file.write("old")
-                with self.assertRaises(FileExistsError):
-                    kagglehub.notebook_output_download(
-                        VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
-                        path=TEST_FILEPATH,
-                        output_dir=dest,
-                    )
-
-    def test_versioned_notebook_output_download_with_output_dir_existing_dir_fails(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                with open(os.path.join(dest, "old.txt"), "w") as output_file:
-                    output_file.write("old")
-                with self.assertRaises(FileExistsError):
-                    kagglehub.notebook_output_download(
-                        VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
-                        output_dir=dest,
-                    )
-
-    def test_versioned_notebook_output_download_with_output_dir_overwrite(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                with open(os.path.join(dest, "old.txt"), "w") as output_file:
-                    output_file.write("old")
-                notebook_path = kagglehub.notebook_output_download(
-                    VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
-                    output_dir=dest,
-                    overwrite=True,
-                )
-                self.assertEqual(dest, notebook_path)
-                self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
-
-    def test_versioned_notebook_output_download_with_path_and_output_dir_overwrite(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                dest_file = os.path.join(dest, TEST_FILEPATH)
-                with open(dest_file, "w") as output_file:
-                    output_file.write("old")
-                notebook_path = kagglehub.notebook_output_download(
+        with TemporaryDirectory() as dest:
+            dest_file = os.path.join(dest, TEST_FILEPATH)
+            with open(dest_file, "w") as output_file:
+                output_file.write("old")
+            with self.assertRaises(FileExistsError):
+                kagglehub.notebook_output_download(
                     VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
                     path=TEST_FILEPATH,
                     output_dir=dest,
-                    overwrite=True,
                 )
-                self.assertEqual(dest_file, notebook_path)
-                with open(notebook_path) as notebook_file:
-                    self.assertEqual(TEST_CONTENTS, notebook_file.read())
+
+    def test_versioned_notebook_output_download_with_output_dir_existing_dir_fails(self) -> None:
+        with TemporaryDirectory() as dest:
+            with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                output_file.write("old")
+            with self.assertRaises(FileExistsError):
+                kagglehub.notebook_output_download(
+                    VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
+                    output_dir=dest,
+                )
+
+    def test_versioned_notebook_output_download_with_output_dir_overwrite(self) -> None:
+        with TemporaryDirectory() as dest:
+            # Download it and ensure completion marker is set.
+            kagglehub.notebook_output_download(
+                VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
+                output_dir=dest,
+            )
+            # Add a random file to ensure the directory is overriden.
+            with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                output_file.write("old")
+            notebook_path = kagglehub.notebook_output_download(
+                VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
+                output_dir=dest,
+                force_download=True,
+            )
+            self.assertEqual(dest, notebook_path)
+            self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
+
+    def test_versioned_notebook_output_download_with_path_and_output_dir_overwrite(self) -> None:
+        with TemporaryDirectory() as dest:
+            # Download it and ensure completion marker is set.
+            kagglehub.notebook_output_download(
+                VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
+                path=TEST_FILEPATH,
+                output_dir=dest,
+            )
+            # Update the file to ensure overwrite works.
+            dest_file = os.path.join(dest, TEST_FILEPATH)
+            with open(dest_file, "w") as output_file:
+                output_file.write("old")
+            notebook_path = kagglehub.notebook_output_download(
+                VERSIONED_NOTEBOOK_OUTPUT_HANDLE,
+                path=TEST_FILEPATH,
+                output_dir=dest,
+                force_download=True,
+            )
+            self.assertEqual(dest_file, notebook_path)
+            with open(notebook_path) as notebook_file:
+                self.assertEqual(TEST_CONTENTS, notebook_file.read())

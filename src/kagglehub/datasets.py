@@ -37,18 +37,15 @@ def dataset_download(
     *,
     force_download: bool | None = False,
     output_dir: str | None = None,
-    overwrite: bool | None = False,
 ) -> str:
     """Download dataset files
     Args:
         handle: (string) the dataset handle
         path: (string) Optional path to a file within a dataset
-        force_download: (bool) Optional flag to force download a dataset, even if it's cached
-        output_dir: (string) Optional output directory for direct download, bypassing the default cache
-        overwrite: (bool) Optional flag to overwrite files in output_dir if they already exist
+        force_download: (bool) Optional flag to force download a dataset, even if it's cached or already in output_dir.
+        output_dir: (string) Optional output directory for direct download, bypassing the default cache.
     Returns:
-        A string requesting the path to the requested dataset files. If output_dir is provided, returns the
-        output_dir path (or file path if a file was requested).
+        A string requesting the path to the requested dataset files.
     """
     h = parse_dataset_handle(handle)
     logger.info(f"Downloading Dataset: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
@@ -57,7 +54,6 @@ def dataset_download(
         path,
         force_download=force_download,
         output_dir=output_dir,
-        overwrite=overwrite,
     )
     return resolved_path
 

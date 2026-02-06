@@ -19,14 +19,14 @@ class Resolver(Generic[T]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
         Args:
             handle: (T) the ResourceHandle to resolve.
             path: (string) Optional path to a file within the resource.
-            force_download: (bool) Optional flag to force download, even if it's cached.
+            force_download: (bool) Optional flag to force download, even if it's cached or already in output_dir.
+            output_dir: (string) Optional output directory for direct download, bypassing the default cache.
 
         Returns:
             A tuple of: (string representing the path, version number of resolved datasource if present)
@@ -37,7 +37,6 @@ class Resolver(Generic[T]):
             path,
             force_download=force_download,
             output_dir=output_dir,
-            overwrite=overwrite,
         )
 
         # Note handles are immutable, so _resolve() could not have altered our reference
@@ -53,14 +52,14 @@ class Resolver(Generic[T]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         """Resolves a handle into a path with the requested file(s) and the resource's version number.
 
         Args:
             handle: (T) the ResourceHandle to resolve.
             path: (string) Optional path to a file within the resource.
-            force_download: (bool) Optional flag to force download, even if it's cached.
+            force_download: (bool) Optional flag to force download, even if it's cached or already in output_dir.
+            output_dir: (string) Optional output directory for direct download, bypassing the default cache.
 
         Returns:
             A tuple of: (string representing the path, version number of resolved datasource if present)
@@ -69,13 +68,6 @@ class Resolver(Generic[T]):
         pass
 
     @abc.abstractmethod
-    def is_supported(
-        self,
-        handle: T,
-        path: str | None = None,
-        *,
-        output_dir: str | None = None,
-        overwrite: bool | None = False,
-    ) -> bool:
+    def is_supported(self, handle: T, path: str | None = None) -> bool:
         """Returns whether the current environment supports this handle/path."""
         pass
