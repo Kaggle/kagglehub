@@ -126,50 +126,59 @@ class TestHttpDatasetDownload(BaseTestCase):
                     self.assertEqual(TEST_CONTENTS, dataset_file.read())
 
     def test_versioned_dataset_download_with_path_and_output_dir_existing_file_fails(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                dest_file = os.path.join(dest, TEST_FILEPATH)
-                with open(dest_file, "w") as output_file:
-                    output_file.write("old")
-                with self.assertRaises(FileExistsError):
-                    kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH, output_dir=dest)
+        with TemporaryDirectory() as dest:
+            dest_file = os.path.join(dest, TEST_FILEPATH)
+            with open(dest_file, "w") as output_file:
+                output_file.write("old")
+            with self.assertRaises(FileExistsError):
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH, output_dir=dest)
 
     def test_versioned_dataset_download_with_output_dir_existing_dir_fails(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                with open(os.path.join(dest, "old.txt"), "w") as output_file:
-                    output_file.write("old")
-                with self.assertRaises(FileExistsError):
-                    kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, output_dir=dest)
+        with TemporaryDirectory() as dest:
+            with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                output_file.write("old")
+            with self.assertRaises(FileExistsError):
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, output_dir=dest)
 
     def test_versioned_dataset_download_with_output_dir_overwrite(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                with open(os.path.join(dest, "old.txt"), "w") as output_file:
-                    output_file.write("old")
-                dataset_path = kagglehub.dataset_download(
-                    VERSIONED_DATASET_HANDLE,
-                    output_dir=dest,
-                    overwrite=True,
-                )
-                self.assertEqual(dest, dataset_path)
-                self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
+        with TemporaryDirectory() as dest:
+            # Download it and ensure completion marker is set.
+            kagglehub.dataset_download(
+                VERSIONED_DATASET_HANDLE,
+                output_dir=dest,
+            )
+            # Add a random file to ensure the directory is overriden.
+            with open(os.path.join(dest, "old.txt"), "w") as output_file:
+                output_file.write("old")
+            dataset_path = kagglehub.dataset_download(
+                VERSIONED_DATASET_HANDLE,
+                output_dir=dest,
+                force_download=True,
+            )
+            self.assertEqual(dest, dataset_path)
+            self.assertEqual([".complete", "foo.txt"], sorted(os.listdir(dest)))
 
     def test_versioned_dataset_download_with_path_and_output_dir_overwrite(self) -> None:
-        with create_test_cache():
-            with TemporaryDirectory() as dest:
-                dest_file = os.path.join(dest, TEST_FILEPATH)
-                with open(dest_file, "w") as output_file:
-                    output_file.write("old")
-                dataset_path = kagglehub.dataset_download(
-                    VERSIONED_DATASET_HANDLE,
-                    path=TEST_FILEPATH,
-                    output_dir=dest,
-                    overwrite=True,
-                )
-                self.assertEqual(dest_file, dataset_path)
-                with open(dataset_path) as dataset_file:
-                    self.assertEqual(TEST_CONTENTS, dataset_file.read())
+        with TemporaryDirectory() as dest:
+            # Download it and ensure completion marker is set.
+            kagglehub.dataset_download(
+                VERSIONED_DATASET_HANDLE,
+                path=TEST_FILEPATH,
+                output_dir=dest,
+            )
+            # Update the file to ensure overwrite works.
+            dest_file = os.path.join(dest, TEST_FILEPATH)
+            with open(dest_file, "w") as output_file:
+                output_file.write("old")
+            dataset_path = kagglehub.dataset_download(
+                VERSIONED_DATASET_HANDLE,
+                path=TEST_FILEPATH,
+                output_dir=dest,
+                force_download=True,
+            )
+            self.assertEqual(dest_file, dataset_path)
+            with open(dataset_path) as dataset_file:
+                self.assertEqual(TEST_CONTENTS, dataset_file.read())
 
     def test_unversioned_dataset_download_with_force_download(self) -> None:
         with create_test_cache() as d:

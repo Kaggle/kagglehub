@@ -13,15 +13,14 @@ def competition_download(
     *,
     force_download: bool | None = False,
     output_dir: str | None = None,
-    overwrite: bool | None = False,
 ) -> str:
     """Download competition dataset
     Args:
         handle: (string) the competition name
         path: (string) Optional path to a file within a competition dataset
-        force_download: (bool) Optional flag to force download a competition dataset, even if it's cached
+        force_download: (bool) Optional flag to force download a competition dataset, even if it's cached or already
+            in output_dir.
         output_dir: (string) Optional output directory for direct download, bypassing the default cache.
-        overwrite: (bool) Optional flag to overwrite files in output_dir if they already exist.
     Returns:
         A string requesting the path to the requested competition files.
     """
@@ -33,6 +32,5 @@ def competition_download(
         path,
         force_download=force_download,
         output_dir=output_dir,
-        overwrite=overwrite,
     )
     return path

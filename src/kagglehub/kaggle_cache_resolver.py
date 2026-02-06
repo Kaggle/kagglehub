@@ -44,16 +44,10 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if output_dir:
             logger.info(
                 "Ignoring `output_dir` argument when running inside the Kaggle notebook environment.",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
-        if overwrite:
-            logger.warning(
-                "Ignoring `overwrite` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         client = KaggleJwtClient()
@@ -124,16 +118,10 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if output_dir:
             logger.info(
                 "Ignoring `output_dir` argument when running inside the Kaggle notebook environment.",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
-        if overwrite:
-            logger.warning(
-                "Ignoring `overwrite` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         if force_download:
@@ -215,16 +203,10 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if output_dir:
             logger.info(
                 "Ignoring `output_dir` argument when running inside the Kaggle notebook environment.",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
-        if overwrite:
-            logger.warning(
-                "Ignoring `overwrite` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         if force_download:
@@ -308,16 +290,10 @@ class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if output_dir:
             logger.info(
                 "Ignoring `output_dir` argument when running inside the Kaggle notebook environment.",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
-        if overwrite:
-            logger.warning(
-                "Ignoring `overwrite` argument when running inside the Kaggle notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         if force_download:

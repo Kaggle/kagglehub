@@ -47,16 +47,10 @@ class ModelColabCacheResolver(Resolver[ModelHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if output_dir:
             logger.info(
                 "Ignoring `output_dir` argument when running inside the Colab notebook environment.",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
-        if overwrite:
-            logger.warning(
-                "Ignoring `overwrite` argument when running inside the Colab notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         if force_download:
@@ -139,16 +133,10 @@ class DatasetColabCacheResolver(Resolver[DatasetHandle]):
         *,
         force_download: bool | None = False,
         output_dir: str | None = None,
-        overwrite: bool | None = False,
     ) -> tuple[str, int | None]:
         if output_dir:
             logger.info(
                 "Ignoring `output_dir` argument when running inside the Colab notebook environment.",
-                extra={**EXTRA_CONSOLE_BLOCK},
-            )
-        if overwrite:
-            logger.warning(
-                "Ignoring `overwrite` argument when running inside the Colab notebook environment.",
                 extra={**EXTRA_CONSOLE_BLOCK},
             )
         if force_download:

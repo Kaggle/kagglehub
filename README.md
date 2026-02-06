@@ -89,8 +89,8 @@ kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', force
 # Download to a custom local directory.
 kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', output_dir='./models')
 
-# Overwrite files in output_dir if they already exist.
-kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', output_dir='./models', overwrite=True)
+# Overwrite an existing output directory.
+kagglehub.model_download('google/bert/tensorFlow2/answer-equivalence-bem', output_dir='./models', force_download=True)
 ```
 
 ### Upload Model
@@ -351,7 +351,7 @@ kagglehub.dataset_download('bricevergnou/spotify-recommendation', output_dir='./
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv', output_dir='./data')
 
 # Overwrite an existing output directory.
-kagglehub.dataset_download('bricevergnou/spotify-recommendation', output_dir='./data', overwrite=True)
+kagglehub.dataset_download('bricevergnou/spotify-recommendation', output_dir='./data', force_download=True)
 ```
 
 ### Upload Dataset
@@ -401,7 +401,7 @@ kagglehub.competition_download('digit-recognizer', force_download=True)
 kagglehub.competition_download('digit-recognizer', output_dir='./competition')
 
 # Overwrite an existing output directory.
-kagglehub.competition_download('digit-recognizer', output_dir='./competition', overwrite=True)
+kagglehub.competition_download('digit-recognizer', output_dir='./competition', force_download=True)
 ```
 
 ### Download Notebook Outputs
@@ -417,14 +417,14 @@ kagglehub.notebook_output_download('alexisbcook/titanic-tutorial')
 # Download a specific version of the notebook output.
 kagglehub.notebook_output_download('alexisbcook/titanic-tutorial/versions/1')
 
+# Download a single file.
+kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submission.csv')
+
 # Download notebook output to a custom output directory.
 kagglehub.notebook_output_download('alexisbcook/titanic-tutorial', output_dir='./output')
 
 # Overwrite an existing output directory.
-kagglehub.notebook_output_download('alexisbcook/titanic-tutorial', output_dir='./output', overwrite=True)
-
-# Download a single file.
-kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submission.csv')
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial', output_dir='./output', force_download=True)
 ```
 
 ### Install Utility Script
