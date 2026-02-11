@@ -2,7 +2,9 @@
 
 ## Next Release
 
-*
+## v1.0.0 (February 11, 2026)
+
+* General Availability release
 
 ## v0.4.3 (February 6, 2026)
 
