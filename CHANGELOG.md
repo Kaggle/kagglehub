@@ -2,7 +2,9 @@
 
 ## Next Release
 
-*
+## v1.0.0 (February 11, 2026)
+
+* Bump version [#288](https://github.com/Kaggle/kagglehub/pull/288))
 
 ## v0.4.3 (February 6, 2026)
 
