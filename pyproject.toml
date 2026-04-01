@@ -21,10 +21,10 @@ classifiers = [
 keywords = ["Kaggle", "API"]
 requires-python = ">=3.10"
 dependencies = [
-  "requests", 
-  "tqdm",
+  "requests >= 2, < 3",
+  "tqdm >= 4, < 5",
   "packaging",
-  "pyyaml",
+  "pyyaml >= 6, < 7",
   "kagglesdk >= 0.1.14, < 1.0", # sync with kaggle-api
 ]
 
