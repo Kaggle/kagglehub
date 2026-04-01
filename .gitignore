@@ -168,3 +168,9 @@ cython_debug/
 
 # IDEs
 .idea/
+
+# Claude Code
+.claude/settings.local.json
+
+# Kagent
+.kagent-context/**
