@@ -238,12 +238,12 @@ exclude_lines = [
 
 # Supply chain protection: only allow package versions published before this date.
 # To upgrade dependencies:
-#   1. Update the date below to today's date (or desired cutoff)
+#   1. Update the date below to a date at least 2 days before today
 #   2. Regenerate the lock file: uv pip compile pyproject.toml -o requirements.lock
 #   3. Review the changes in requirements.lock
 #   4. Commit both pyproject.toml and requirements.lock
 [tool.uv]
-exclude-newer = "2026-04-02T00:00:00Z"
+exclude-newer = "2026-03-31T00:00:00Z"
 
 [tool.mypy]
 mypy_path = "./stubs"
