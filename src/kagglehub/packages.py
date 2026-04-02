@@ -246,7 +246,7 @@ def _install_dependencies(package_module: ModuleType) -> None:
         )
         log_file.flush()
 
-        subprocess.run(
+        subprocess.run(  # noqa: S603
             ["/bin/bash", str(install_path)], check=True, text=True, stdout=log_file, stderr=log_file
         )
         log_file.flush()
