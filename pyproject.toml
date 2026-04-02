@@ -21,10 +21,10 @@ classifiers = [
 keywords = ["Kaggle", "API"]
 requires-python = ">=3.10"
 dependencies = [
-  "requests >= 2, < 3",
-  "tqdm >= 4, < 5",
+  "requests",
+  "tqdm",
   "packaging",
-  "pyyaml >= 6, < 7",
+  "pyyaml",
   "kagglesdk >= 0.1.14, < 1.0", # sync with kaggle-api
 ]
 
@@ -235,6 +235,15 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+# Supply chain protection: only allow package versions published before this date.
+# To upgrade dependencies:
+#   1. Update the date below to today's date (or desired cutoff)
+#   2. Regenerate the lock file: uv pip compile pyproject.toml -o requirements.lock
+#   3. Review the changes in requirements.lock
+#   4. Commit both pyproject.toml and requirements.lock
+[tool.uv]
+exclude-newer = "2026-04-02T00:00:00Z"
 
 [tool.mypy]
 mypy_path = "./stubs"
