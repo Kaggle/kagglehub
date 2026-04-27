@@ -53,7 +53,7 @@ class TestAuth(BaseTestCase):
         captured_output = output_stream.getvalue()
         self.assertEqual(
             captured_output,
-            "Invalid Kaggle credentials. You can obtain a Kaggle API token on your [Kaggle settings page](https://www.kaggle.com/settings/account).\n",
+            "Invalid Kaggle credentials. You can obtain a Kaggle API token on your [Kaggle API tokens settings page](https://www.kaggle.com/settings/api).\n",
         )
 
     def test_capture_logger_output(self) -> None:

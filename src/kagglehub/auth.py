@@ -22,8 +22,8 @@ INVALID_CREDENTIALS_ERROR = 401
 NOTEBOOK_LOGIN_TOKEN_HTML_START = """<center> <img
 src=https://www.kaggle.com/static/images/site-logo.png
 alt='Kaggle'> <br> Create an API token from <a
-href="https://www.kaggle.com/settings/account" target="_blank">your Kaggle
-settings page</a> and paste it below. <br> </center>"""
+href="https://www.kaggle.com/settings/api" target="_blank">your Kaggle
+API Tokens settings page</a> and paste it below. <br> </center>"""
 
 NOTEBOOK_LOGIN_TOKEN_HTML_END = """
 <b>Thank You</b></center>"""
@@ -131,7 +131,7 @@ def _validate_credentials_helper(*, verbose: bool = True) -> str | None:
         elif "code" in response and response["code"] == INVALID_CREDENTIALS_ERROR:
             if verbose:
                 _logger.error(
-                    "Invalid Kaggle credentials. You can obtain a Kaggle API token on your [Kaggle settings page](https://www.kaggle.com/settings/account)."
+                    "Invalid Kaggle credentials. You can obtain a Kaggle API token on your [Kaggle API tokens settings page](https://www.kaggle.com/settings/api)."
                 )
         elif verbose:
             _logger.warning("Unable to validate Kaggle credentials at this time.")
