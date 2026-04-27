@@ -30,7 +30,7 @@ Authenticating is **only** needed to access public resources requiring user cons
 
 First, you will need a Kaggle account. You can sign up [here](https://www.kaggle.com/account/login).
 
-After login, you can download your Kaggle API token at https://www.kaggle.com/settings/api by clicking on the "Generate New Token" button under the "API" section.
+After login, you can download your Kaggle API token at https://www.kaggle.com/settings/api by clicking on the "Generate New Token" button.
 
 You have several options to authenticate. Note that if you use `kaggle-api` (the `kaggle` command-line tool) you have
 already configured authentication and can skip this.
