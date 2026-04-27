@@ -418,7 +418,7 @@ kagglehub.notebook_output_download('alexisbcook/titanic-tutorial')
 kagglehub.notebook_output_download('alexisbcook/titanic-tutorial/versions/1')
 
 # Download a single file.
-kagglehub.notebok_output_download('alexisbcook/titanic-tutorial', path='submission.csv')
+kagglehub.notebook_output_download('alexisbcook/titanic-tutorial', path='submission.csv')
 
 # Download notebook output to a custom output directory.
 kagglehub.notebook_output_download('alexisbcook/titanic-tutorial', output_dir='./output')
