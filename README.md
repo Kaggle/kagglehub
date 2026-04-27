@@ -30,7 +30,7 @@ Authenticating is **only** needed to access public resources requiring user cons
 
 First, you will need a Kaggle account. You can sign up [here](https://www.kaggle.com/account/login).
 
-After login, you can download your Kaggle API token at https://www.kaggle.com/settings by clicking on the "Generate New Token" button under the "API" section.
+After login, you can download your Kaggle API token at https://www.kaggle.com/settings/api by clicking on the "Generate New Token" button under the "API" section.
 
 You have several options to authenticate. Note that if you use `kaggle-api` (the `kaggle` command-line tool) you have
 already configured authentication and can skip this.
@@ -55,17 +55,17 @@ export KAGGLE_API_TOKEN=xxxxxxxxxxxxxx # Copied from the settings UI
 
 #### Option 3: API token file
 
-Store your Kaggle API token obtained from your [Kaggle account settings page](https://www.kaggle.com/settings) in a file at `~/.kaggle/access_token`.
+Store your Kaggle API token obtained from your [Kaggle account API tokens settings page](https://www.kaggle.com/settings/api) in a file at `~/.kaggle/access_token`.
 
 #### Option 4: Google Colab secret
 
-Store your Kaggle API token obtained from your [Kaggle account settings page](https://www.kaggle.com/settings) in a Colab secret named `KAGGLE_API_TOKEN`.
+Store your Kaggle API token obtained from your [Kaggle account API tokens settings page](https://www.kaggle.com/settings/api) in a Colab secret named `KAGGLE_API_TOKEN`.
 
 Instructions on adding secrets in both Colab and Colab Enterprise can be found in [this article](https://www.googlecloudcommunity.com/gc/Cloud-Hub/How-do-I-add-secrets-in-Google-Colab-Enterprise/m-p/784866).
 
 #### Option 5: Legacy API credentials file
 
-From your [Kaggle account settings page](https://www.kaggle.com/settings), under "Legacy API Credentials", click on the "Create Legacy API Key" button to generate a `kaggle.json` file and store it at `~/.kaggle/kaggle.json`.
+From your [Kaggle account API tokens settings page](https://www.kaggle.com/settings/api), under "Legacy API Credentials", click on the "Create Legacy API Key" button to generate a `kaggle.json` file and store it at `~/.kaggle/kaggle.json`.
 
 ### Download Model
 

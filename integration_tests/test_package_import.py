@@ -90,5 +90,5 @@ class TestPackageImport(unittest.TestCase):
             # Uninstall pyjokes now
             del sys.modules["pyjokes"]
             importlib.invalidate_caches()
-            subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "pyjokes", "-y"])  # noqa: S603
+            subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "pyjokes", "-y"])
             self.assertIsNone(importlib.util.find_spec("pyjokes"))
