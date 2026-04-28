@@ -3,7 +3,7 @@
 import abc
 from dataclasses import asdict, dataclass
 
-from kagglesdk.kaggle_env import get_endpoint, get_env
+from kagglesdk.kaggle_env import get_web_endpoint, get_env
 from kagglesdk.models.types.model_enums import ModelFramework
 
 from kagglehub.enum import to_enum
@@ -53,7 +53,7 @@ class ModelHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_endpoint(get_env())
+        endpoint = get_web_endpoint(get_env())
         if self.is_versioned():
             return f"{endpoint}/models/{self.owner}/{self.model}/{self.framework}/{self.variation}/{self.version}"
         else:
@@ -79,7 +79,7 @@ class DatasetHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_endpoint(get_env())
+        endpoint = get_web_endpoint(get_env())
         base_url = f"{endpoint}/datasets/{self.owner}/{self.dataset}"
         if self.is_versioned():
             return f"{base_url}/versions/{self.version}"
@@ -95,7 +95,7 @@ class CompetitionHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_endpoint(get_env())
+        endpoint = get_web_endpoint(get_env())
         base_url = f"{endpoint}/competitions/{self.competition}"
         return base_url
 
@@ -119,7 +119,7 @@ class NotebookHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_endpoint(get_env())
+        endpoint = get_web_endpoint(get_env())
         base_url = f"{endpoint}/code/{self.owner}/{self.notebook}"
         if self.is_versioned():
             return f"{base_url}/versions/{self.version}"
