@@ -2,6 +2,11 @@
 
 ## Next Release
 
+## v1.0.1 (April 28, 2026)
+
+* Fix detail page URL returned. ([#295](https://github.com/Kaggle/kagglehub/pull/295))
+* Update API token page URL. ([#294](https://github.com/Kaggle/kagglehub/pull/294))
+
 ## v1.0.0 (February 11, 2026)
 
 * General Availability release
