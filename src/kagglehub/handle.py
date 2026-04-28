@@ -3,7 +3,7 @@
 import abc
 from dataclasses import asdict, dataclass
 
-from kagglesdk.kaggle_env import get_web_endpoint, get_env
+from kagglesdk.kaggle_env import get_env, get_web_endpoint
 from kagglesdk.models.types.model_enums import ModelFramework
 
 from kagglehub.enum import to_enum
