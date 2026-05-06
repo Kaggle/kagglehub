@@ -1,22 +1,5 @@
 steps:
 
-# Validate substitution variables.
-- name: 'ubuntu'
-  id: validation
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    if [[ $_NEW_VERSION == "default" ]]; then
-      echo "Specify _NEW_VERSION"
-      exit 1
-    elif [[ $_NEW_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-      echo "_NEW_VERSION format validated."
-    else
-      echo "_NEW_VERSION=$_NEW_VERSION must follow the format '^[0-9]+\.[0-9]+\.[0-9]+$' (example: 1.2.3)"
-      exit 1
-    fi
-
 # Get the GitHub access token from Secret Manager.
 # The token is used to talk to GitHub API, specifically to create a release.
 - name: gcr.io/cloud-builders/gcloud
@@ -95,8 +78,10 @@ steps:
   args:
   - '-c'
   - |
+    export RELEASE_VERSION=`grep __version__ src/kagglehub/__init__.py | sed -E "s/.*['\"]([^'\"]+)['\"].*/\1/"`
+    echo "Preparing release for version $$RELEASE_VERSION"
     export GITHUB_TOKEN=$(</root/github_token)
-    hub release create -m "release v$_NEW_VERSION" "v$_NEW_VERSION"
+    hub release create -m "release v$$RELEASE_VERSION" "v$$RELEASE_VERSION"
   env:
   - GITHUB_USER=kaggle
   - GITHUB_REPOSITORY=$_GITHUB_REPOSITORY
@@ -123,5 +108,4 @@ substitutions:
   # Before changing this, ensure there's a matching tag for our bre-built hatch image:
   # https://pantheon.corp.google.com/artifacts/docker/kaggle-cicd/us/tools/hatch?e=13803378&mods=-ai_platform_fake_service&project=kaggle-cicd
   _PYTHON_VERSION: 3.10.13
-  _NEW_VERSION: default
 
