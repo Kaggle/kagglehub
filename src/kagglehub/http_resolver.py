@@ -298,7 +298,7 @@ def _extract_archive(archive_path: str, out_path: str) -> None:
     logger.info("Extracting files...")
     if tarfile.is_tarfile(archive_path):
         with tarfile.open(archive_path) as f:
-            f.extractall(out_path)
+            f.extractall(out_path, filter="data")
     elif zipfile.is_zipfile(archive_path):
         with zipfile.ZipFile(archive_path, "r") as f:
             f.extractall(out_path)
