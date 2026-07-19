@@ -2,7 +2,7 @@
 
 ## Next Release
 
-* Support downloading one dataset directory through `dataset_download(path=...)`, including nested files and cache reuse.
+* Support downloading one dataset directory through `dataset_download(path=...)`, including nested files and cache reuse. ([#306](https://github.com/Kaggle/kagglehub/pull/306))
 
 ## v1.0.2 (June 9, 2026)
 
