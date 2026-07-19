@@ -341,7 +341,13 @@ kagglehub.dataset_download('bricevergnou/spotify-recommendation/versions/1')
 # Download a single file.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', path='data.csv')
 
-# Download a dataset or file, even if previously downloaded to cache.
+# Download one directory while preserving its nested structure.
+kagglehub.dataset_download(
+    'moltean/fruits/versions/99',
+    path='fruits-360_meta/fruits-360-meta/Papers',
+)
+
+# Download a dataset, directory, or file, even if previously downloaded to cache.
 kagglehub.dataset_download('bricevergnou/spotify-recommendation', force_download=True)
 
 # Download a dataset to a custom output directory.

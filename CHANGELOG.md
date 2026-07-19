@@ -2,6 +2,8 @@
 
 ## Next Release
 
+* Support downloading one dataset directory through `dataset_download(path=...)`, including nested files and cache reuse.
+
 ## v1.0.2 (June 9, 2026)
 
 * Use secure extraction filter for tar files to prevent extraction vulnerability. ([#303](https://github.com/Kaggle/kagglehub/pull/303))

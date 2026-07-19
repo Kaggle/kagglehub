@@ -8,6 +8,8 @@ from .utils import assert_columns, assert_files, create_test_cache, unauthentica
 
 UNVERSIONED_HANDLE = "ryanholbrook/dl-course-data"
 HANDLE = "ryanholbrook/dl-course-data/versions/5"
+FOLDER_HANDLE = "moltean/fruits/versions/99"
+FOLDER_PATH = "fruits-360_meta/fruits-360-meta/Papers"
 
 
 class TestDatasetDownload(unittest.TestCase):
@@ -103,3 +105,9 @@ class TestDatasetDownload(unittest.TestCase):
                     "spotify.csv",
                 ]
                 assert_files(self, actual_path, expected_files)
+
+    def test_public_dataset_folder_with_unauthenticated_succeeds(self) -> None:
+        with create_test_cache(), unauthenticated():
+            actual_path = dataset_download(FOLDER_HANDLE, path=FOLDER_PATH)
+
+            assert_files(self, actual_path, ["readme.txt"])

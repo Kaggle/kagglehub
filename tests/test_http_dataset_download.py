@@ -2,7 +2,8 @@ import os
 from tempfile import TemporaryDirectory
 
 import kagglehub
-from kagglehub.cache import DATASETS_CACHE_SUBFOLDER, get_cached_archive_path
+from kagglehub.cache import DATASETS_CACHE_SUBFOLDER, Cache, get_cached_archive_path
+from kagglehub.exceptions import KaggleApiHTTPError
 from kagglehub.handle import parse_dataset_handle
 from tests.fixtures import BaseTestCase
 
@@ -41,6 +42,10 @@ class TestHttpDatasetDownload(BaseTestCase):
     @classmethod
     def tearDownClass(cls):
         cls.server.shutdown()
+
+    def setUp(self) -> None:
+        super().setUp()
+        stub.shared_data.reset()
 
     def _download_dataset_and_assert_downloaded(
         self,
@@ -105,6 +110,145 @@ class TestHttpDatasetDownload(BaseTestCase):
     def test_versioned_dataset_download_with_path(self) -> None:
         with create_test_cache() as d:
             self._download_test_file_and_assert_downloaded(d, VERSIONED_DATASET_HANDLE)
+
+    def test_exact_file_download_does_not_list_tree(self) -> None:
+        with create_test_cache():
+            kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH)
+        self.assertEqual(0, stub.shared_data.tree_requests)
+
+    def test_folder_download_recurses_and_paginates(self) -> None:
+        with create_test_cache() as d:
+            folder_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="folder")
+
+            self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, "folder"), folder_path)
+            self.assertEqual(
+                ["nested/child.txt", "nested/child2.txt", "page2.csv", "root.txt"],
+                sorted(
+                    os.path.relpath(os.path.join(root, file), folder_path)
+                    for root, _, files in os.walk(folder_path)
+                    for file in files
+                ),
+            )
+            self.assertEqual(4, stub.shared_data.tree_requests)
+
+    def test_folder_download_is_reused_from_cache(self) -> None:
+        with create_test_cache():
+            first_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="folder")
+            requests_after_first_download = (
+                stub.shared_data.download_requests,
+                stub.shared_data.tree_requests,
+            )
+
+            second_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="folder")
+
+            self.assertEqual(first_path, second_path)
+            self.assertEqual(
+                requests_after_first_download,
+                (stub.shared_data.download_requests, stub.shared_data.tree_requests),
+            )
+
+    def test_missing_folder_preserves_exact_file_404(self) -> None:
+        with create_test_cache() as d:
+            with self.assertRaises(KaggleApiHTTPError) as raised:
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="missing")
+
+            self.assertEqual(404, raised.exception.response.status_code)
+            self.assertFalse(os.path.exists(os.path.join(d, EXPECTED_DATASET_SUBPATH, "missing")))
+
+    def test_empty_folder_preserves_exact_file_404(self) -> None:
+        with create_test_cache() as d:
+            with self.assertRaises(KaggleApiHTTPError) as raised:
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="empty")
+
+            self.assertEqual(404, raised.exception.response.status_code)
+            self.assertFalse(os.path.exists(os.path.join(d, EXPECTED_DATASET_SUBPATH, "empty")))
+
+    def test_folder_download_with_output_dir(self) -> None:
+        with create_test_cache(), TemporaryDirectory() as dest:
+            folder_path = kagglehub.dataset_download(
+                VERSIONED_DATASET_HANDLE,
+                path="folder",
+                output_dir=dest,
+            )
+
+            self.assertEqual(os.path.join(dest, "folder"), folder_path)
+            self.assertTrue(os.path.isfile(os.path.join(folder_path, "nested", "child.txt")))
+
+    def test_incomplete_output_folder_requires_force(self) -> None:
+        with create_test_cache(), TemporaryDirectory() as dest:
+            folder_path = os.path.join(dest, "folder")
+            os.makedirs(folder_path)
+            with open(os.path.join(folder_path, "stale.txt"), "w") as output_file:
+                output_file.write("stale")
+
+            with self.assertRaises(FileExistsError):
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="folder", output_dir=dest)
+
+    def test_force_download_replaces_folder(self) -> None:
+        with create_test_cache(), TemporaryDirectory() as dest:
+            folder_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="folder", output_dir=dest)
+            stale_file = os.path.join(folder_path, "stale.txt")
+            with open(stale_file, "w") as output_file:
+                output_file.write("stale")
+
+            refreshed_path = kagglehub.dataset_download(
+                VERSIONED_DATASET_HANDLE,
+                path="folder",
+                output_dir=dest,
+                force_download=True,
+            )
+
+            self.assertEqual(folder_path, refreshed_path)
+            self.assertFalse(os.path.exists(stale_file))
+            self.assertTrue(os.path.isfile(os.path.join(folder_path, "root.txt")))
+
+    def test_partial_folder_failure_is_resumable_in_default_cache(self) -> None:
+        with create_test_cache() as d:
+            stub.shared_data.fail_once_paths = {"partial/second.txt"}
+            with self.assertRaises(KaggleApiHTTPError):
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="partial")
+
+            h = parse_dataset_handle(VERSIONED_DATASET_HANDLE)
+            cache = Cache()
+            self.assertIsNone(cache.load_from_cache(h, "partial"))
+            self.assertTrue(os.path.isfile(os.path.join(d, EXPECTED_DATASET_SUBPATH, "partial", "first.txt")))
+            requests_before_retry = stub.shared_data.download_requests
+
+            folder_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="partial")
+
+            self.assertTrue(os.path.isfile(os.path.join(folder_path, "second.txt")))
+            self.assertEqual(2, stub.shared_data.download_requests - requests_before_retry)
+
+    def test_user_path_traversal_is_rejected_before_network_access(self) -> None:
+        with create_test_cache():
+            unsafe_paths = (
+                "../escape.txt",
+                "folder/../../escape.txt",
+                "/absolute/path",
+                "\\absolute\\path",
+                "C:\\absolute\\path",
+                "//server/share/path",
+                "folder/evil\x00name",
+            )
+            for unsafe_path in unsafe_paths:
+                with self.subTest(unsafe_path), self.assertRaises(ValueError):
+                    kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=unsafe_path)
+
+        self.assertEqual(0, stub.shared_data.get_dataset_requests)
+        self.assertEqual(0, stub.shared_data.download_requests)
+        self.assertEqual(0, stub.shared_data.tree_requests)
+
+    def test_server_path_traversal_is_rejected_before_writing(self) -> None:
+        with create_test_cache() as d:
+            with self.assertRaises(ValueError):
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="malicious")
+
+            self.assertFalse(os.path.exists(os.path.join(d, EXPECTED_DATASET_SUBPATH, "escape.txt")))
+
+    def test_repeated_tree_page_token_fails_closed(self) -> None:
+        with create_test_cache():
+            with self.assertRaises(ValueError):
+                kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="loop")
 
     def test_versioned_dataset_download_with_auto_compressed_path(self) -> None:
         with create_test_cache() as d:

@@ -3,10 +3,16 @@ import os
 import shutil
 import tarfile
 import zipfile
+from functools import partial
+from http import HTTPStatus
 
 import requests
 from kagglesdk.competitions.types.competition_api_service import ApiDownloadDataFileRequest, ApiDownloadDataFilesRequest
-from kagglesdk.datasets.types.dataset_api_service import ApiDownloadDatasetRequest, ApiGetDatasetRequest
+from kagglesdk.datasets.types.dataset_api_service import (
+    ApiDownloadDatasetRequest,
+    ApiGetDatasetRequest,
+    ApiListTreeDatasetFilesRequest,
+)
 from kagglesdk.kaggle_client import KaggleClient
 from kagglesdk.kernels.types.kernels_api_service import ApiDownloadKernelOutputRequest, ApiGetKernelRequest
 from kagglesdk.models.types.model_api_service import (
@@ -19,7 +25,8 @@ from tqdm.contrib.concurrent import thread_map
 from kagglehub.cache import Cache
 from kagglehub.clients import build_kaggle_client, download_file
 from kagglehub.config import get_kaggle_credentials
-from kagglehub.exceptions import UnauthenticatedError, handle_call
+from kagglehub.dataset_paths import normalize_dataset_path, validate_dataset_path_descendant
+from kagglehub.exceptions import KaggleApiHTTPError, UnauthenticatedError, handle_call
 from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle, NotebookHandle, ResourceHandle
 from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
@@ -121,6 +128,8 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
         output_dir: str | None = None,
     ) -> tuple[str, int | None]:
         with build_kaggle_client() as api_client:
+            if path:
+                path = normalize_dataset_path(path)
             if not h.is_versioned():
                 h = h.with_version(_get_current_version(api_client, h))
 
@@ -128,22 +137,43 @@ class DatasetHttpResolver(Resolver[DatasetHandle]):
             dataset_path = cache.load_from_cache(h, path)
             if dataset_path and not force_download:
                 return dataset_path, h.version  # Already cached
-            elif dataset_path and force_download:
+            if dataset_path and force_download:
                 cache.delete_from_cache(h, path)
-
-            if output_dir:
-                _prepare_output_dir(output_dir, path, force_download=bool(force_download))
 
             r = _build_dataset_download_request(h, path)
             out_path = cache.get_path(h, path)
 
             # Create the intermediary directories
             if path:
-                # Downloading a single file.
+                # Preserve exact-file behavior, then fall back to directory discovery only for a 404.
+                try:
+                    response = handle_call(lambda: api_client.datasets.dataset_api_client.download_dataset(r), h)
+                except KaggleApiHTTPError as error:
+                    if error.response is None or error.response.status_code != HTTPStatus.NOT_FOUND:
+                        raise
+
+                    files = _list_dataset_folder_files(api_client, h, path)
+                    if not files:
+                        # Kaggle databundles do not preserve empty directories, so a zero-file tree response is
+                        # indistinguishable from a missing path. Preserve the original exact-file 404 in both cases.
+                        raise error
+
+                    if output_dir:
+                        _prepare_output_folder(output_dir, path, force_download=bool(force_download))
+                    elif force_download:
+                        cache.delete_from_cache(h, path)
+                    os.makedirs(out_path, exist_ok=True)
+                    _download_dataset_folder(api_client, cache, h, files)
+                    cache.mark_as_complete(h, path)
+                    return out_path, h.version
+
+                if output_dir:
+                    _prepare_output_dir(output_dir, path, force_download=bool(force_download))
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
-                response = handle_call(lambda: api_client.datasets.dataset_api_client.download_dataset(r), h)
                 download_file(response, out_path, h, extract_auto_compressed_file=True)
             else:
+                if output_dir:
+                    _prepare_output_dir(output_dir, path, force_download=bool(force_download))
                 # TODO(b/345800027) Implement parallel download when < 25 files in databundle.
                 # Downloading the full archived bundle.
                 archive_path = cache.get_archive_path(h)
@@ -333,6 +363,20 @@ def _prepare_output_dir(output_dir: str, path: str | None, *, force_download: bo
         os.makedirs(output_dir, exist_ok=True)
 
 
+def _prepare_output_folder(output_dir: str, path: str, *, force_download: bool) -> None:
+    target_path = os.path.join(output_dir, path)
+    if os.path.exists(target_path):
+        if os.path.isfile(target_path):
+            msg = f"Folder path points to a file at output_dir: {target_path}"
+            raise FileExistsError(msg)
+        if os.listdir(target_path):
+            if not force_download:
+                msg = f"Folder already exists at output_dir: {target_path}. Set force_download=True to replace it."
+                raise FileExistsError(msg)
+            shutil.rmtree(target_path)
+    os.makedirs(target_path, exist_ok=True)
+
+
 def _clear_directory(directory: str) -> None:
     for entry in os.listdir(directory):
         entry_path = os.path.join(directory, entry)
@@ -375,6 +419,90 @@ def _get_current_version(api_client: KaggleClient, h: ResourceHandle) -> int:
     else:
         msg = f"Invalid ResourceHandle type {h}"
         raise ValueError(msg)
+
+
+def _list_dataset_folder_files(api_client: KaggleClient, h: DatasetHandle, folder: str) -> list[str]:
+    if not h.is_versioned():
+        msg = "No version provided"
+        raise ValueError(msg)
+
+    pending_directories = [folder]
+    discovered_directories = {folder}
+    discovered_files: set[str] = set()
+
+    while pending_directories:
+        directory = pending_directories.pop()
+        page_token = ""
+        seen_page_tokens: set[str] = set()
+
+        while True:
+            request = ApiListTreeDatasetFilesRequest()
+            request.owner_slug = h.owner
+            request.dataset_slug = h.dataset
+            request.dataset_version_number = h.version
+            request.path = directory
+            request.page_size = 200
+            if page_token:
+                request.page_token = page_token
+
+            response = handle_call(
+                partial(api_client.datasets.dataset_api_client.list_tree_dataset_files, request),
+                h,
+            )
+
+            for file in response.files:
+                file_path = validate_dataset_path_descendant(folder, file.relative_url)
+                if file_path in discovered_files:
+                    msg = f"Dataset API returned duplicate file path: {file_path!r}"
+                    raise ValueError(msg)
+                discovered_files.add(file_path)
+
+            for child in response.directories:
+                child_path = validate_dataset_path_descendant(folder, child.relative_url)
+                if child_path in discovered_directories:
+                    msg = f"Dataset API returned duplicate or cyclic directory path: {child_path!r}"
+                    raise ValueError(msg)
+                discovered_directories.add(child_path)
+                pending_directories.append(child_path)
+
+            next_page_token = response.next_page_token
+            if not next_page_token:
+                break
+            if next_page_token in seen_page_tokens:
+                msg = f"Dataset API repeated a page token for directory {directory!r}"
+                raise ValueError(msg)
+            seen_page_tokens.add(next_page_token)
+            page_token = next_page_token
+
+    return sorted(discovered_files)
+
+
+def _download_dataset_folder(
+    api_client: KaggleClient,
+    cache: Cache,
+    h: DatasetHandle,
+    files: list[str],
+) -> None:
+    def _inner_download_file(file: str) -> None:
+        if cache.load_from_cache(h, file):
+            return
+
+        out_path = cache.get_path(h, file)
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        request = _build_dataset_download_request(h, file)
+        response = handle_call(
+            lambda: api_client.datasets.dataset_api_client.download_dataset(request),
+            h,
+        )
+        download_file(response, out_path, h, extract_auto_compressed_file=True)
+        cache.mark_as_complete(h, file)
+
+    thread_map(
+        _inner_download_file,
+        files,
+        desc=f"Downloading {len(files)} files",
+        max_workers=8,
+    )
 
 
 def _list_model_files(api_client: KaggleClient, h: ModelHandle) -> tuple[list[str], bool]:

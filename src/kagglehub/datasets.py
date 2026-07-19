@@ -5,6 +5,7 @@ from typing import Any
 from kagglesdk.blobs.types.blob_api_service import ApiBlobType
 
 from kagglehub import registry
+from kagglehub.dataset_paths import normalize_dataset_path
 from kagglehub.datasets_enums import KaggleDatasetAdapter, PolarsFrameType
 from kagglehub.datasets_helpers import create_dataset_or_version
 from kagglehub.gcs_upload import normalize_patterns, upload_files_and_directories
@@ -41,13 +42,15 @@ def dataset_download(
     """Download dataset files
     Args:
         handle: (string) the dataset handle
-        path: (string) Optional path to a file within a dataset
+        path: (string) Optional path to a file or directory within a dataset
         force_download: (bool) Optional flag to force download a dataset, even if it's cached or already in output_dir.
         output_dir: (string) Optional output directory for direct download, bypassing the default cache.
     Returns:
         A string requesting the path to the requested dataset files.
     """
     h = parse_dataset_handle(handle)
+    if path:
+        path = normalize_dataset_path(path)
     logger.info(f"Downloading Dataset: {h.to_url()} ...", extra={**EXTRA_CONSOLE_BLOCK})
     resolved_path, _ = registry.dataset_resolver(
         h,
