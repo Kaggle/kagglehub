@@ -423,6 +423,8 @@ def _get_current_version(api_client: KaggleClient, h: ResourceHandle) -> int:
 
 def _list_dataset_folder_files(api_client: KaggleClient, h: DatasetHandle, folder: str) -> list[str]:
     if not h.is_versioned():
+        # This should never happen: when no version is provided, _resolve() attaches the
+        # current version via h.with_version(...) before any folder listing is performed.
         msg = "No version provided"
         raise ValueError(msg)
 

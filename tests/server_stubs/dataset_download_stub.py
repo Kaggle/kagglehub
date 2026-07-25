@@ -68,7 +68,7 @@ def dataset_download() -> ResponseReturnValue:
 
     handle = f"{r.owner_slug}/{r.dataset_slug}"
 
-    # First, determine if we're fetching a file or the whole dataset
+    # First, determine if we're fetching a file, a folder, or the whole dataset
     folder_paths = {"empty", "folder", "partial", "malicious", "loop", "missing"}
     if r.file_name in folder_paths:
         return jsonify({"message": "No exact file at this path"}), 404
