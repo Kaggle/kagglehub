@@ -2,6 +2,7 @@
 
 ## Next Release
 
+* Fix single-file downloads not being extracted from their server-side zip wrapper on Windows, which left the raw zip archive cached under the requested filename instead of the expected file. ([#252](https://github.com/Kaggle/kagglehub/issues/252))
 * Support downloading one dataset directory through `dataset_download(path=...)`, including nested files and cache reuse. ([#306](https://github.com/Kaggle/kagglehub/pull/306))
 
 ## v1.0.2 (June 9, 2026)

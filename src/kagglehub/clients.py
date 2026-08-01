@@ -210,22 +210,46 @@ def download_file(
     # For individual file downloads, the downloaded file may be a zip of the file rather
     # than the file name/type that was requested (e.g. my-big-table.csv.zip and not my-big-table.csv).
     # If that's the case, we should auto-extract it so users get what they expect.
-    expected_downloaded_file_name = urlparse(out_file).path.split("/")[-1]
-    actual_downloaded_file_name = urlparse(response.url).path.split("/")[-1]
-    if (
-        extract_auto_compressed_file
-        and f"{expected_downloaded_file_name}.zip" == actual_downloaded_file_name
-        and zipfile.is_zipfile(out_file)
-    ):
-        logger.info(f"Extracting zip of {expected_downloaded_file_name}...")
+    auto_compressed_member_name = (
+        _detect_auto_compressed_member_name(out_file, response.url) if extract_auto_compressed_file else None
+    )
+    if auto_compressed_member_name and zipfile.is_zipfile(out_file):
+        logger.info(f"Extracting zip of {auto_compressed_member_name}...")
         # Rename the file to match what it really is and make space to write to the expected location
         renamed_auto_compressed_path = f"{out_file}.zip"
         os.rename(out_file, renamed_auto_compressed_path)
         with zipfile.ZipFile(renamed_auto_compressed_path, "r") as f:
-            f.extract(expected_downloaded_file_name, os.path.dirname(out_file))
+            f.extract(auto_compressed_member_name, os.path.dirname(out_file))
         # We don't need the zipped version anymore
         os.remove(renamed_auto_compressed_path)
     return True
+
+
+def _detect_auto_compressed_member_name(out_file: str, response_url: str) -> str | None:
+    """Detects whether a single-file download actually came back as a same-named zip.
+
+    Some individual dataset/model/competition file downloads are served by the backend as
+    a zip archive containing the single requested file (e.g. `my-table.csv` is served as
+    `my-table.csv.zip`) rather than the raw file. When that happens, this returns the
+    filename to extract from the archive (e.g. "my-table.csv"); otherwise returns None.
+
+    `out_file` is a local filesystem path, not a URL, so it must be parsed with `os.path`,
+    not `urllib.parse.urlparse`. A previous version of this function ran `out_file` through
+    `urlparse(out_file).path.split("/")[-1]`, which broke on Windows: a path such as
+    `C:\\Users\\...\\my-table.csv` gets misparsed by `urlparse` (the `C:` drive prefix is
+    read as a URL scheme), and splitting on "/" never matches Windows' "\\" separators, so
+    the "expected" filename came out as the whole remaining path instead of just
+    "my-table.csv". That comparison then always failed, silently disabling extraction on
+    Windows and leaving the raw zip bytes cached under the requested (non-zip) filename.
+    See: https://github.com/Kaggle/kagglehub/issues/252
+    """
+    expected_downloaded_file_name = os.path.basename(out_file)
+    # response_url is always a real URL (not a local path), so forward slashes are guaranteed
+    # by the URL spec regardless of the host OS.
+    actual_downloaded_file_name = urlparse(response_url).path.split("/")[-1]
+    if f"{expected_downloaded_file_name}.zip" == actual_downloaded_file_name:
+        return expected_downloaded_file_name
+    return None
 
 
 def _is_resumable(response: requests.Response) -> bool:

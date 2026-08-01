@@ -1,3 +1,4 @@
+import ntpath
 import os
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
@@ -5,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from kagglesdk.datasets.types.dataset_api_service import ApiDownloadDatasetRequest
 
 import kagglehub
-from kagglehub.clients import build_kaggle_client, download_file, get_user_agent
+from kagglehub.clients import _detect_auto_compressed_member_name, build_kaggle_client, download_file, get_user_agent
 from kagglehub.exceptions import DataCorruptionError
 from kagglehub.handle import DatasetHandle
 from tests.fixtures import BaseTestCase
@@ -88,6 +89,45 @@ class TestKaggleClient(BaseTestCase):
 
             # Assert the corrupted file has been deleted.
             self.assertFalse(os.path.exists(out_file))
+
+    def test_detect_auto_compressed_member_name_matches(self) -> None:
+        # Sanity check for the normal (non-Windows-specific) case: the server served
+        # "shapes.csv" back as "shapes.csv.zip", so the archive member to extract is
+        # "shapes.csv".
+        out_file = os.path.join("some", "cache", "dir", "shapes.csv")
+        response_url = "https://storage.googleapis.com/bucket/path/shapes.csv.zip?token=abc"
+
+        self.assertEqual(_detect_auto_compressed_member_name(out_file, response_url), "shapes.csv")
+
+    def test_detect_auto_compressed_member_name_no_match(self) -> None:
+        # The server returned the exact file that was requested (not a same-named zip),
+        # so no extraction should be triggered.
+        out_file = os.path.join("some", "cache", "dir", "shapes.csv")
+        response_url = "https://storage.googleapis.com/bucket/path/shapes.csv?token=abc"
+
+        self.assertIsNone(_detect_auto_compressed_member_name(out_file, response_url))
+
+    def test_detect_auto_compressed_member_name_windows_path_regression(self) -> None:
+        # Regression test for https://github.com/Kaggle/kagglehub/issues/252.
+        #
+        # On Windows, `out_file` is an absolute path like "C:\\Users\\...\\shapes.csv"
+        # (drive letter + backslash separators). The previous implementation parsed
+        # `out_file` with `urllib.parse.urlparse`, which is meant for URLs, not local
+        # paths: it misreads the "C:" drive prefix as a URL scheme, and then splits the
+        # remainder on "/" -- which never matches Windows' "\\" separators. So the
+        # "expected" filename came out as the *entire remaining path* instead of just
+        # "shapes.csv", the comparison against the real (correctly-parsed) URL always
+        # failed, and the auto-extraction was silently skipped -- leaving the raw zip
+        # bytes cached under the filename that was supposed to be the extracted CSV.
+        #
+        # We force Windows path semantics with `ntpath` here (rather than relying on the
+        # host OS actually being Windows) so this regression is caught on any platform's
+        # CI, including the Linux/macOS runners this suite normally runs on.
+        windows_out_file = ntpath.join("C:\\Users\\test\\.cache\\kagglehub", "shapes.csv")
+        response_url = "https://storage.googleapis.com/bucket/path/shapes.csv.zip?token=abc"
+
+        with patch("kagglehub.clients.os.path", ntpath):
+            self.assertEqual(_detect_auto_compressed_member_name(windows_out_file, response_url), "shapes.csv")
 
     @patch.dict("os.environ", {})
     def test_get_user_agent(self) -> None:
