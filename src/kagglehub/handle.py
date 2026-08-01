@@ -3,10 +3,35 @@
 import abc
 from dataclasses import asdict, dataclass
 
-from kagglesdk.kaggle_env import get_env, get_web_endpoint
+from kagglesdk.kaggle_env import KaggleEnv, get_endpoint, get_env
 from kagglesdk.models.types.model_enums import ModelFramework
 
 from kagglehub.enum import to_enum
+
+# kagglesdk 0.1.24-0.1.27 accidentally removed get_web_endpoint (yanked on PyPI).
+try:
+    from kagglesdk.kaggle_env import get_web_endpoint as _sdk_get_web_endpoint
+except ImportError:
+    _sdk_get_web_endpoint = None
+
+
+def _web_endpoint_fallback(env: KaggleEnv) -> str:
+    """Detail-page base URL matching kagglesdk.get_web_endpoint when it is missing.
+
+    In PROD, the API host uses the `api` subdomain which is wrong for user-facing
+    detail pages, so map PROD to https://kaggle.com like the restored SDK helper.
+    """
+    if env == KaggleEnv.PROD:
+        return "https://kaggle.com"
+    return get_endpoint(env)
+
+
+def _get_web_endpoint(env: KaggleEnv) -> str:
+    # Prefer the SDK helper when present so we track any future endpoint changes.
+    if _sdk_get_web_endpoint is not None:
+        return _sdk_get_web_endpoint(env)
+    return _web_endpoint_fallback(env)
+
 
 NUM_VERSIONED_DATASET_PARTS = 4  # e.g.: <owner>/<dataset>/versions/<version>
 NUM_UNVERSIONED_DATASET_PARTS = 2  # e.g.: <owner>/<dataset>
@@ -53,7 +78,7 @@ class ModelHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_web_endpoint(get_env())
+        endpoint = _get_web_endpoint(get_env())
         if self.is_versioned():
             return f"{endpoint}/models/{self.owner}/{self.model}/{self.framework}/{self.variation}/{self.version}"
         else:
@@ -79,7 +104,7 @@ class DatasetHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_web_endpoint(get_env())
+        endpoint = _get_web_endpoint(get_env())
         base_url = f"{endpoint}/datasets/{self.owner}/{self.dataset}"
         if self.is_versioned():
             return f"{base_url}/versions/{self.version}"
@@ -95,7 +120,7 @@ class CompetitionHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_web_endpoint(get_env())
+        endpoint = _get_web_endpoint(get_env())
         base_url = f"{endpoint}/competitions/{self.competition}"
         return base_url
 
@@ -119,7 +144,7 @@ class NotebookHandle(ResourceHandle):
         return handle_str
 
     def to_url(self) -> str:
-        endpoint = get_web_endpoint(get_env())
+        endpoint = _get_web_endpoint(get_env())
         base_url = f"{endpoint}/code/{self.owner}/{self.notebook}"
         if self.is_versioned():
             return f"{base_url}/versions/{self.version}"

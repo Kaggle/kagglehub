@@ -2,6 +2,7 @@
 
 ## Next Release
 
+* Tolerate kagglesdk builds that omit `get_web_endpoint` (e.g. yanked 0.1.24–0.1.27) so `import kagglehub` no longer raises `ImportError`. ([#301](https://github.com/Kaggle/kagglehub/issues/301))
 * Support downloading one dataset directory through `dataset_download(path=...)`, including nested files and cache reuse. ([#306](https://github.com/Kaggle/kagglehub/pull/306))
 
 ## v1.0.2 (June 9, 2026)

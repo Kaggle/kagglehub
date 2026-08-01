@@ -1,4 +1,14 @@
-from kagglehub.handle import parse_competition_handle, parse_dataset_handle, parse_model_handle, parse_notebook_handle
+from unittest import mock
+
+from kagglesdk.kaggle_env import KaggleEnv
+
+from kagglehub.handle import (
+    _web_endpoint_fallback,
+    parse_competition_handle,
+    parse_dataset_handle,
+    parse_model_handle,
+    parse_notebook_handle,
+)
 from tests.fixtures import BaseTestCase
 
 
@@ -79,3 +89,27 @@ class TestHandle(BaseTestCase):
     def test_invalid_code_handle(self) -> None:
         with self.assertRaises(ValueError):
             parse_notebook_handle("notebook")
+
+    def test_to_url_uses_web_endpoint_not_api_host(self) -> None:
+        # Detail pages must use kaggle.com, not api.kaggle.com (see kagglesdk.get_web_endpoint).
+        model = parse_model_handle("google/bert/tensorFlow2/answer-equivalence-bem/3")
+        dataset = parse_dataset_handle("owner/dataset/versions/2")
+        competition = parse_competition_handle("titanic")
+        notebook = parse_notebook_handle("owner/notebook/versions/1")
+
+        with mock.patch("kagglehub.handle.get_env", return_value=KaggleEnv.PROD):
+            self.assertEqual(
+                "https://kaggle.com/models/google/bert/tensorFlow2/answer-equivalence-bem/3",
+                model.to_url(),
+            )
+            self.assertEqual("https://kaggle.com/datasets/owner/dataset/versions/2", dataset.to_url())
+            self.assertEqual("https://kaggle.com/competitions/titanic", competition.to_url())
+            self.assertEqual("https://kaggle.com/code/owner/notebook/versions/1", notebook.to_url())
+
+    def test_web_endpoint_fallback_prod_maps_to_kaggle_com(self) -> None:
+        self.assertEqual("https://kaggle.com", _web_endpoint_fallback(KaggleEnv.PROD))
+
+    def test_web_endpoint_fallback_non_prod_uses_get_endpoint(self) -> None:
+        with mock.patch("kagglehub.handle.get_endpoint", return_value="https://staging.kaggle.com") as get_endpoint:
+            self.assertEqual("https://staging.kaggle.com", _web_endpoint_fallback(KaggleEnv.STAGING))
+            get_endpoint.assert_called_once_with(KaggleEnv.STAGING)
