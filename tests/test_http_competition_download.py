@@ -121,13 +121,13 @@ class TestHttpCompetitionDownload(BaseTestCase):
             # force cached file to be out of date. We set it back to March 02 2000.
             test_date = 951955200
             os.utime(os.path.join(d, EXPECTED_COMPETITION_SUBDIR), (test_date, test_date))
-            old_date = datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc)
+            old_date = datetime.fromtimestamp(os.path.getmtime(path), tz=datetime.UTC)
 
             # Latest version is from March 02 2020.
             path = kagglehub.competition_download(COMPETITION_HANDLE)
 
             # New cache file is current day.
-            new_date = datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc)
+            new_date = datetime.fromtimestamp(os.path.getmtime(path), tz=datetime.UTC)
             self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBDIR), path)
             self.assertGreater(new_date, old_date)
 

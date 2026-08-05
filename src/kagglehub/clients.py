@@ -277,12 +277,12 @@ def _download_needed(response: requests.Response, h: ResourceHandle, cached_path
         return True
     else:
         remote_date = datetime.strptime(response.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S %Z").replace(
-            tzinfo=timezone.utc
+            tzinfo=datetime.UTC
         )
 
     file_exists = os.path.exists(cached_path)
     if file_exists:
-        local_date = datetime.fromtimestamp(os.path.getmtime(cached_path), tz=timezone.utc)
+        local_date = datetime.fromtimestamp(os.path.getmtime(cached_path), tz=datetime.UTC)
 
         download_needed = remote_date >= local_date
         if download_needed:
