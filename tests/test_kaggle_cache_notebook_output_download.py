@@ -66,6 +66,13 @@ class TestKaggleCacheNotebookOutputDownload(BaseTestCase):
                 with self.assertRaises(requests.exceptions.ConnectionError):
                     kagglehub.notebook_output_download(UNVERSIONED_NOTEBOOK_HANDLE)
 
+    @mock.patch("kagglehub.kaggle_cache_resolver.is_in_colab_notebook", return_value=True)
+    def test_kaggle_resolver_skipped_in_colab(self, mock_colab) -> None:
+        with stub.create_env():
+            # Assert that a ConnectionError is set (uses HTTP server which is not set)
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                kagglehub.notebook_output_download(UNVERSIONED_NOTEBOOK_HANDLE)
+
     def test_versioned_notebook_output_download_bad_handle_raises(self) -> None:
         with self.assertRaises(ValueError):
             kagglehub.notebook_output_download("bad handle")

@@ -70,6 +70,14 @@ class TestKaggleCacheDatasetDownload(BaseTestCase):
                     with self.assertRaises(requests.exceptions.ConnectionError):
                         kagglehub.dataset_download(VERSIONED_DATASET_HANDLE)
 
+    @mock.patch("kagglehub.kaggle_cache_resolver.is_in_colab_notebook", return_value=True)
+    def test_kaggle_resolver_skipped_in_colab(self, mock_colab) -> None:
+        with create_test_cache():  # falls back to http resolver, make sure to use a test cache.
+            with stub.create_env():
+                # Assert that a ConnectionError is set (uses HTTP server which is not set)
+                with self.assertRaises(requests.exceptions.ConnectionError):
+                    kagglehub.dataset_download(VERSIONED_DATASET_HANDLE)
+
     def test_versioned_dataset_download_bad_handle_raises(self) -> None:
         with self.assertRaises(ValueError):
             kagglehub.dataset_download("bad handle")
