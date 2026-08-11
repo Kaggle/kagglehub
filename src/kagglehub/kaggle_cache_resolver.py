@@ -4,6 +4,8 @@ import time
 
 from kagglesdk.kaggle_env import is_in_kaggle_notebook
 
+from kagglehub.env import is_in_colab_notebook
+
 from kagglehub.clients import (
     DEFAULT_CONNECT_TIMEOUT,
     KaggleJwtClient,
@@ -31,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
-        if is_kaggle_cache_disabled():
+        if is_kaggle_cache_disabled() or is_in_colab_notebook():
             return False
         if is_in_kaggle_notebook():
             return True
@@ -103,7 +105,7 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
 
 class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
-        if is_kaggle_cache_disabled():
+        if is_kaggle_cache_disabled() or is_in_colab_notebook():
             return False
 
         if is_in_kaggle_notebook():
@@ -188,7 +190,7 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
 
 class ModelKaggleCacheResolver(Resolver[ModelHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
-        if is_kaggle_cache_disabled():
+        if is_kaggle_cache_disabled() or is_in_colab_notebook():
             return False
 
         if is_in_kaggle_notebook():
@@ -275,7 +277,7 @@ class ModelKaggleCacheResolver(Resolver[ModelHandle]):
 
 class NotebookOutputKaggleCacheResolver(Resolver[NotebookHandle]):
     def is_supported(self, *_, **__) -> bool:  # noqa: ANN002, ANN003
-        if is_kaggle_cache_disabled():
+        if is_kaggle_cache_disabled() or is_in_colab_notebook():
             return False
 
         if is_in_kaggle_notebook():

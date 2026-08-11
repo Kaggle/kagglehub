@@ -63,7 +63,16 @@ class TestKaggleCacheModelDownload(BaseTestCase):
                 kagglehub.model_download(UNVERSIONED_MODEL_HANDLE, "missing.txt")
 
     def test_kaggle_resolver_skipped(self) -> None:
-        with mock.patch.dict(os.environ, {DISABLE_KAGGLE_CACHE_ENV_VAR_NAME: "true"}):
+        with create_test_cache():  # falls back to http resolver, make sure to use a test cache.
+            with mock.patch.dict(os.environ, {DISABLE_KAGGLE_CACHE_ENV_VAR_NAME: "true"}):
+                with stub.create_env():
+                    # Assert that a ConnectionError is set (uses HTTP server which is not set)
+                    with self.assertRaises(requests.exceptions.ConnectionError):
+                        kagglehub.model_download(VERSIONED_MODEL_HANDLE)
+
+    @mock.patch("kagglehub.kaggle_cache_resolver.is_in_colab_notebook", return_value=True)
+    def test_kaggle_resolver_skipped_in_colab(self, mock_colab) -> None:
+        with create_test_cache():  # falls back to http resolver, make sure to use a test cache.
             with stub.create_env():
                 # Assert that a ConnectionError is set (uses HTTP server which is not set)
                 with self.assertRaises(requests.exceptions.ConnectionError):
