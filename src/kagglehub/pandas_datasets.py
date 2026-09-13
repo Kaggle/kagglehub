@@ -8,15 +8,19 @@ from typing import Any
 # appropriate `pandas-datasets` extras in order to use these methods. Adding
 # any new dependencies here must correspond with an addition to the
 # list of `pandas-datasets` optional dependencies in pyproject.toml.
+from contextlib import closing
+
 import pandas as pd
 
 from kagglehub.datasets import dataset_download
 
 
-# This is a thin wrapper around pd.read_sql_query so we get the connection
-# closing for free after we've produced the DataFrame
+# This is a thin wrapper around pd.read_sql_query that closes the connection
+# once we've produced the DataFrame. Note: sqlite3.connect as a context
+# manager only manages the transaction; it does NOT close the connection,
+# so closing must be explicit (otherwise the db file stays locked on Windows).
 def wrapped_read_sql_query(sql_query: str, path: str) -> pd.DataFrame:
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         df = pd.read_sql_query(sql_query, conn)
         return df
 
