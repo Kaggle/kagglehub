@@ -49,7 +49,7 @@ class TestHttpModelDownload(BaseTestCase):
     ) -> None:
         # Download the full model and ensure all files are there.
         model_path = kagglehub.model_download(model_handle, **kwargs)
-        self.assertEqual(os.path.join(d, expected_subdir_or_subpath), model_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, expected_subdir_or_subpath)), os.path.normpath(model_path))
         if not expected_files:
             expected_files = ["config.json", "model.keras"]
         self.assertEqual(sorted(expected_files), sorted(os.listdir(model_path)))
@@ -60,7 +60,7 @@ class TestHttpModelDownload(BaseTestCase):
 
     def _download_test_file_and_assert_downloaded(self, d: str, model_handle: str, **kwargs) -> None:  # noqa: ANN003
         model_path = kagglehub.model_download(model_handle, path=TEST_FILEPATH, **kwargs)
-        self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_MODEL_SUBPATH)), os.path.normpath(model_path))
         with open(model_path) as model_file:
             self.assertEqual(TEST_CONTENTS, model_file.readline())
 
@@ -162,7 +162,7 @@ class TestHttpModelDownload(BaseTestCase):
         with create_test_cache():
             with TemporaryDirectory() as dest:
                 model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH, output_dir=dest)
-                self.assertEqual(os.path.join(dest, TEST_FILEPATH), model_path)
+                self.assertEqual(os.path.normpath(os.path.join(dest, TEST_FILEPATH)), os.path.normpath(model_path))
                 with open(model_path) as model_file:
                     self.assertEqual(TEST_CONTENTS, model_file.readline())
 
@@ -229,7 +229,7 @@ class TestHttpModelDownload(BaseTestCase):
             # No internet, cache hit.
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE)
 
-            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), model_path)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_MODEL_SUBDIR)), os.path.normpath(model_path))
 
     def test_versioned_model_download_with_path_already_cached(self) -> None:
         with create_test_cache() as d:
@@ -238,7 +238,7 @@ class TestHttpModelDownload(BaseTestCase):
             # No internet, cache hit.
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH)
 
-            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_MODEL_SUBPATH)), os.path.normpath(model_path))
 
     def test_versioned_model_download_already_cached_with_force_download_explicit_false(self) -> None:
         with create_test_cache() as d:
@@ -247,7 +247,7 @@ class TestHttpModelDownload(BaseTestCase):
             # Not force downloaded, cache hit.
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, force_download=False)
 
-            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBDIR), model_path)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_MODEL_SUBDIR)), os.path.normpath(model_path))
 
     def test_versioned_model_download_with_path_already_cached_with_force_download_explicit_false(self) -> None:
         with create_test_cache() as d:
@@ -256,7 +256,7 @@ class TestHttpModelDownload(BaseTestCase):
             # Not force downloaded, cache hit.
             model_path = kagglehub.model_download(VERSIONED_MODEL_HANDLE, path=TEST_FILEPATH, force_download=False)
 
-            self.assertEqual(os.path.join(d, EXPECTED_MODEL_SUBPATH), model_path)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_MODEL_SUBPATH)), os.path.normpath(model_path))
 
 
 class TestHttpNoInternet(BaseTestCase):
