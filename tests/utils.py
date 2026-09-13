@@ -1,6 +1,7 @@
 import functools
 import hashlib
 import mimetypes
+import logging
 import os
 import sys
 from collections.abc import Callable, Generator
@@ -52,6 +53,17 @@ def get_gcs_redirect_response(file_name: str) -> ResponseReturnValue:
         ),
         302,
     )
+
+
+def close_kagglehub_log_handlers() -> None:
+    """Closes the kagglehub logger file handlers.
+
+    Windows keeps files locked while a handler holds them open, so tests
+    that write logs into a TemporaryDirectory must release them before the
+    directory is removed.
+    """
+    for handler in logging.getLogger("kagglehub").handlers:
+        handler.close()
 
 
 @contextmanager

@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from tempfile import TemporaryDirectory
 
 import requests
@@ -56,7 +56,7 @@ class TestHttpCompetitionDownload(BaseTestCase):
         competition_path = kagglehub.competition_download(competition_handle, **kwargs)
         archive_path = get_cached_archive_path(parse_competition_handle(competition_handle))
 
-        self.assertEqual(os.path.join(d, expected_subdir_or_subpath), competition_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, expected_subdir_or_subpath)), os.path.normpath(competition_path))
         self.assertEqual(sorted(expected_files), sorted(os.listdir(competition_path)))
         # Assert that the archive file has been deleted
         self.assertFalse(os.path.exists(archive_path))
@@ -69,7 +69,7 @@ class TestHttpCompetitionDownload(BaseTestCase):
     ) -> None:
         competition_path = kagglehub.competition_download(competition_handle, path=TEST_FILEPATH, **kwargs)
 
-        self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, TEST_FILEPATH), competition_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, TEST_FILEPATH)), os.path.normpath(competition_path))
         with open(competition_path) as competition_file:
             self.assertEqual(TEST_CONTENTS, competition_file.readline())
 
@@ -80,7 +80,7 @@ class TestHttpCompetitionDownload(BaseTestCase):
         **kwargs,  # noqa: ANN003
     ) -> None:
         competition_path = kagglehub.competition_download(competition_handle, path=AUTO_COMPRESSED_FILE_NAME, **kwargs)
-        self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, AUTO_COMPRESSED_FILE_NAME), competition_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, AUTO_COMPRESSED_FILE_NAME)), os.path.normpath(competition_path))
         with open(competition_path) as competition_file:
             self.assertEqual(AUTO_COMPRESSED_CONTENTS, competition_file.read())
 
@@ -121,14 +121,14 @@ class TestHttpCompetitionDownload(BaseTestCase):
             # force cached file to be out of date. We set it back to March 02 2000.
             test_date = 951955200
             os.utime(os.path.join(d, EXPECTED_COMPETITION_SUBDIR), (test_date, test_date))
-            old_date = datetime.fromtimestamp(os.path.getmtime(path), tz=datetime.UTC)
+            old_date = datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc)
 
             # Latest version is from March 02 2020.
             path = kagglehub.competition_download(COMPETITION_HANDLE)
 
             # New cache file is current day.
-            new_date = datetime.fromtimestamp(os.path.getmtime(path), tz=datetime.UTC)
-            self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBDIR), path)
+            new_date = datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_COMPETITION_SUBDIR)), os.path.normpath(path))
             self.assertGreater(new_date, old_date)
 
     def test_competition_download_with_path(self) -> None:
@@ -153,7 +153,7 @@ class TestHttpCompetitionDownload(BaseTestCase):
                     path=TEST_FILEPATH,
                     output_dir=dest,
                 )
-                self.assertEqual(os.path.join(dest, TEST_FILEPATH), competition_path)
+                self.assertEqual(os.path.normpath(os.path.join(dest, TEST_FILEPATH)), os.path.normpath(competition_path))
                 with open(competition_path) as competition_file:
                     self.assertEqual(TEST_CONTENTS, competition_file.readline())
 
@@ -237,7 +237,7 @@ class TestHttpNoInternet(BaseTestCase):
 
             path = kagglehub.competition_download(COMPETITION_HANDLE)
 
-            self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBDIR), path)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_COMPETITION_SUBDIR)), os.path.normpath(path))
 
     def test_competition_download_path_already_cached_with_no_internet(self) -> None:
         with create_test_cache() as d:
@@ -247,7 +247,7 @@ class TestHttpNoInternet(BaseTestCase):
 
             path = kagglehub.competition_download(COMPETITION_HANDLE, path=TEST_FILEPATH)
 
-            self.assertEqual(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, TEST_FILEPATH), path)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_COMPETITION_SUBPATH, TEST_FILEPATH)), os.path.normpath(path))
 
     def test_competition_download_already_cached_with_force_download_no_internet(self) -> None:
         with create_test_cache():

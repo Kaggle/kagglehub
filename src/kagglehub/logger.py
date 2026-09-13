@@ -37,6 +37,7 @@ def _configure_logger(log_dir: Path | None = None) -> None:
     library_logger = logging.getLogger(library_name)
     while library_logger.handlers:
         handler = library_logger.handlers.pop()
+        handler.close()
         while handler.filters:
             handler.filters.pop()
     logging_enabled = os.environ.get(KAGGLE_LOGGING_ENABLED_ENV_VAR_NAME, "false")

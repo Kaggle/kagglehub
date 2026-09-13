@@ -7,6 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 
+from tests.utils import close_kagglehub_log_handlers
 from kagglehub.logger import (
     _CONSOLE_BLOCK_KEY,
     EXTRA_CONSOLE_BLOCK,
@@ -74,6 +75,7 @@ class TestLoggerConfigurations(unittest.TestCase):
                 logger = logging.getLogger("kagglehub")
                 logger.info("HIDE", extra={**EXTRA_FILE_BLOCK})
                 logger.info("SHOW")
+                close_kagglehub_log_handlers()
                 text = (log_path / "kagglehub.log").read_text()
                 self.assertRegex(text, "^.*SHOW.*$")
                 self.assertRegex(text, "^(?!.*HIDE).*$")
@@ -92,6 +94,7 @@ class TestLoggerConfigurations(unittest.TestCase):
                 logger = logging.getLogger("kagglehub")
                 logger.info("goose")
                 self.assertTrue((Path(root_log_dir) / ".kaggle/logs/kagglehub.log").exists(), "log file expected")
+                close_kagglehub_log_handlers()
 
     def test_log_disabled(self) -> None:
         with TemporaryDirectory() as d:
@@ -116,6 +119,7 @@ class TestLoggerConfigurations(unittest.TestCase):
                 logger = logging.getLogger("kagglehub")
                 logger.info("goose")
                 self.assertTrue((log_dir / "kagglehub.log").exists(), "log file expected")
+                close_kagglehub_log_handlers()
 
 
 if __name__ == "__main__":

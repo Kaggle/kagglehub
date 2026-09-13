@@ -58,7 +58,7 @@ class TestHttpDatasetDownload(BaseTestCase):
         # Download the full datasets and ensure all files are there.
         dataset_path = kagglehub.dataset_download(dataset_handle, **kwargs)
 
-        self.assertEqual(os.path.join(d, expected_subdir_or_subpath), dataset_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, expected_subdir_or_subpath)), os.path.normpath(dataset_path))
 
         if not expected_files:
             expected_files = ["foo.txt"]
@@ -70,7 +70,7 @@ class TestHttpDatasetDownload(BaseTestCase):
 
     def _download_test_file_and_assert_downloaded(self, d: str, dataset_handle: str, **kwargs) -> None:  # noqa: ANN003
         dataset_path = kagglehub.dataset_download(dataset_handle, path=TEST_FILEPATH, **kwargs)
-        self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, TEST_FILEPATH), dataset_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_DATASET_SUBPATH, TEST_FILEPATH)), os.path.normpath(dataset_path))
         with open(dataset_path) as dataset_file:
             self.assertEqual(TEST_CONTENTS, dataset_file.read())
 
@@ -81,7 +81,7 @@ class TestHttpDatasetDownload(BaseTestCase):
         **kwargs,  # noqa: ANN003
     ) -> None:
         dataset_path = kagglehub.dataset_download(dataset_handle, path=AUTO_COMPRESSED_FILE_NAME, **kwargs)
-        self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, AUTO_COMPRESSED_FILE_NAME), dataset_path)
+        self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_DATASET_SUBPATH, AUTO_COMPRESSED_FILE_NAME)), os.path.normpath(dataset_path))
         with open(dataset_path) as dataset_file:
             self.assertEqual(AUTO_COMPRESSED_CONTENTS, dataset_file.read())
 
@@ -120,11 +120,11 @@ class TestHttpDatasetDownload(BaseTestCase):
         with create_test_cache() as d:
             folder_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path="folder")
 
-            self.assertEqual(os.path.join(d, EXPECTED_DATASET_SUBPATH, "folder"), folder_path)
+            self.assertEqual(os.path.normpath(os.path.join(d, EXPECTED_DATASET_SUBPATH, "folder")), os.path.normpath(folder_path))
             self.assertEqual(
                 ["nested/child.txt", "nested/child2.txt", "page2.csv", "root.txt"],
                 sorted(
-                    os.path.relpath(os.path.join(root, file), folder_path)
+                    os.path.relpath(os.path.join(root, file), folder_path).replace(os.sep, "/")
                     for root, _, files in os.walk(folder_path)
                     for file in files
                 ),
@@ -171,7 +171,7 @@ class TestHttpDatasetDownload(BaseTestCase):
                 output_dir=dest,
             )
 
-            self.assertEqual(os.path.join(dest, "folder"), folder_path)
+            self.assertEqual(os.path.normpath(os.path.join(dest, "folder")), os.path.normpath(folder_path))
             self.assertTrue(os.path.isfile(os.path.join(folder_path, "nested", "child.txt")))
 
     def test_incomplete_output_folder_requires_force(self) -> None:
@@ -265,7 +265,7 @@ class TestHttpDatasetDownload(BaseTestCase):
         with create_test_cache():
             with TemporaryDirectory() as dest:
                 dataset_path = kagglehub.dataset_download(VERSIONED_DATASET_HANDLE, path=TEST_FILEPATH, output_dir=dest)
-                self.assertEqual(os.path.join(dest, TEST_FILEPATH), dataset_path)
+                self.assertEqual(os.path.normpath(os.path.join(dest, TEST_FILEPATH)), os.path.normpath(dataset_path))
                 with open(dataset_path) as dataset_file:
                     self.assertEqual(TEST_CONTENTS, dataset_file.read())
 
