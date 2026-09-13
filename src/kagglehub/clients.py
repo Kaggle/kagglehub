@@ -6,7 +6,7 @@ import os
 import sys
 import zipfile
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 import requests
@@ -301,12 +301,12 @@ def _download_needed(response: requests.Response, h: ResourceHandle, cached_path
         return True
     else:
         remote_date = datetime.strptime(response.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S %Z").replace(
-            tzinfo=datetime.UTC
+            tzinfo=timezone.utc
         )
 
     file_exists = os.path.exists(cached_path)
     if file_exists:
-        local_date = datetime.fromtimestamp(os.path.getmtime(cached_path), tz=datetime.UTC)
+        local_date = datetime.fromtimestamp(os.path.getmtime(cached_path), tz=timezone.utc)
 
         download_needed = remote_date >= local_date
         if download_needed:
