@@ -41,14 +41,6 @@ pandas-datasets = ["pandas"]
 signing = [ "model_signing", "sigstore>=3.6.1", "betterproto>=2.0.0b6", "pyopenssl"]
 polars-datasets = ["polars"]
 
-# twine 6.0.1 doesn't support metadata-version 2.4.
-# remove `core-metadata-version` pin once twine release a new version with: https://github.com/pypa/twine/pull/1180
-[tool.hatch.build.targets.wheel]
-core-metadata-version = "2.3" 
-
-[tool.hatch.build.targets.sdist]
-core-metadata-version = "2.3"
-
 [tool.hatch.version]
 path = "src/kagglehub/__init__.py"
 
@@ -81,6 +73,7 @@ dependencies = [
   "pyjwt[crypto]",
   "pytest",
   "model_signing",
+  "pyopenssl",
   "black>=23.1.0",
   "mypy>=1.0.0",
   "ruff>=0.0.243",
