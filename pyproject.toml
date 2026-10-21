@@ -240,6 +240,8 @@ exclude_lines = [
 ]
 
 [tool.mypy]
+# Check against the minimum supported Python, not whichever interpreter runs mypy.
+python_version = "3.11"
 mypy_path = "./stubs"
 
 # TODO(b/307576378): Generate type hints for kagglesdk

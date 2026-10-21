@@ -2,7 +2,8 @@
 
 ## Next Release
 
-* Fix `competition_download` crashing with `AttributeError` when the server returns a `Last-Modified` header, and add the `pyopenssl` dependency missing from the `signing` extra.
+* Fix `competition_download` crashing with `AttributeError` when the server returns a `Last-Modified` header.
+* Add the `pyopenssl` dependency missing from the `signing` extra.
 * Require `certifi>=2026.10.19` to drop the compromised emSign/eMudhra root CAs, which allowed forged TLS certificates to intercept Kaggle API credentials ([GHSA-6q48-6c7w-9gw2](https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2)). Also floor `pip>=26.2.2` and `uv>=0.13.4` in the development and CI tooling.
 * Fix single-file downloads not being extracted from their server-side zip wrapper on Windows, which left the raw zip archive cached under the requested filename instead of the expected file. ([#252](https://github.com/Kaggle/kagglehub/issues/252))
 * Support downloading one dataset directory through `dataset_download(path=...)`, including nested files and cache reuse. ([#306](https://github.com/Kaggle/kagglehub/pull/306))
