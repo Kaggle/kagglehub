@@ -37,7 +37,8 @@ dependencies = [
 [project.optional-dependencies]
 hf-datasets = ["datasets", "kagglehub[pandas-datasets]"]
 pandas-datasets = ["pandas"]
-signing = [ "model_signing", "sigstore>=3.6.1", "betterproto>=2.0.0b6"]
+# model_signing imports OpenSSL without declaring pyOpenSSL as a dependency.
+signing = [ "model_signing", "sigstore>=3.6.1", "betterproto>=2.0.0b6", "pyopenssl"]
 polars-datasets = ["polars"]
 
 # twine 6.0.1 doesn't support metadata-version 2.4.
