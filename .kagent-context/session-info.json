@@ -1,0 +1,33 @@
+{
+  "task_id": "sohier-20261021160117-4cce0c39",
+  "agent_type": "claude",
+  "session_id": "c643433d-6422-428b-b9cb-3cbc6b0e36ae",
+  "updated_at": "2026-10-21T16:07:30Z",
+  "resume_command": "claude --resume c643433d-6422-428b-b9cb-3cbc6b0e36ae",
+  "usage": {
+    "total_cost_usd": 1.8094522000000004,
+    "input_tokens": 108,
+    "output_tokens": 25813,
+    "cache_read_input_tokens": 1637851,
+    "cache_creation_input_tokens": 193038,
+    "duration_ms": 281894,
+    "duration_api_ms": 276474,
+    "num_turns": 20,
+    "model_usage": {
+      "claude-opus-5-5[1m]@default[1m]": {
+        "inputTokens": 80,
+        "outputTokens": 18892,
+        "thinkingTokens": 6240,
+        "cacheReadInputTokens": 1130322,
+        "cacheCreationInputTokens": 136468,
+        "webSearchRequests": 0,
+        "costUSD": 1.2865644000000003,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "canonicalModel": "claude-opus-5-5",
+        "provider": "vertex",
+        "costBasis": "list"
+      }
+    }
+  }
+}

@@ -22,6 +22,8 @@ keywords = ["Kaggle", "API"]
 requires-python = ">=3.11"
 dependencies = [
   "requests", 
+  # Floor for the emSign/eMudhra CA removal (GHSA-6q48-6c7w-9gw2); requests otherwise accepts any certifi.
+  "certifi>=2026.10.19",
   "tqdm",
   "packaging",
   "pyyaml",
@@ -59,7 +61,7 @@ dependencies = [
   "openpyxl",
   # Used for testing reading Excel file via polars
   "fastexcel",
-  "pip",
+  "pip>=26.2.2",
   "pyjwt[crypto]",
 ]
 features = ["hf-datasets", "signing", "polars-datasets"]
