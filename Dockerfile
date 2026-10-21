@@ -2,7 +2,10 @@ ARG PYTHON_VERSION
 
 FROM python:${PYTHON_VERSION}
 
-RUN pip install hatch==1.16.5
+# Pick up the emSign/eMudhra CA removal (GHSA-6q48-6c7w-9gw2) in the OS trust store and Python tooling.
+# hatch uses uv to manage its environments; floor it for GHSA-hq85-5cpj-mr62.
+RUN apt-get update && apt-get install -y --only-upgrade ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN python -m pip install --upgrade "pip>=26.2.2" "certifi>=2026.10.19" hatch==1.16.5 "uv>=0.13.4"
 
 # Add only the minimal files required to be able to pre-create the hatch environments.
 # If any of these files changes, a new Docker build is necessary. This is why we need

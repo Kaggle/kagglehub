@@ -166,5 +166,7 @@ cython_debug/
 # ./docker-hatch run python my-script.py
 /*.py
 
-# IDEs
+# IDEs and agent metadata
 .idea/
+.claude/
+.kagent-context/
