@@ -1,7 +1,6 @@
-import datetime
 import threading
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from cryptography.hazmat.primitives import serialization
@@ -131,7 +130,7 @@ def model_instance_create() -> ResponseReturnValue:
 
 @app.route("/api/v1/models.ModelApiService/CreateModelSigningToken", methods=["POST"])
 def model_signing_token() -> ResponseReturnValue:
-    now = datetime.datetime.now(tz=datetime.UTC)
+    now = datetime.now(tz=UTC)
     # Generate the private key
     private_key = rsa.generate_private_key(
         public_exponent=65537,
