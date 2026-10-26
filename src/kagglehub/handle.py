@@ -142,7 +142,7 @@ def parse_dataset_handle(handle: str) -> DatasetHandle:
 
     if len(parts) == NUM_VERSIONED_DATASET_PARTS:
         # Versioned handle
-        # e.g.: <owner>/>dataset>/versions/<version>
+        # e.g.: <owner>/<dataset>/versions/<version>
         try:
             version = int(parts[3])
         except ValueError as err:
