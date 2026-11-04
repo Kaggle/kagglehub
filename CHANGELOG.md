@@ -1,5 +1,9 @@
 # Changelog
 
+## Next Release
+
+* Restart the download from scratch instead of appending the response to the partial file when the server does not honor the `Range` request while resuming a download. Appending it corrupted the file, failed the checksum and deleted everything downloaded so far. ([#322](https://github.com/Kaggle/kagglehub/issues/322))
+
 ## v1.0.3 (October 21, 2026)
 
 * Fix `competition_download` crashing with `AttributeError` when the server returns a `Last-Modified` header.

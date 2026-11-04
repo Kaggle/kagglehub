@@ -3,10 +3,17 @@ import os
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
+import requests
 from kagglesdk.datasets.types.dataset_api_service import ApiDownloadDatasetRequest
 
 import kagglehub
-from kagglehub.clients import _detect_auto_compressed_member_name, build_kaggle_client, download_file, get_user_agent
+from kagglehub.clients import (
+    _detect_auto_compressed_member_name,
+    _is_valid_range_response,
+    build_kaggle_client,
+    download_file,
+    get_user_agent,
+)
 from kagglehub.exceptions import DataCorruptionError
 from kagglehub.handle import DatasetHandle
 from tests.fixtures import BaseTestCase
@@ -60,6 +67,70 @@ class TestKaggleClient(BaseTestCase):
 
             with open(out_file) as f:
                 self.assertEqual("foo", f.read())
+
+    def test_resumable_download_restarts_when_server_ignores_range(self) -> None:
+        # Regression test for https://github.com/Kaggle/kagglehub/issues/322.
+        #
+        # The server advertises `Accept-Ranges: bytes` but answers the `Range` request with
+        # `200 OK` and the whole file. Appending that to the partial file would produce
+        # "fofoo" and fail the checksum; instead the download must start over from scratch.
+        with TemporaryDirectory() as d:
+            out_file = os.path.join(d, "out")
+
+            with open(out_file, "w") as f:
+                f.write("fo")
+
+            with self.assertLogs("kagglehub", level="INFO") as cm:
+                with build_kaggle_client() as api_client:
+                    r = ApiDownloadDatasetRequest()
+                    r.dataset_slug = "range-ignored"
+
+                    response = api_client.datasets.dataset_api_client.download_dataset(r)
+                    download_file(response, out_file, DUMMY_HANDLE)
+
+            self.assertTrue(any("did not honor the range request" in line for line in cm.output), cm.output)
+
+            with open(out_file) as f:
+                self.assertEqual("foo", f.read())
+
+    def test_resumable_download_restarts_on_mismatched_content_range(self) -> None:
+        # Same as above, but the server replies 206 from an offset other than the one requested.
+        with TemporaryDirectory() as d:
+            out_file = os.path.join(d, "out")
+
+            with open(out_file, "w") as f:
+                f.write("fo")
+
+            with build_kaggle_client() as api_client:
+                r = ApiDownloadDatasetRequest()
+                r.dataset_slug = "range-wrong-offset"
+
+                response = api_client.datasets.dataset_api_client.download_dataset(r)
+                download_file(response, out_file, DUMMY_HANDLE)
+
+            with open(out_file) as f:
+                self.assertEqual("foo", f.read())
+
+    def test_is_valid_range_response(self) -> None:
+        def make_response(status_code: int, content_range: str | None) -> requests.Response:
+            response = requests.Response()
+            response.status_code = status_code
+            if content_range is not None:
+                response.headers["Content-Range"] = content_range
+            return response
+
+        self.assertTrue(_is_valid_range_response(make_response(206, "bytes 2-9/10"), 2, 10))
+        # The complete length may be unknown to the server.
+        self.assertTrue(_is_valid_range_response(make_response(206, "bytes 2-9/*"), 2, 10))
+
+        # Server ignored the Range header and sent the whole file.
+        self.assertFalse(_is_valid_range_response(make_response(200, None), 2, 10))
+        # Local partial file is larger than the remote file.
+        self.assertFalse(_is_valid_range_response(make_response(416, "bytes */10"), 12, 10))
+        # 206 without a Content-Range header, or from the wrong offset / of a different file.
+        self.assertFalse(_is_valid_range_response(make_response(206, None), 2, 10))
+        self.assertFalse(_is_valid_range_response(make_response(206, "bytes 0-9/10"), 2, 10))
+        self.assertFalse(_is_valid_range_response(make_response(206, "bytes 2-11/12"), 2, 10))
 
     def test_download_no_integrity_check(self) -> None:
         with TemporaryDirectory() as d:
