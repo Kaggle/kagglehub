@@ -3,6 +3,7 @@ import inspect
 import json
 import logging
 import os
+import re
 import sys
 import zipfile
 from collections.abc import Callable
@@ -47,6 +48,8 @@ CHUNK_SIZE = 1048576
 DEFAULT_CONNECT_TIMEOUT = 5  # seconds
 DEFAULT_READ_TIMEOUT = 15  # seconds
 ACCEPT_RANGE_HTTP_HEADER = "Accept-Ranges"
+CONTENT_RANGE_HTTP_HEADER = "Content-Range"
+HTTP_PARTIAL_CONTENT = 206
 HTTP_STATUS_404 = 404
 
 already_printed_version_warning = False
@@ -188,15 +191,19 @@ def download_file(
 
         logger.info(f"Resuming download from {size_read} bytes ({total_size - size_read} bytes left)...")
 
-        # Send the request again with the 'Range' header.
-        with requests.get(
-            response.url,  # GCS URL after redirection
-            stream=True,
-            timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
-            headers={"Range": f"bytes={size_read}-"},
-        ) as resumed_response:
-            logger.info(f"Resuming download to {out_file} ({size_read}/{total_size}) bytes left.")
-            _download_file(resumed_response, out_file, size_read, total_size, hash_object)
+        if not _resume_download(response.url, out_file, size_read, total_size, hash_object):
+            # The server did not honor the 'Range' request, so nothing was appended. Appending its
+            # response anyway would corrupt the file and fail the checksum. Start over from scratch.
+            size_read = 0
+            hash_object = hashlib.md5() if expected_md5_hash else None
+            logger.info(f"Downloading to {out_file}...")
+            with requests.get(
+                response.url,  # GCS URL after redirection
+                stream=True,
+                timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+            ) as full_response:
+                full_response.raise_for_status()
+                _download_file(full_response, out_file, size_read, total_size, hash_object)
     else:
         logger.info(f"Downloading to {out_file}...")
         _download_file(response, out_file, size_read, total_size, hash_object)
@@ -254,6 +261,56 @@ def _detect_auto_compressed_member_name(out_file: str, response_url: str) -> str
 
 def _is_resumable(response: requests.Response) -> bool:
     return ACCEPT_RANGE_HTTP_HEADER in response.headers and response.headers[ACCEPT_RANGE_HTTP_HEADER] == "bytes"
+
+
+def _is_valid_range_response(response: requests.Response, start: int, total_size: int) -> bool:
+    """Checks that the server honored a `Range: bytes=<start>-` request.
+
+    A server (or proxy) that does not support range requests answers with `200 OK` and the whole
+    file, and one that does may still answer from a different offset or for a different file. In
+    all those cases the body must not be appended to the partial file.
+    See: https://github.com/Kaggle/kagglehub/issues/322
+    """
+    if response.status_code != HTTP_PARTIAL_CONTENT:
+        return False
+    # Format is "bytes <start>-<end>/<complete-length>", where <complete-length> may be "*" if unknown.
+    m = re.match(r"^bytes (\d+)-(\d+)/(\d+|\*)$", response.headers.get(CONTENT_RANGE_HTTP_HEADER, ""))
+    if not m:
+        return False
+    range_start, _, complete_length = m.groups()
+    if int(range_start) != start:
+        return False
+    return complete_length == "*" or int(complete_length) == total_size
+
+
+def _resume_download(
+    url: str,
+    out_file: str,
+    size_read: int,
+    total_size: int,
+    hash_object,  # noqa: ANN001 - no public type for hashlib hash
+) -> bool:
+    """Requests the bytes of `url` from `size_read` onwards and appends them to `out_file`.
+
+    Returns:
+    bool:  False if the server did not honor the range request, in which case nothing was written.
+    """
+    with requests.get(
+        url,  # GCS URL after redirection
+        stream=True,
+        timeout=(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT),
+        headers={"Range": f"bytes={size_read}-"},
+    ) as resumed_response:
+        if not _is_valid_range_response(resumed_response, size_read, total_size):
+            logger.warning(
+                f"Server did not honor the range request (status {resumed_response.status_code}, "
+                f"{CONTENT_RANGE_HTTP_HEADER}: {resumed_response.headers.get(CONTENT_RANGE_HTTP_HEADER)}). "
+                "Restarting the download from scratch..."
+            )
+            return False
+        logger.info(f"Resuming download to {out_file} ({size_read}/{total_size}) bytes left.")
+        _download_file(resumed_response, out_file, size_read, total_size, hash_object)
+        return True
 
 
 def _download_file(
