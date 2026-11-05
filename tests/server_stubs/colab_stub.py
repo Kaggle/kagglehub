@@ -98,6 +98,27 @@ def datasets_mount() -> ResponseReturnValue:
     return jsonify({"slug": slug}), 200
 
 
+@app.route(ColabClient.IS_COMPETITION_SUPPORTED_PATH, methods=["POST"])
+def competitions_is_supported() -> ResponseReturnValue:
+    data = request.get_json()
+    competition = data["competition"]
+    if competition == "unavailable-competition":
+        return competition, 400
+    return "", 200
+
+
+@app.route(ColabClient.COMPETITION_MOUNT_PATH, methods=["POST"])
+def competitions_mount() -> ResponseReturnValue:
+    data = request.get_json()
+    competition = data["competition"]
+    slug = f"competitions/{competition}"
+    cache_mount_folder = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME)
+    base_path = f"{cache_mount_folder}/{slug}"
+    os.makedirs(base_path, exist_ok=True)
+    Path(f"{base_path}/competition_data.csv").touch()
+    return jsonify({"slug": slug}), 200
+
+
 @contextmanager
 def create_env() -> Generator[Any, Any, Any]:
     with TemporaryDirectory() as cache_mount_folder:
