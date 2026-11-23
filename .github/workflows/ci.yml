@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.11, 3.12]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Hatch
+        run: python -m pip install --upgrade pip setuptools wheel && python -m pip install hatch
+
+      - name: Cache pip and Hatch
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/hatch
+            ~/.local/share/hatch
+          key: ${{ runner.os }}-pip-hatch-${{ matrix.python }}-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-hatch-${{ matrix.python }}-
+            ${{ runner.os }}-pip-hatch-
+
+      - name: Create hatch-test env
+        run: hatch env create hatch-test
+
+      - name: Run tests
+        run: hatch run -e hatch-test -c "pytest -q"

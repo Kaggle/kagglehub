@@ -1,5 +1,7 @@
 # kagglehub
 
+[![CI](https://github.com/Kaggle/kagglehub/actions/workflows/ci.yml/badge.svg)](https://github.com/Kaggle/kagglehub/actions/workflows/ci.yml)
+
 The `kagglehub` library provides a simple way to interact with Kaggle resources such as datasets, models, notebook outputs in Python.
 
 This library also integrates natively with the Kaggle notebook environment. This means the behavior differs when you download a Kaggle resource with `kagglehub` in the Kaggle notebook environment:
