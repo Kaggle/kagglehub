@@ -5,7 +5,7 @@ import time
 from kagglehub.clients import ColabClient
 from kagglehub.config import is_colab_cache_disabled
 from kagglehub.exceptions import BackendError, NotFoundError
-from kagglehub.handle import DatasetHandle, ModelHandle
+from kagglehub.handle import CompetitionHandle, DatasetHandle, ModelHandle
 from kagglehub.logger import EXTRA_CONSOLE_BLOCK
 from kagglehub.packages import PackageScope
 from kagglehub.resolver import Resolver
@@ -210,3 +210,77 @@ def _get_dataset_version(h: DatasetHandle) -> int | None:
         return version_from_package_scope
 
     return None
+
+
+class CompetitionColabCacheResolver(Resolver[CompetitionHandle]):
+    def is_supported(self, handle: CompetitionHandle, *_, **__) -> bool:  # noqa: ANN002, ANN003
+        if ColabClient.TBE_RUNTIME_ADDR_ENV_VAR_NAME not in os.environ or is_colab_cache_disabled():
+            return False
+
+        api_client = ColabClient()
+        data = {
+            "competition": handle.competition,
+        }
+
+        try:
+            api_client.post(data, ColabClient.IS_COMPETITION_SUPPORTED_PATH, handle)
+        except NotFoundError:
+            return False
+        return True
+
+    def _resolve(
+        self,
+        h: CompetitionHandle,
+        path: str | None = None,
+        *,
+        force_download: bool | None = False,
+        output_dir: str | None = None,
+    ) -> tuple[str, int | None]:
+        if output_dir:
+            logger.info(
+                "Ignoring `output_dir` argument when running inside the Colab notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+        if force_download:
+            logger.info(
+                "Ignoring `force_download` argument when running inside the Colab notebook environment.",
+                extra={**EXTRA_CONSOLE_BLOCK},
+            )
+
+        api_client = ColabClient()
+        data = {
+            "competition": h.competition,
+        }
+
+        response = api_client.post(data, ColabClient.COMPETITION_MOUNT_PATH, h)
+
+        if response is None:
+            no_response = "No response received or response was empty."
+            raise ValueError(no_response)
+
+        if "slug" not in response:
+            msg = "'slug' field missing from response"
+            raise BackendError(msg)
+
+        logger.info(f"Using Colab cache for faster access to the '{response['slug']}' competition.")
+
+        base_mount_path = os.getenv(COLAB_CACHE_MOUNT_FOLDER_ENV_VAR_NAME, DEFAULT_COLAB_CACHE_MOUNT_FOLDER)
+        cached_path = f"{base_mount_path}/{response['slug']}"
+
+        if not os.path.exists(cached_path):
+            # Only print this if the dataset is not already mounted.
+            logger.info(f"Mounting files to {cached_path}...")
+
+        while not os.path.exists(cached_path):
+            time.sleep(5)
+
+        if path:
+            cached_filepath = f"{cached_path}/{path}"
+            if not os.path.exists(cached_filepath):
+                msg = (
+                    f"'{path}' is not present in the competition files. "
+                    f"You can access the other files of the attached competition at '{cached_path}'"
+                )
+                raise ValueError(msg)
+            return cached_filepath, None
+        return cached_path, None

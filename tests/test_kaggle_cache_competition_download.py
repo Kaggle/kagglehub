@@ -33,6 +33,13 @@ class TestKaggleCacheCompetitionDownload(BaseTestCase):
                 with self.assertRaises(requests.exceptions.ConnectionError):
                     kagglehub.competition_download(COMPETITION_HANDLE)
 
+    @mock.patch("kagglehub.kaggle_cache_resolver.is_in_colab_notebook", return_value=True)
+    def test_kaggle_resolver_skipped_in_colab(self, mock_colab) -> None:
+        with stub.create_env():
+            # Assert that a ConnectionError is set (uses HTTP server which is not set)
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                kagglehub.competition_download(COMPETITION_HANDLE)
+
     def test_competition_download(self) -> None:
         with stub.create_env():
             competition_path = kagglehub.competition_download(COMPETITION_HANDLE)
