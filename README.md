@@ -207,7 +207,7 @@ df = kagglehub.dataset_load(
 
 #### `KaggleDatasetAdapter.HUGGING_FACE`
 
-The Hugging Face `Dataset` provided by this adapater is built exclusively using 
+The Hugging Face `Dataset` provided by this adapter is built exclusively using 
 [`Dataset.from_pandas`](https://huggingface.co/docs/datasets/main/en/package_reference/main_classes#datasets.Dataset.from_pandas). 
 As a result, all of the file type and `pandas_kwargs` support is the same as 
 [`KaggleDatasetAdapter.PANDAS`](#kaggledatasetadapterpandas). Some important things to note about this:
@@ -455,7 +455,7 @@ You can override this path by setting the `KAGGLEHUB_CACHE` environment variable
 
 ## Development
 
-### Prequisites
+### Prerequisites
 
 We use [hatch](https://hatch.pypa.io) to manage this project.
 
@@ -595,7 +595,7 @@ The table below contains possible locations:
 | linux   | ~/.kaggle/logs/kagglehub.log                     |
 | windows | C:\Users\\%USERNAME%\\.kaggle\logs\kagglehub.log |
 
-If needed, the root log directory can be overriden using the following environment variable: `KAGGLE_LOGGING_ROOT_DIR`
+If needed, the root log directory can be overridden using the following environment variable: `KAGGLE_LOGGING_ROOT_DIR`
 
 Please include the log to help troubleshoot issues.
 
