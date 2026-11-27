@@ -131,7 +131,8 @@ def _validate_credentials_helper(*, verbose: bool = True) -> str | None:
         elif "code" in response and response["code"] == INVALID_CREDENTIALS_ERROR:
             if verbose:
                 _logger.error(
-                    "Invalid Kaggle credentials. You can obtain a Kaggle API token on your [Kaggle API tokens settings page](https://www.kaggle.com/settings/api)."
+                    "Invalid Kaggle credentials. You can obtain a Kaggle API token on your "
+                    "[Kaggle API tokens settings page](https://www.kaggle.com/settings/api)."
                 )
         elif verbose:
             _logger.warning("Unable to validate Kaggle credentials at this time.")
