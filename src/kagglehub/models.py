@@ -68,7 +68,7 @@ def model_upload(
             Use a pattern ending with "/" to ignore the whole dir,
             e.g., ".git/" is equivalent to ".git/*".
         sigstore: (bool, optional)
-            Creates a trasparent ledger on sigstore. User must be an admin/editor of the model.
+            Creates a transparent ledger on sigstore. User must be an admin/editor of the model.
     """
     # parse slug
     h = parse_model_handle(handle)

@@ -94,7 +94,7 @@ class CompetitionKaggleCacheResolver(Resolver[CompetitionHandle]):
             if not os.path.exists(cached_filepath):
                 msg = (
                     f"'{path}' is not present in the competition files."
-                    f"You can acces the other files othe attached competition at '{cached_path}'"
+                    f"You can access the other files of the attached competition at '{cached_path}'"
                 )
                 raise ValueError(msg)
             return cached_filepath, None
@@ -179,7 +179,7 @@ class DatasetKaggleCacheResolver(Resolver[DatasetHandle]):
             if not os.path.exists(cached_filepath):
                 msg = (
                     f"'{path}' is not present in the dataset files."
-                    f"You can acces the other files othe attached dataset at '{cached_path}'"
+                    f"You can access the other files of the attached dataset at '{cached_path}'"
                 )
                 raise ValueError(msg)
             return cached_filepath, version
